@@ -20,11 +20,17 @@ final internal class NetworkURLProtocol: URLProtocol {
         return request
     }
     
+    override class func canInit(with task: URLSessionTask) -> Bool {
+        guard let request = task.currentRequest else { return false }
+        return canInit(with: request)
+    }
+    
     override func startLoading() {
-        if let thisRequest = request as? NSMutableURLRequest {
-            URLProtocol.setProperty(true, forKey: Self.taskCacheKey, in: thisRequest)
+        guard let thisRequest = request as? NSMutableURLRequest else {
+            super.startLoading()
+            return
         }
-        
+        URLProtocol.setProperty(true, forKey: Self.taskCacheKey, in: thisRequest)
         let log = LogItem.fromRequest(request)
         logger.log(.initiated, log)
         Task {
@@ -34,7 +40,7 @@ final internal class NetworkURLProtocol: URLProtocol {
         let config = URLSessionConfiguration.default
         let session = URLSession(configuration: config, delegate: nil, delegateQueue: nil)
 
-        sessionTask = session.dataTask(with: request) { data, response, error in
+        sessionTask = session.dataTask(with: thisRequest as URLRequest) { data, response, error in
             let finalUpdatedLog = log.withResponse(response: response, data: data, error: error)
             logger.log(.finished, finalUpdatedLog)
             Task {
@@ -59,5 +65,6 @@ final internal class NetworkURLProtocol: URLProtocol {
 
     override func stopLoading() {
         sessionTask?.cancel()
+        sessionTask = nil
     }
 }
