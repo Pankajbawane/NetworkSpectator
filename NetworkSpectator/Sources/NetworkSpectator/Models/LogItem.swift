@@ -39,9 +39,9 @@ struct LogItem: Identifiable {
 }
 
 extension LogItem {
-    func build(request: NSMutableURLRequest) -> LogItem {
+    func build(request: URLRequest) -> LogItem {
         var log = self
-        log.method = request.httpMethod
+        log.method = request.httpMethod ?? ""
         
         if let headers = request.allHTTPHeaderFields, !headers.isEmpty {
             log.headers = headers.prettyPrintedJSON
@@ -56,12 +56,6 @@ extension LogItem {
                 log.requestBody = string
             }
         }
-        
-        logger.log(.initatedLine)
-        logger.log(.url, log.url)
-        logger.log(.request, log.requestBody)
-        logger.log(.headers, log.headers)
-        logger.log(.finishedLine)
         
         return log
     }
@@ -86,13 +80,6 @@ extension LogItem {
         }
         log.error = error
         log.finishTime = Date()
-        
-        logger.log(.finishedLine)
-        logger.log(.url, log.url)
-        logger.log(.request, log.requestBody)
-        logger.log(.headers, log.headers)
-        logger.log(.response, log.responseBody)
-        logger.log(.finishedLine)
         
         return log
     }

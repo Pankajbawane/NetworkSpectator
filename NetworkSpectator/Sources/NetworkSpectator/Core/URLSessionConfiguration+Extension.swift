@@ -85,9 +85,9 @@ extension URLSession {
     private func swizzled_dataTask(with request: URLRequest,
                                    completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
         
-        let thisRequest = request as! NSMutableURLRequest
         let initialLog = LogItem(url: request.url?.absoluteString ?? "")
-        let updatedLog = initialLog.build(request: thisRequest)
+        let updatedLog = initialLog.build(request: request)
+        logger.log(.initiated, updatedLog)
         
         Task {
             await NetworkLogManager.shared.add(updatedLog)
@@ -95,6 +95,8 @@ extension URLSession {
         
         let wrappedHandler: (Data?, URLResponse?, Error?) -> Void = { data, response, error in
             let finalUpdatedLog = updatedLog.build(response: response, data: data, error: error)
+            logger.log(.finished, finalUpdatedLog)
+            
             Task {
                 await NetworkLogManager.shared.add(finalUpdatedLog)
             }

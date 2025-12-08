@@ -13,11 +13,27 @@ struct ConsoleLogger {
         self.enabled = enabled
     }
     
+    func log(_ level: LogLevel, _ logItem: LogItem) {
+        log(level == .initiated ? .initatedLine : .finishedLine)
+        log(.url, logItem.method + " " + logItem.url)
+        log(.request, logItem.requestBody)
+        log(.headers, logItem.headers)
+        if level == .finished {
+            logger.log(.response, logItem.responseBody)
+        }
+        log(.line)
+    }
+    
     func log(_ type: LogType, _ message: String = "") {
         guard enabled else { return }
         let printMessage = message.isEmpty ? "" : "\n\(message)"
         print(type.title, printMessage)
     }
+}
+
+enum LogLevel {
+    case initiated
+    case finished
 }
 
 enum LogType {
