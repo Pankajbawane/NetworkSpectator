@@ -28,7 +28,8 @@ final internal class NetworkURLProtocol: URLProtocol {
         URLProtocol.setProperty(true, forKey: Self.taskCacheKey, in: thisRequest)
         
         let initialLog = LogItem(url: request.url?.absoluteString ?? "")
-        let updatedLog = initialLog.build(request: thisRequest)
+        let updatedLog = initialLog.build(request: request)
+        logger.log(.initiated, updatedLog)
         Task {
             await NetworkLogManager.shared.add(updatedLog)
         }
@@ -38,6 +39,7 @@ final internal class NetworkURLProtocol: URLProtocol {
 
         sessionTask = session.dataTask(with: thisRequest as URLRequest) { data, response, error in
             let finalUpdatedLog = updatedLog.build(response: response, data: data, error: error)
+            logger.log(.finished, finalUpdatedLog)
             Task {
                 await NetworkLogManager.shared.add(finalUpdatedLog)
             }

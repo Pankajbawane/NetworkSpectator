@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Combine
 
 /// Manages network log updates and publishes them for observers.
 @MainActor
@@ -22,11 +21,13 @@ final class NetworkLogManager: ObservableObject, Sendable {
     
     func enable() {
         URLSessionConfiguration.enableNetworkSwizzling()
+        URLSession.enableNetworkSwizzling()
         startObservingUpdates()
     }
     
     func disable() {
         URLSessionConfiguration.disableNetworkSwizzling()
+        URLSession.enableNetworkSwizzling()
         stop()
     }
 
