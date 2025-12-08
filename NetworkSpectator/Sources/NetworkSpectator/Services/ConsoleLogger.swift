@@ -21,7 +21,7 @@ struct ConsoleLogger {
         if level == .finished {
             logger.log(.response, logItem.responseBody)
         }
-        log(.line)
+        log(.endline)
     }
     
     func log(_ type: LogType, _ message: String = "") {
@@ -42,7 +42,7 @@ enum LogType {
     case request
     case response
     case headers
-    case line
+    case endline
     case initatedLine
     case finishedLine
     
@@ -54,7 +54,7 @@ enum LogType {
         case .response: return "RESPONSE:"
         case .headers: return "HEADERS:"
         case .none: return ""
-        case .line: return "================================================================================"
+        case .endline: return "======================================END======================================="
         case .initatedLine: return "=============================REQUEST INITIATED=================================="
         case .finishedLine: return "=============================REQUEST FINISHED==================================="
         }
