@@ -9,7 +9,7 @@ import Foundation
 
 final internal class NetworkURLProtocol: URLProtocol {
     private var sessionTask: URLSessionDataTask?
-    private static let taskCacheKey = "TRACKED_TASK"
+    private static let taskCacheKey = "TRACK_CACHED_TASK_KEY"
 
     override class func canInit(with request: URLRequest) -> Bool {
         // Avoid intercepting requests twice
@@ -21,11 +21,9 @@ final internal class NetworkURLProtocol: URLProtocol {
     }
     
     override func startLoading() {
-        guard let thisRequest = request as? NSMutableURLRequest else {
-            super.startLoading()
-            return
+        if let thisRequest = request as? NSMutableURLRequest {
+            URLProtocol.setProperty(true, forKey: Self.taskCacheKey, in: thisRequest)
         }
-        URLProtocol.setProperty(true, forKey: Self.taskCacheKey, in: thisRequest)
         
         let initialLog = LogItem(url: request.url?.absoluteString ?? "")
         let updatedLog = initialLog.build(request: request)
@@ -37,7 +35,7 @@ final internal class NetworkURLProtocol: URLProtocol {
         let config = URLSessionConfiguration.default
         let session = URLSession(configuration: config, delegate: nil, delegateQueue: nil)
 
-        sessionTask = session.dataTask(with: thisRequest as URLRequest) { data, response, error in
+        sessionTask = session.dataTask(with: request) { data, response, error in
             let finalUpdatedLog = updatedLog.build(response: response, data: data, error: error)
             logger.log(.finished, finalUpdatedLog)
             Task {
