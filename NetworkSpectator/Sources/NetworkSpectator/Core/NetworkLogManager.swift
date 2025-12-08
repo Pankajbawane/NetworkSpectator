@@ -52,7 +52,6 @@ final class NetworkLogManager: ObservableObject, Sendable {
         }
     }
 
-    @MainActor
     private func updateItems(_ newItems: [LogItem]) {
         self.items = newItems
     }

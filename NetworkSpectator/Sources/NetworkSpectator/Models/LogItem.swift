@@ -18,7 +18,7 @@ struct LogItem: Identifiable {
     var requestBody: String = ""
     var responseBody: String = ""
     var responseHeaders: String = ""
-    var responseTime: TimeInterval = 0
+    private(set) var responseTime: TimeInterval = 0
     var mimetype: String?
     var textEncodingName: String?
     var error: Error?
@@ -41,11 +41,9 @@ struct LogItem: Identifiable {
 extension LogItem {
     func build(request: NSMutableURLRequest) -> LogItem {
         var log = self
-        print("Logging Request: \(request.httpMethod) \(request.url?.absoluteString ?? "")")
         log.method = request.httpMethod
         
         if let headers = request.allHTTPHeaderFields, !headers.isEmpty {
-            print("Logging Request Headers:\n\(headers.prettyPrintedJSON)")
             log.headers = headers.prettyPrintedJSON
         }
 
@@ -53,20 +51,24 @@ extension LogItem {
             if let json = try? JSONSerialization.jsonObject(with: body, options: []),
                let data = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted]),
                let pretty = String(data: data, encoding: .utf8) {
-                print("Logging Request Body:\n\(pretty)")
                 log.requestBody = pretty
             } else if let string = String(data: body, encoding: .utf8) {
-                print("Logging Request Body (raw):\n\(string)")
                 log.requestBody = string
             }
         }
+        
+        logger.log(.initatedLine)
+        logger.log(.url, log.url)
+        logger.log(.request, log.requestBody)
+        logger.log(.headers, log.headers)
+        logger.log(.finishedLine)
+        
         return log
     }
     
     func build(response: URLResponse?, data: Data?, error: Error?) -> LogItem {
         var log = self
         if let httpResponse = response as? HTTPURLResponse {
-            print("Logging Response Headers:\n\(httpResponse.allHeaderFields.prettyPrintedHeaders)" as Any)
             log.statusCode = httpResponse.statusCode
             log.responseHeaders = httpResponse.allHeaderFields.prettyPrintedHeaders
             log.mimetype = httpResponse.mimeType
@@ -77,15 +79,20 @@ extension LogItem {
             if let json = try? JSONSerialization.jsonObject(with: data, options: []),
                let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted]),
                let pretty = String(data: jsonData, encoding: .utf8) {
-                print("Logging Response Body:\n\(pretty)")
                 log.responseBody = pretty
             } else if let string = String(data: data, encoding: .utf8) {
-                print("Logging Response Body (raw):\n\(string)")
                 log.responseBody = string
             }
         }
         log.error = error
         log.finishTime = Date()
+        
+        logger.log(.finishedLine)
+        logger.log(.url, log.url)
+        logger.log(.request, log.requestBody)
+        logger.log(.headers, log.headers)
+        logger.log(.response, log.responseBody)
+        logger.log(.finishedLine)
         
         return log
     }

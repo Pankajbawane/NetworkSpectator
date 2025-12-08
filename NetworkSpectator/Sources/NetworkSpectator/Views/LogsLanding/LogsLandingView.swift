@@ -8,14 +8,18 @@
 import SwiftUI
 import UIKit
 
-struct ContentView: View {
+public struct ContentView: View {
     @ObservedObject private var manager = NetworkLogManager.shared
     @State private var showExportSheet = false
     @State private var exportURL: URL?
     @State private var navigationPath = NavigationPath()
     @State private var logItems: [LogItem] = []
+    
+    public init() {
+        
+    }
 
-    var body: some View {
+    public var body: some View {
         NavigationStack(path: $navigationPath) {
             itemList
                 .navigationTitle("Requests")
