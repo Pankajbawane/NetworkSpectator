@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// Manages network log updates and publishes them for observers.
+/// Manages network log updates and publishes.
 @MainActor
 final class NetworkLogManager: ObservableObject, Sendable {
     static let shared = NetworkLogManager()
@@ -69,7 +69,7 @@ final class NetworkLogManager: ObservableObject, Sendable {
     }
 
     /// Cancels ongoing observation of network log updates.
-    func stop() {
+    private func stop() {
         Task {
             await container.stop()
         }

@@ -7,80 +7,170 @@
 
 import Foundation
 
-struct LogItem: Identifiable {
-    let id = UUID()
-    let startTime: Date = Date()
+// MARK: - LogItem
+// Represents a single network log entry.
+struct LogItem: Identifiable, Codable, Equatable, Sendable {
+    // Identity & timing
+    let id: UUID
+    let startTime: Date
     let url: String
-    
-    var method: String = ""
-    var headers: String = ""
-    var statusCode: Int = 0
-    var requestBody: String = ""
-    var responseBody: String = ""
-    var responseHeaders: String = ""
-    private(set) var responseTime: TimeInterval = 0
-    var mimetype: String?
-    var textEncodingName: String?
-    var error: Error?
-    var finishTime: Date? {
-        didSet {
-            if let finishTime {
-                responseTime = finishTime.timeIntervalSince(startTime)
-                isLoading = false
-            }
+
+    // Request
+    let method: String
+    let headers: String
+    let requestBody: String
+
+    // Response
+    let statusCode: Int
+    let responseBody: String
+    let responseHeaders: String
+    let mimetype: String?
+    let textEncodingName: String?
+
+    // Error & state
+    let errorDescription: String?
+    let finishTime: Date?
+    let responseTime: TimeInterval
+    let isLoading: Bool
+
+    // MARK: - Derived
+    var host: String {
+        URLComponents(string: url)?.host ?? url
+    }
+
+    var path: String {
+        URLComponents(string: url)?.percentEncodedPath ?? ""
+    }
+
+    var scheme: String? {
+        URLComponents(string: url)?.scheme
+    }
+
+    var statusCategory: String {
+        switch statusCode {
+        case 100..<200: return "Informational"
+        case 200..<300: return "Success"
+        case 300..<400: return "Redirection"
+        case 400..<500: return "Client Error"
+        case 500..<600: return "Server Error"
+        default: return statusCode == 0 ? "Unknown" : "Other"
         }
     }
-    var isLoading: Bool = true
-    
-    var host: String {
-        guard let urlComponents = URLComponents(string: url) else { return url }
-        return urlComponents.host ?? url
+
+    var isError: Bool { (400..<600).contains(statusCode) || errorDescription != nil }
+
+    // MARK: - Initializer
+    init(
+        id: UUID = UUID(),
+        startTime: Date = Date(),
+        url: String,
+        method: String = "",
+        headers: String = "",
+        requestBody: String = "",
+        statusCode: Int = 0,
+        responseBody: String = "",
+        responseHeaders: String = "",
+        mimetype: String? = nil,
+        textEncodingName: String? = nil,
+        errorDescription: String? = nil,
+        finishTime: Date? = nil,
+        responseTime: TimeInterval = 0,
+        isLoading: Bool = true
+    ) {
+        self.id = id
+        self.startTime = startTime
+        self.url = url
+        self.method = method
+        self.headers = headers
+        self.requestBody = requestBody
+        self.statusCode = statusCode
+        self.responseBody = responseBody
+        self.responseHeaders = responseHeaders
+        self.mimetype = mimetype
+        self.textEncodingName = textEncodingName
+        self.errorDescription = errorDescription
+        self.finishTime = finishTime
+        self.responseTime = responseTime
+        self.isLoading = isLoading
     }
 }
 
+// MARK: - Convinience Object Factory Methods.
 extension LogItem {
-    func build(request: URLRequest) -> LogItem {
-        var log = self
-        log.method = request.httpMethod ?? ""
-        
-        if let headers = request.allHTTPHeaderFields, !headers.isEmpty {
-            log.headers = headers.prettyPrintedJSON
+    /// Create a LogItem initialized with request information.
+    static func fromRequest(_ request: URLRequest) -> LogItem {
+        let urlString = request.url?.absoluteString ?? ""
+        let method = request.httpMethod ?? ""
+        let headers = request.allHTTPHeaderFields.flatMap { prettyPrintedHeaders($0) } ?? ""
+        let body = prettyPrintedBody(request.httpBody)
+        return LogItem(url: urlString, method: method, headers: headers, requestBody: body)
+    }
+
+    /// Returns a new LogItem by attaching response information to an existing request LogItem.
+    func withResponse(response: URLResponse?, data: Data?, error: Error?) -> LogItem {
+        var statusCode = 0
+        var responseHeaders = ""
+        var mimetype: String?
+        var textEncodingName: String?
+
+        if let http = response as? HTTPURLResponse {
+            statusCode = http.statusCode
+            responseHeaders = Self.prettyPrintedHeaders(http.allHeaderFields)
+            mimetype = http.mimeType
+            textEncodingName = http.textEncodingName
         }
 
-        if let body = request.httpBody {
-            if let json = try? JSONSerialization.jsonObject(with: body, options: []),
-               let data = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted]),
-               let pretty = String(data: data, encoding: .utf8) {
-                log.requestBody = pretty
-            } else if let string = String(data: body, encoding: .utf8) {
-                log.requestBody = string
-            }
-        }
-        
-        return log
+        let responseBody = Self.prettyPrintedBody(data)
+        let finish = Date()
+        let elapsed = finish.timeIntervalSince(startTime)
+
+        return LogItem(
+            id: id,
+            startTime: startTime,
+            url: url,
+            method: method,
+            headers: headers,
+            requestBody: requestBody,
+            statusCode: statusCode,
+            responseBody: responseBody,
+            responseHeaders: responseHeaders,
+            mimetype: mimetype,
+            textEncodingName: textEncodingName,
+            errorDescription: error.map { String(describing: $0) },
+            finishTime: finish,
+            responseTime: elapsed,
+            isLoading: false
+        )
     }
-    
-    func build(response: URLResponse?, data: Data?, error: Error?) -> LogItem {
-        var log = self
-        if let httpResponse = response as? HTTPURLResponse {
-            log.statusCode = httpResponse.statusCode
-            log.responseHeaders = httpResponse.allHeaderFields.prettyPrintedHeaders
-            log.mimetype = httpResponse.mimeType
-            log.textEncodingName = httpResponse.textEncodingName
+}
+
+// MARK: - Pretty Printing Helpers
+private extension LogItem {
+    static func prettyPrintedHeaders(_ headers: [AnyHashable: Any]) -> String {
+        // Convert header values to strings and sort keys for stable output
+        let mapped = headers.reduce(into: [String: String]()) { partial, pair in
+            let key = String(describing: pair.key)
+            let value = String(describing: pair.value)
+            partial[key] = value
         }
-        
-        if let data = data {
-            if let json = try? JSONSerialization.jsonObject(with: data, options: []),
-               let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted]),
-               let pretty = String(data: jsonData, encoding: .utf8) {
-                log.responseBody = pretty
-            } else if let string = String(data: data, encoding: .utf8) {
-                log.responseBody = string
-            }
+        let sorted = mapped.keys.sorted()
+        let lines = sorted.map { "\($0): \(mapped[$0] ?? "")" }
+        return lines.joined(separator: "\n")
+    }
+
+    static func prettyPrintedBody(_ data: Data?) -> String {
+        guard let data = data, !data.isEmpty else { return "" }
+        // Try JSON first
+        if let json = try? JSONSerialization.jsonObject(with: data, options: []),
+           let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted]),
+           let pretty = String(data: jsonData, encoding: .utf8) {
+            return pretty
         }
-        log.error = error
-        log.finishTime = Date()
-        
-        return log
+        // Fallback to UTF-8 text
+        if let string = String(data: data, encoding: .utf8) {
+            return string
+        }
+        // Last resort, return the description.
+        return data.description
     }
 }
