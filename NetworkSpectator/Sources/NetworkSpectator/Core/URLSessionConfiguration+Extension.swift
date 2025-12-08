@@ -65,3 +65,43 @@ internal extension URLSessionConfiguration {
         }
     }
 }
+
+extension URLSession {
+    
+    static func enableNetworkSwizzling() {
+        
+        let originalSelector = #selector(URLSession.dataTask(with:completionHandler:) as (URLSession) -> (URLRequest, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask)
+        let swizzledSelector = #selector(URLSession.swizzled_dataTask(with:completionHandler:))
+        
+        guard let originalMethod = class_getInstanceMethod(URLSession.self, originalSelector),
+              let swizzledMethod = class_getInstanceMethod(URLSession.self, swizzledSelector) else {
+            return
+        }
+        
+        method_exchangeImplementations(originalMethod, swizzledMethod)
+    }
+    
+    @objc
+    private func swizzled_dataTask(with request: URLRequest,
+                                   completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
+        
+        let thisRequest = request as! NSMutableURLRequest
+        let initialLog = LogItem(url: request.url?.absoluteString ?? "")
+        let updatedLog = initialLog.build(request: thisRequest)
+        
+        Task {
+            await NetworkLogManager.shared.add(updatedLog)
+        }
+        
+        let wrappedHandler: (Data?, URLResponse?, Error?) -> Void = { data, response, error in
+            let finalUpdatedLog = updatedLog.build(response: response, data: data, error: error)
+            Task {
+                await NetworkLogManager.shared.add(finalUpdatedLog)
+            }
+            
+            completionHandler(data, response, error)
+        }
+        
+        return self.swizzled_dataTask(with: request, completionHandler: wrappedHandler)
+    }
+}

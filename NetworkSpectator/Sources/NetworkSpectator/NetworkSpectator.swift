@@ -7,9 +7,12 @@
 
 import Foundation
 
+let logger = NetworkSpectatorManager.shared.consoleLogger
+
 final public class NetworkSpectatorManager: Sendable {
     
     public static let shared: NetworkSpectatorManager = NetworkSpectatorManager()
+    let consoleLogger: ConsoleLogger = .init(enabled: true)
     
     private init() {
         
