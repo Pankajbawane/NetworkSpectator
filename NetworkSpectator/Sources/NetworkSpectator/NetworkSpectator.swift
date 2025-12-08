@@ -6,25 +6,26 @@
 //
 
 import Foundation
+import SwiftUI
 
-let logger = NetworkSpectatorManager.shared.consoleLogger
+let logger = NetworkSpectator.consoleLogger
 
-final public class NetworkSpectatorManager: Sendable {
+final public class NetworkSpectator: Sendable {
     
-    public static let shared: NetworkSpectatorManager = NetworkSpectatorManager()
-    let consoleLogger: ConsoleLogger = .init(enabled: true)
-    
-    private init() {
-        
+    public static var logView: some View {
+        ContentView()
     }
+    static let consoleLogger: ConsoleLogger = .init(enabled: true)
     
-    public func enable() {
+    private init() { }
+    
+    public static func enable() {
         Task {
             await NetworkLogManager.shared.enable()
         }
     }
     
-    public func disable() {
+    public static func disable() {
         Task {
             await NetworkLogManager.shared.disable()
         }
