@@ -81,6 +81,19 @@ extension URLSession {
         method_exchangeImplementations(originalMethod, swizzledMethod)
     }
     
+    static func disableNetworkSwizzling() {
+        let originalSelector = #selector(URLSession.dataTask(with:completionHandler:) as (URLSession) -> (URLRequest, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask)
+        let swizzledSelector = #selector(URLSession.swizzled_dataTask(with:completionHandler:))
+        
+        guard let originalMethod = class_getInstanceMethod(URLSession.self, originalSelector),
+              let swizzledMethod = class_getInstanceMethod(URLSession.self, swizzledSelector) else {
+            return
+        }
+        
+        // Reverse the swizzle by swapping the implementations back
+        method_exchangeImplementations(swizzledMethod, originalMethod)
+    }
+    
     @objc
     private func swizzled_dataTask(with request: URLRequest,
                                    completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {

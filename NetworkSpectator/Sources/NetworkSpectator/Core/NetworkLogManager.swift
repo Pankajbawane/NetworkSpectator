@@ -28,7 +28,7 @@ final class NetworkLogManager: ObservableObject, Sendable {
     
     func disable() {
         URLSessionConfiguration.disableNetworkSwizzling()
-        URLSession.enableNetworkSwizzling()
+        URLSession.disableNetworkSwizzling()
         stop()
     }
 
