@@ -14,6 +14,7 @@ final class NetworkLogManager: ObservableObject, Sendable {
 
     @Published private(set) var items: [LogItem] = []
     private var itemUpdateTask: Task<Void, Never>?
+    private let container = NetworkItemContainer()
 
     private init() {
         
@@ -34,18 +35,17 @@ final class NetworkLogManager: ObservableObject, Sendable {
     /// Adds a new `NWLogItem` to the log in a concurrent-safe manner.
     func add(_ item: LogItem) {
         Task {
-            await NetworkItemContainer.shared.add(item)
+            await container.add(item)
         }
     }
 
     /// Starts observing updates from the network log container.
     private func startObservingUpdates() {
         itemUpdateTask = Task { [weak self] in
-            // Capture a strong reference once at task start; avoid sending non-Sendable self across threads repeatedly
             guard let self else { return }
 
             // Iterate the async stream produced by the actor
-            for await updatedItems in await NetworkItemContainer.shared.itemUpdates() {
+            for await updatedItems in await container.itemUpdates() {
                 if Task.isCancelled { break }
                 // Hop to the main actor to update published state
                 self.updateItems(updatedItems)
@@ -60,7 +60,7 @@ final class NetworkLogManager: ObservableObject, Sendable {
     /// Cancels ongoing observation of network log updates.
     func stop() {
         Task {
-            await NetworkItemContainer.shared.stop()
+            await container.stop()
         }
         itemUpdateTask?.cancel()
         itemUpdateTask = nil
@@ -69,13 +69,12 @@ final class NetworkLogManager: ObservableObject, Sendable {
 
 /// Container actor for thread-safe management and streaming of network log items.
 fileprivate actor NetworkItemContainer {
-    static let shared = NetworkItemContainer()
 
     private var items: [LogItem] = []
     private var cache: [UUID: Int] = [:]
     private var continuations: [UUID: AsyncStream<[LogItem]>.Continuation] = [:]
 
-    private init() {}
+    fileprivate init() {}
 
     /// Provides a stream of live updates to the item list.
     func itemUpdates() -> AsyncStream<[LogItem]> {
