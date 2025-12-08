@@ -25,18 +25,17 @@ final internal class NetworkURLProtocol: URLProtocol {
             URLProtocol.setProperty(true, forKey: Self.taskCacheKey, in: thisRequest)
         }
         
-        let initialLog = LogItem(url: request.url?.absoluteString ?? "")
-        let updatedLog = initialLog.build(request: request)
-        logger.log(.initiated, updatedLog)
+        let log = LogItem.fromRequest(request)
+        logger.log(.initiated, log)
         Task {
-            await NetworkLogManager.shared.add(updatedLog)
+            await NetworkLogManager.shared.add(log)
         }
         
         let config = URLSessionConfiguration.default
         let session = URLSession(configuration: config, delegate: nil, delegateQueue: nil)
 
         sessionTask = session.dataTask(with: request) { data, response, error in
-            let finalUpdatedLog = updatedLog.build(response: response, data: data, error: error)
+            let finalUpdatedLog = log.withResponse(response: response, data: data, error: error)
             logger.log(.finished, finalUpdatedLog)
             Task {
                 await NetworkLogManager.shared.add(finalUpdatedLog)

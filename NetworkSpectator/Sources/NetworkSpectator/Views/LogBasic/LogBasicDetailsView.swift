@@ -20,7 +20,7 @@ struct LogBasicDetailsView: View {
     // Gather displayable details
     private var details: [DetailRow] {
         var rows: [DetailRow] = [
-            .init(title: "Method", value: item.method.uppercased()),
+            .init(title: "HTTP Method", value: item.method.uppercased()),
             .init(title: "URL", value: item.url),
             .init(title: "Start time", value: item.startTime.formatted(date: .numeric, time: .standard))
         ]
@@ -37,7 +37,7 @@ struct LogBasicDetailsView: View {
             if item.statusCode != 0 {
                 rows.append(.init(title: "Status code", value: "\(item.statusCode)"))
             }
-            if let errorDesc = item.error?.localizedDescription {
+            if let errorDesc = item.errorDescription {
                 rows.append(.init(title: "Error occurred", value: errorDesc))
             }
         }
