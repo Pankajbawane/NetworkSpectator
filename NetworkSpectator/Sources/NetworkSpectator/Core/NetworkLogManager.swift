@@ -43,7 +43,7 @@ final class NetworkLogManager: ObservableObject, Sendable {
         }
     }
 
-    /// Adds a new `NWLogItem` to the log in a concurrent-safe manner.
+    /// Adds a new `LogItem` to the log in a concurrent-safe manner.
     func add(_ item: LogItem) {
         Task {
             await container.add(item)

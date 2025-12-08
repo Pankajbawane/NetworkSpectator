@@ -66,7 +66,7 @@ internal extension URLSessionConfiguration {
     }
 }
 
-extension URLSession {
+internal extension URLSession {
     
     static func enableNetworkSwizzling() {
         
