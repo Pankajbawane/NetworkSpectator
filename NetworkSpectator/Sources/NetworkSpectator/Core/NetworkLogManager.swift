@@ -15,21 +15,32 @@ final class NetworkLogManager: ObservableObject, Sendable {
     @Published private(set) var items: [LogItem] = []
     private var itemUpdateTask: Task<Void, Never>?
     private let container = NetworkItemContainer()
+    private var isLoggingEnabled: Bool = false
 
     private init() {
         
     }
     
     func enable() {
+        guard !isLoggingEnabled else { return }
         URLSessionConfiguration.enableNetworkSwizzling()
         URLSession.enableNetworkSwizzling()
         startObservingUpdates()
+        defer {
+            logger.log(.none, "NetworkSpectator: Logging started.")
+            isLoggingEnabled = true
+        }
     }
     
     func disable() {
+        guard isLoggingEnabled else { return }
         URLSessionConfiguration.disableNetworkSwizzling()
         URLSession.disableNetworkSwizzling()
         stop()
+        defer {
+            logger.log(.none, "NetworkSpectator: Logging stopped.")
+            isLoggingEnabled = false
+        }
     }
 
     /// Adds a new `NWLogItem` to the log in a concurrent-safe manner.
