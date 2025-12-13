@@ -46,7 +46,7 @@ extension FileExportable {
             try String(content).write(to: fileURL, atomically: true, encoding: .utf8)
             return fileURL
         } catch {
-            print("FileExportable failed to write text file: \(fileURL.lastPathComponent), error: \(error)")
+            DebugPrint.log("FileExportable failed to write text file: \(fileURL.lastPathComponent), error: \(error)")
             return nil
         }
     }
@@ -57,7 +57,7 @@ extension FileExportable {
             try content.write(to: fileURL)
             return fileURL
         } catch {
-            print("FileExportable failed to write data file: \(fileURL.lastPathComponent), error: \(error)")
+            DebugPrint.log("FileExportable failed to write data file: \(fileURL.lastPathComponent), error: \(error)")
             return nil
         }
     }

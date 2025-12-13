@@ -99,7 +99,7 @@ internal extension URLSession {
                                    completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
         
         let log = LogItem.fromRequest(request)
-        logger.log(.initiated, log)
+        DebugPrint.log(log)
         
         Task {
             await NetworkLogManager.shared.add(log)
@@ -107,7 +107,7 @@ internal extension URLSession {
         
         let wrappedHandler: (Data?, URLResponse?, Error?) -> Void = { data, response, error in
             let finalUpdatedLog = log.withResponse(response: response, data: data, error: error)
-            logger.log(.finished, finalUpdatedLog)
+            DebugPrint.log(finalUpdatedLog)
             
             Task {
                 await NetworkLogManager.shared.add(finalUpdatedLog)
