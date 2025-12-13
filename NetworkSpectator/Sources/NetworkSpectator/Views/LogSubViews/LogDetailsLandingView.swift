@@ -49,7 +49,7 @@ struct LogDetailsLandingView: View {
         }
         .navigationTitle("Details")
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .automatic) {
                 Button(action: exportAction) {
                     Image(systemName: "square.and.arrow.up")
                 }

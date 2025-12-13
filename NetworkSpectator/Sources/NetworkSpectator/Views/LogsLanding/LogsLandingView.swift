@@ -6,30 +6,38 @@
 //
 
 import SwiftUI
-import UIKit
 
-struct ContentView: View {
+struct RootView: View {
     @ObservedObject private var manager = NetworkLogManager.shared
     @State private var showExportSheet = false
     @State private var exportURL: URL?
     @State private var navigationPath = NavigationPath()
     @State private var logItems: [LogItem] = []
 
-    public var body: some View {
+    var body: some View {
         NavigationStack(path: $navigationPath) {
-            itemList
-                .navigationTitle("Requests")
+            List($logItems, id: \.id) { item in
+                NavigationLink {
+                    LogDetailsLandingView(item: item)
+                } label: {
+                    LogListItemView(item: item)
+                }
+            }
+            .listStyle(.plain)
+            .navigationTitle("Requests")
+            #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
+            #endif
                 .navigationDestination(for: String.self,
                                        destination: analyticsNavigationDestination)
                 .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
+                    ToolbarItem(placement: .automatic) {
                         Button("Analytics") {
                             navigationPath.append("analytics")
                         }
                     }
                     
-                    ToolbarItem(placement: .topBarTrailing) {
+                    ToolbarItem(placement: .automatic) {
                         Button {
                             exportData()
                         } label: {
@@ -39,22 +47,10 @@ struct ContentView: View {
                     }
                 }
                 .sheet(isPresented: $showExportSheet, content: exportSheet)
-                //.fullScreenCover(isPresented: $showExportSheet, content: exportSheet)
                 .task {
                     logItems = manager.items
                 }
         }
-    }
-
-    private var itemList: some View {
-        List($logItems, id: \.id) { item in
-            NavigationLink {
-                LogDetailsLandingView(item: item)
-            } label: {
-                LogListItemView(item: item)
-            }
-        }
-        .listStyle(.plain)
     }
 
     @ViewBuilder
@@ -83,5 +79,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    RootView()
 }

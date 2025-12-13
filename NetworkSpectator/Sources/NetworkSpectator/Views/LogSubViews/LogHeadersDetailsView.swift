@@ -29,7 +29,7 @@ struct LogHeadersDetailsView: View {
                 Spacer()
             }
             .padding(6)
-            .background(Color(.systemGray5))
+            .background(Color(.systemGray))
             .cornerRadius(6)
 
             if let headers = headers, !headers.isEmpty {
@@ -38,11 +38,15 @@ struct LogHeadersDetailsView: View {
                         .font(.caption)
                         .textSelection(.enabled)
                         .padding(6)
-                        .background(Color(.systemGray6))
+                        .background(Color(.systemGray))
                         .cornerRadius(4)
                         .contextMenu {
                             Button("Copy", action: {
+                                #if canImport(UIKit)
                                 UIPasteboard.general.string = headers
+                                #elseif canImport(AppKit)
+                                NSPasteboard.general.setString(headers, forType: .string)
+                                #endif
                             })
                         }
                 }

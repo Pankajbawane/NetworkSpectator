@@ -9,8 +9,10 @@ public struct Configuration {
     
     internal var debugPrintEnabled: Bool = true
     
+    public init() {}
+    
     public mutating func enableDebugPrint(_ enable: Bool) -> Self {
-        self.debugPrintEnabled = enable
+        debugPrintEnabled = enable
         return self
     }
 }
