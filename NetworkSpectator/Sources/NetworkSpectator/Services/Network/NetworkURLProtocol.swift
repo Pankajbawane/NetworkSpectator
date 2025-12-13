@@ -8,6 +8,7 @@
 import Foundation
 
 final internal class NetworkURLProtocol: URLProtocol {
+    
     private var sessionTask: URLSessionDataTask?
     private static let taskCacheKey = "TRACK_CACHED_TASK_KEY"
 
@@ -32,7 +33,7 @@ final internal class NetworkURLProtocol: URLProtocol {
         }
         URLProtocol.setProperty(true, forKey: Self.taskCacheKey, in: thisRequest)
         let log = LogItem.fromRequest(request)
-        logger.log(.initiated, log)
+        DebugPrint.log(log)
         Task {
             await NetworkLogManager.shared.add(log)
         }
@@ -42,7 +43,7 @@ final internal class NetworkURLProtocol: URLProtocol {
 
         sessionTask = session.dataTask(with: thisRequest as URLRequest) { data, response, error in
             let finalUpdatedLog = log.withResponse(response: response, data: data, error: error)
-            logger.log(.finished, finalUpdatedLog)
+            DebugPrint.log(finalUpdatedLog)
             Task {
                 await NetworkLogManager.shared.add(finalUpdatedLog)
             }

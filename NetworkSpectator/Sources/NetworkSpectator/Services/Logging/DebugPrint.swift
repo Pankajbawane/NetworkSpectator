@@ -1,42 +1,64 @@
 //
-//  ConsoleLogger.swift
+//  DebugPrint.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 08/12/25.
 //
 
-struct ConsoleLogger {
+struct DebugPrint {
     
     private let enabled: Bool
+    nonisolated(unsafe) static var shared: DebugPrint = .init(enabled: false)
     
     init(enabled: Bool) {
+        #if DEBUG
         self.enabled = enabled
+        #else
+        self.enabled = false
+        #endif
     }
     
-    func log(_ level: LogLevel, _ logItem: LogItem) {
+    fileprivate func log(_ level: LogState, _ logItem: LogItem) {
+        #if DEBUG
+        guard enabled else { return }
         log(level == .initiated ? .initatedLine : .finishedLine)
         log(.url, logItem.method + " " + logItem.url)
         log(.request, logItem.requestBody)
         log(.headers, logItem.headers)
         if level == .finished {
-            logger.log(.response, logItem.responseBody)
+            log(.response, logItem.responseBody)
         }
         log(.endline)
+        #endif
     }
     
-    func log(_ type: LogType, _ message: String = "") {
+    fileprivate func log(_ type: LogComponent = .none, _ message: String = "") {
+        #if DEBUG
         guard enabled else { return }
         let printMessage = message.isEmpty ? "" : "\n\(message)"
         print(type.title, printMessage)
+        #endif
     }
 }
 
-enum LogLevel {
+// MARK: - Convinience methods.
+extension DebugPrint {
+    static func log(_ logItem: LogItem) {
+        let loggingState: LogState = logItem.isLoading ? LogState.initiated : .finished
+        shared.log(loggingState, logItem)
+    }
+    
+    static func log(_ message: String) {
+        shared.log(.none, message)
+    }
+}
+
+fileprivate enum LogState {
     case initiated
     case finished
 }
 
-enum LogType {
+fileprivate enum LogComponent {
     case none
     case url
     case request

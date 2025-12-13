@@ -8,14 +8,17 @@
 import Foundation
 import SwiftUI
 
-let logger = NetworkSpectator.consoleLogger
-
 final public class NetworkSpectator: Sendable {
     
-    public static var logView: some View {
+    public static var view: some View {
         ContentView()
     }
-    static let consoleLogger: ConsoleLogger = .init(enabled: true)
+    
+    nonisolated(unsafe) public static var configuration: Configuration = .init() {
+        didSet {
+            DebugPrint.shared = .init(enabled: configuration.debugPrintEnabled)
+        }
+    }
     
     private init() { }
     
