@@ -36,10 +36,12 @@ struct RootView: View {
                 .listRowBackground(rowBackgroundColor(item.wrappedValue))
             }
             .listStyle(.plain)
+            #if os(iOS)
             .searchable(text: $searchText,
                         isPresented: $isSearching,
                         placement: .navigationBarDrawer(displayMode: .automatic),
                         prompt: "Search by URL")
+            #endif
             .navigationTitle("Requests")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
