@@ -12,27 +12,36 @@ struct LogListItemView: View {
     @Binding var item: LogItem
     
     var body: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                if item.isLoading {
-                    Text("\(item.startTime.formatted(date: .numeric, time: .standard))")
+        HStack {
+            VStack(alignment: .leading) {
+                Text("\(item.url)")
+                    .lineLimit(1)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                
+                HStack {
+                    Text("\(item.startTime.formatted(date: .abbreviated, time: .standard)) \(!item.isLoading ? "| Response Time: \(item.responseTime, specifier: "%.2f") sec" : "")")
                         .font(.caption)
+                    
                     Spacer()
-                    ProgressView()
-                        .progressViewStyle(.circular)
-                        .frame(width: 5, height: 5)
-                        .padding(.leading, 5)
-                } else {
-                    Text("\(item.startTime.formatted(date: .numeric, time: .standard)) - \( item.finishTime?.formatted(date: .omitted, time: .standard) ?? "")")
-                        .font(.caption)
                 }
                 
+                if let error = item.errorLocalizedDescription {
+                    Text("Error: \(error)")
+                        .lineLimit(1)
+                        .font(.caption)
+                        .foregroundStyle(Color.red)
+                }
             }
-            Text("\(item.url)")
-                .lineLimit(1)
-                .font(.caption)
-                .fontWeight(.medium)
+            
+            Spacer()
+            
+            if item.isLoading {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .frame(width: 5, height: 5)
+                    .padding(.leading, 5)
+            }
         }
-        .listRowSeparator(.hidden)
     }
 }

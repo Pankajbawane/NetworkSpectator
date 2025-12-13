@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - LogItem
 // Represents a single network log entry.
-struct LogItem: Identifiable, Codable, Equatable, Sendable {
+struct LogItem: Identifiable, Codable, Equatable, Sendable , Hashable{
     // Identity & timing
     let id: UUID
     let startTime: Date
@@ -29,6 +29,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable {
 
     // Error & state
     let errorDescription: String?
+    let errorLocalizedDescription: String?
     let finishTime: Date?
     let responseTime: TimeInterval
     let isLoading: Bool
@@ -73,6 +74,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable {
         mimetype: String? = nil,
         textEncodingName: String? = nil,
         errorDescription: String? = nil,
+        errorLocalizedDescription: String? = nil,
         finishTime: Date? = nil,
         responseTime: TimeInterval = 0,
         isLoading: Bool = true
@@ -89,6 +91,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable {
         self.mimetype = mimetype
         self.textEncodingName = textEncodingName
         self.errorDescription = errorDescription
+        self.errorLocalizedDescription = errorLocalizedDescription
         self.finishTime = finishTime
         self.responseTime = responseTime
         self.isLoading = isLoading
@@ -108,6 +111,7 @@ extension LogItem {
 
     /// Returns a new LogItem by attaching response information to an existing request LogItem.
     func withResponse(response: URLResponse?, data: Data?, error: Error?) -> LogItem {
+        let finish = Date()
         var statusCode = 0
         var responseHeaders = ""
         var mimetype: String?
@@ -121,7 +125,6 @@ extension LogItem {
         }
 
         let responseBody = Self.prettyPrintedBody(data)
-        let finish = Date()
         let elapsed = finish.timeIntervalSince(startTime)
 
         return LogItem(
@@ -137,6 +140,7 @@ extension LogItem {
             mimetype: mimetype,
             textEncodingName: textEncodingName,
             errorDescription: error.map { String(describing: $0) },
+            errorLocalizedDescription: (error as? NSError).flatMap { $0.localizedDescription },
             finishTime: finish,
             responseTime: elapsed,
             isLoading: false

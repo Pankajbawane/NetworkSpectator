@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct NWChartItemFactory {
+struct ChartItemFactory {
     
     static func get<T: Hashable>(items: [LogItem], key: (LogItem) -> T) -> [ChartParameter<T>] {
         return createList(from: items, key: key)

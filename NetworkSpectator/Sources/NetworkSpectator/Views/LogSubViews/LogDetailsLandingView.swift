@@ -35,7 +35,7 @@ struct LogDetailsLandingView: View {
 
     var body: some View {
         VStack {
-            Picker("Details", selection: $selected) {
+            Picker("", selection: $selected) {
                 ForEach(availableTabs) { tab in
                     Text(tab.rawValue).tag(tab)
                 }
