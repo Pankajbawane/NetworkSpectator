@@ -4,15 +4,15 @@ struct AnalyticsDashboardView: View {
     let data: [LogItem]
     
     var statusCode: [ChartParameter<Int>] {
-        NWChartItemFactory.get(items: data, key: \.statusCode)
+        ChartItemFactory.get(items: data, key: \.statusCode)
     }
     
     var httpMethod: [ChartParameter<String>] {
-        NWChartItemFactory.get(items: data, key: \.method)
+        ChartItemFactory.get(items: data, key: \.method)
     }
     
     var hosts: [ChartParameter<String>] {
-        NWChartItemFactory.get(items: data, key: \.host)
+        ChartItemFactory.get(items: data, key: \.host)
     }
     
     var body: some View {

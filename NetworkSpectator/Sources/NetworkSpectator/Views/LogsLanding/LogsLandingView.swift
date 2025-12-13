@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct RootView: View {
-    @ObservedObject private var manager = NetworkLogManager.shared
+    @ObservedObject private var store = NetworkLogManager.shared
     @State private var showExportSheet = false
     @State private var exportURL: URL?
     @State private var navigationPath = NavigationPath()
@@ -16,12 +16,13 @@ struct RootView: View {
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            List($logItems, id: \.id) { item in
+            List($store.items, id: \.id) { item in
                 NavigationLink {
                     LogDetailsLandingView(item: item)
                 } label: {
                     LogListItemView(item: item)
                 }
+                .listRowBackground(rowBackgroundColor(item.wrappedValue))
             }
             .listStyle(.plain)
             .navigationTitle("Requests")
@@ -32,8 +33,18 @@ struct RootView: View {
                                        destination: analyticsNavigationDestination)
                 .toolbar {
                     ToolbarItem(placement: .automatic) {
-                        Button("Analytics") {
+                        Button {
                             navigationPath.append("analytics")
+                        } label: {
+                            Image(systemName: "chart.bar.xaxis.ascending")
+                        }
+                    }
+                    
+                    ToolbarItem(placement: .automatic) {
+                        Button {
+                            store.clear()
+                        } label: {
+                            Image(systemName: "clear")
                         }
                     }
                     
@@ -47,23 +58,25 @@ struct RootView: View {
                     }
                 }
                 .sheet(isPresented: $showExportSheet, content: exportSheet)
-                .task {
-                    logItems = manager.items
-                }
         }
+    }
+    
+    func rowBackgroundColor(_ item: LogItem) -> Color {
+        (item.errorDescription != nil) ? Color.red.opacity(0.1)
+        : (item.isLoading ? Color.yellow.opacity(0.1) : Color.clear)
     }
 
     @ViewBuilder
     private func analyticsNavigationDestination(_ path: String) -> some View {
         if path == "analytics" {
-            AnalyticsDashboardView(data: manager.items)
+            AnalyticsDashboardView(data: store.items)
         } else if path == "showExport" {
             exportSheet()
         }
     }
 
     private func exportData() {
-        exportURL = ExportManager.csv(manager.items).exporter.export()
+        exportURL = ExportManager.csv(store.items).exporter.export()
         //showExportSheet = true
         navigationPath.append("showExport")
     }

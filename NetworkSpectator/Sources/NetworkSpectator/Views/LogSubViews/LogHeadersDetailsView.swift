@@ -29,7 +29,7 @@ struct LogHeadersDetailsView: View {
                 Spacer()
             }
             .padding(6)
-            .background(Color(.systemGray))
+            .background(Color(.systemGray).opacity(0.5))
             .cornerRadius(6)
 
             if let headers = headers, !headers.isEmpty {
@@ -38,7 +38,6 @@ struct LogHeadersDetailsView: View {
                         .font(.caption)
                         .textSelection(.enabled)
                         .padding(6)
-                        .background(Color(.systemGray))
                         .cornerRadius(4)
                         .contextMenu {
                             Button("Copy", action: {

@@ -5,14 +5,26 @@
 //  Created by Pankaj Bawane on 13/12/25.
 //
 
-public struct Configuration {
+public final class Configuration {
     
     internal var debugPrintEnabled: Bool = true
+    internal var storeLogsEnabled: Bool = false
+    internal var mockEnabled: Bool = false
     
     public init() {}
     
-    public mutating func enableDebugPrint(_ enable: Bool) -> Self {
+    public func enableDebugPrint(_ enable: Bool) -> Self {
         debugPrintEnabled = enable
+        return self
+    }
+    
+    public func enableStoringLogs(_ enable: Bool) -> Self {
+        storeLogsEnabled = enable
+        return self
+    }
+    
+    public func enableMocking(_ enable: Bool) -> Self {
+        mockEnabled = enable
         return self
     }
 }

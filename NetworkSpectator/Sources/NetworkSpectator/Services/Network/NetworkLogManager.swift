@@ -12,7 +12,7 @@ import SwiftUI
 final class NetworkLogManager: ObservableObject, Sendable {
     static let shared = NetworkLogManager()
 
-    @Published private(set) var items: [LogItem] = []
+    @Published var items: [LogItem] = []
     private var itemUpdateTask: Task<Void, Never>?
     private let container = NetworkItemContainer()
     private var isLoggingEnabled: Bool = false
@@ -75,6 +75,13 @@ final class NetworkLogManager: ObservableObject, Sendable {
         }
         itemUpdateTask?.cancel()
         itemUpdateTask = nil
+    }
+    
+    func clear() {
+        Task {
+            await container.clear()
+        }
+        items.removeAll()
     }
 }
 
@@ -139,5 +146,10 @@ fileprivate actor NetworkItemContainer {
             continuation.finish()
         }
         continuations.removeAll()
+    }
+    
+    func clear() {
+        items.removeAll()
+        cache.removeAll()
     }
 }
