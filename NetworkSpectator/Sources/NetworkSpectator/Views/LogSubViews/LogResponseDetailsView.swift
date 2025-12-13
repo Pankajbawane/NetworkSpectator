@@ -13,8 +13,22 @@ struct LogResponseDetailsView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            Text(item.responseBody)
-                .font(.caption)
+            ScrollView(.horizontal) {
+                Text(item.responseBody)
+                    .font(.caption)
+                    .textSelection(.enabled)
+                    .padding(6)
+                    .cornerRadius(4)
+                    .contextMenu {
+                        Button("Copy", action: {
+                            #if canImport(UIKit)
+                            UIPasteboard.general.string = item.responseBody
+                            #elseif canImport(AppKit)
+                            NSPasteboard.general.setString(item.responseBody, forType: .string)
+                            #endif
+                        })
+                    }
+            }
             Spacer()
         }
         .padding(.horizontal)
