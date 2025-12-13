@@ -12,7 +12,7 @@ import UIKit
 import AppKit
 #endif
 
-final public class NetworkSpectator: Sendable {
+public struct NetworkSpectator: Sendable {
     
     // Presentable View from SwiftUI.
     public static var rootView: some View {
