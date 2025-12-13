@@ -12,11 +12,22 @@ struct RootView: View {
     @State private var showExportSheet = false
     @State private var exportURL: URL?
     @State private var navigationPath = NavigationPath()
-    @State private var logItems: [LogItem] = []
+    @State private var searchText = ""
+    @State private var isSearching = false
 
+    var items: [Binding<LogItem>] {
+        if searchText.isEmpty {
+            return Array($store.items)
+        } else {
+            return $store.items.filter { item in
+                item.wrappedValue.url.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
+    
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            List($store.items, id: \.id) { item in
+            List(items, id: \.id) { item in
                 NavigationLink {
                     LogDetailsLandingView(item: item)
                 } label: {
@@ -25,39 +36,44 @@ struct RootView: View {
                 .listRowBackground(rowBackgroundColor(item.wrappedValue))
             }
             .listStyle(.plain)
+            .searchable(text: $searchText,
+                        isPresented: $isSearching,
+                        placement: .navigationBarDrawer(displayMode: .automatic),
+                        prompt: "Search by URL")
             .navigationTitle("Requests")
             #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.inline)
             #endif
-                .navigationDestination(for: String.self,
-                                       destination: analyticsNavigationDestination)
-                .toolbar {
-                    ToolbarItem(placement: .automatic) {
-                        Button {
-                            navigationPath.append("analytics")
-                        } label: {
-                            Image(systemName: "chart.bar.xaxis.ascending")
-                        }
-                    }
-                    
-                    ToolbarItem(placement: .automatic) {
-                        Button {
-                            store.clear()
-                        } label: {
-                            Image(systemName: "clear")
-                        }
-                    }
-                    
-                    ToolbarItem(placement: .automatic) {
-                        Button {
-                            exportData()
-                        } label: {
-                            Image(systemName: "square.and.arrow.up")
-                        }
-                        .accessibilityLabel("Export")
+            .navigationDestination(for: String.self,
+                                   destination: analyticsNavigationDestination)
+            .toolbar {
+                
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        navigationPath.append("analytics")
+                    } label: {
+                        Image(systemName: "chart.bar.xaxis.ascending")
                     }
                 }
-                .sheet(isPresented: $showExportSheet, content: exportSheet)
+                
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        store.clear()
+                    } label: {
+                        Image(systemName: "clear")
+                    }
+                }
+                
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        exportData()
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityLabel("Export")
+                }
+            }
+            .sheet(isPresented: $showExportSheet, content: exportSheet)
         }
     }
     
