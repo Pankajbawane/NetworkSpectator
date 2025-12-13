@@ -20,7 +20,9 @@ final public class NetworkSpectator: Sendable {
         }
     }
     
-    private init() { }
+    private init() {
+        DebugPrint.shared = .init(enabled: Self.configuration.debugPrintEnabled)
+    }
     
     public static func enable() {
         Task {

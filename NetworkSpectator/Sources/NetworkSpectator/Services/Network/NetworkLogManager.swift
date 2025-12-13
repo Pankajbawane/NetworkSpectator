@@ -27,7 +27,7 @@ final class NetworkLogManager: ObservableObject, Sendable {
         URLSession.enableNetworkSwizzling()
         startObservingUpdates()
         defer {
-            DebugPrint.log("NetworkSpectator: Logging started.")
+            DebugPrint.log("NETWORK SPECTATOR: Logging initiated.")
             isLoggingEnabled = true
         }
     }
@@ -38,7 +38,7 @@ final class NetworkLogManager: ObservableObject, Sendable {
         URLSession.disableNetworkSwizzling()
         stop()
         defer {
-            DebugPrint.log("NetworkSpectator: Logging stopped.")
+            DebugPrint.log("NETWORK SPECTATOR: Logging stopped.")
             isLoggingEnabled = false
         }
     }

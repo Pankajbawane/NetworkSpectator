@@ -8,9 +8,10 @@
 struct DebugPrint {
     
     private let enabled: Bool
-    nonisolated(unsafe) static var shared: DebugPrint = .init(enabled: false)
+    nonisolated(unsafe) static var shared: DebugPrint = .init(enabled: true)
     
     init(enabled: Bool) {
+        // DEBUG check to ensure logs are printed only while debugging.
         #if DEBUG
         self.enabled = enabled
         #else
@@ -18,14 +19,19 @@ struct DebugPrint {
         #endif
     }
     
-    fileprivate func log(_ level: LogState, _ logItem: LogItem) {
+    fileprivate func log(_ logItem: LogItem) {
+        // DEBUG check to ensure logs are printed only while debugging.
         #if DEBUG
         guard enabled else { return }
-        log(level == .initiated ? .initatedLine : .finishedLine)
+        log(logItem.isLoading ? .initatedLine : .finishedLine)
         log(.url, logItem.method + " " + logItem.url)
-        log(.request, logItem.requestBody)
-        log(.headers, logItem.headers)
-        if level == .finished {
+        if !logItem.requestBody.isEmpty {
+            log(.request, logItem.requestBody)
+        }
+        if !logItem.headers.isEmpty {
+            log(.headers, logItem.headers)
+        }
+        if !logItem.isLoading {
             log(.response, logItem.responseBody)
         }
         log(.endline)
@@ -33,6 +39,7 @@ struct DebugPrint {
     }
     
     fileprivate func log(_ type: LogComponent = .none, _ message: String = "") {
+        // DEBUG check to ensure logs are printed only while debugging.
         #if DEBUG
         guard enabled else { return }
         let printMessage = message.isEmpty ? "" : "\n\(message)"
@@ -44,18 +51,12 @@ struct DebugPrint {
 // MARK: - Convinience methods.
 extension DebugPrint {
     static func log(_ logItem: LogItem) {
-        let loggingState: LogState = logItem.isLoading ? LogState.initiated : .finished
-        shared.log(loggingState, logItem)
+        shared.log(logItem)
     }
     
     static func log(_ message: String) {
         shared.log(.none, message)
     }
-}
-
-fileprivate enum LogState {
-    case initiated
-    case finished
 }
 
 fileprivate enum LogComponent {
@@ -71,14 +72,14 @@ fileprivate enum LogComponent {
     var title: String {
         
         switch self {
-        case .url: return "URL:"
-        case .request: return "REQUEST:"
-        case .response: return "RESPONSE:"
-        case .headers: return "HEADERS:"
+        case .url: return "• URL:"
+        case .request: return "• REQUEST:"
+        case .response: return "• RESPONSE:"
+        case .headers: return "• HEADERS:"
         case .none: return ""
         case .endline: return "======================================END======================================="
         case .initatedLine: return "=============================REQUEST INITIATED=================================="
-        case .finishedLine: return "=============================REQUEST FINISHED==================================="
+        case .finishedLine: return "=============================REQUEST COMPLETED==================================="
         }
     }
 }
