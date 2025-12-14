@@ -5,16 +5,17 @@
 //  Created by Pankaj Bawane on 19/07/25.
 //
 
+import SwiftUI
+
 struct ExportItem: Identifiable {
-    let id: UUID
+    let id: UUID = UUID()
     let data: Any
 }
-
-import SwiftUI
 
 struct RootView: View {
     @ObservedObject private var store = NetworkLogManager.shared
     @State private var exportItem: ExportItem?
+    @State private var showAlert: Bool = false
     @State private var navigationPath = NavigationPath()
     @State private var searchText = ""
     @State private var isSearching = false
@@ -82,9 +83,9 @@ struct RootView: View {
                         Task {
                             do {
                                 let url = await try ExportManager.csv(store.items).exporter.export()
-                                exportItem = ExportItem(id: UUID(), data: url)
+                                exportItem = ExportItem(data: url)
                             } catch {
-                                
+                                showAlert = true
                             }
                         }
                     } label: {
@@ -93,7 +94,12 @@ struct RootView: View {
                     .accessibilityLabel("Export")
                 }
             }
-            .sheet(item: $exportItem) { item in
+            .alert("Export failed", isPresented: $showAlert, actions: {
+                Button("Ok") {
+                    showAlert = false
+                }
+            })
+            .popover(item: $exportItem) { item in
                 ActivityView(item: item.data)
             }
         }

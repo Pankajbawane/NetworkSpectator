@@ -20,8 +20,8 @@ struct LogDetailsContainerView: View {
     }
 
     @State private var selected: DetailsTab = .basic
-    @State private var showExport = false
-    @State private var url: URL?
+    @State private var showAlert = false
+    @State private var exportItem: ExportItem?
 
     // Filtered picker options depending on item content
     private var availableTabs: [DetailsTab] {
@@ -56,10 +56,13 @@ struct LogDetailsContainerView: View {
                 .accessibilityLabel("Export Log")
             }
         }
-        .popover(isPresented: $showExport) {
-            if let url = url {
-                ActivityView(item: url)
+        .alert("Export failed", isPresented: $showAlert, actions: {
+            Button("Ok") {
+                showAlert = false
             }
+        })
+        .popover(item: $exportItem) { item in
+            ActivityView(item: item.data)
         }
     }
 
@@ -83,10 +86,9 @@ struct LogDetailsContainerView: View {
         Task {
             do {
                 let exportedURL = await try ExportManager.txt(item).exporter.export()
-                self.url = exportedURL
-                self.showExport = true
+                exportItem = ExportItem(data: exportedURL)
             } catch {
-                
+                showAlert = true
             }
         }
     }
