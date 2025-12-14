@@ -22,6 +22,7 @@ struct LogDetailsContainerView: View {
     @State private var selected: DetailsTab = .basic
     @State private var showAlert = false
     @State private var exportItem: ExportItem?
+    @State private var isExporting: Bool = false
 
     // Filtered picker options depending on item content
     private var availableTabs: [DetailsTab] {
@@ -64,6 +65,7 @@ struct LogDetailsContainerView: View {
         .popover(item: $exportItem) { item in
             ActivityView(item: item.data)
         }
+        .loadingOverlay(isPresented: isExporting, text: "Preparing")
     }
 
     // Extracted view builder for each tab
@@ -83,6 +85,7 @@ struct LogDetailsContainerView: View {
 
     // Helper function for export
     private func exportAction() {
+        isExporting = true
         Task {
             do {
                 let exportedURL = await try ExportManager.txt(item).exporter.export()
@@ -90,6 +93,7 @@ struct LogDetailsContainerView: View {
             } catch {
                 showAlert = true
             }
+            isExporting = false
         }
     }
 }

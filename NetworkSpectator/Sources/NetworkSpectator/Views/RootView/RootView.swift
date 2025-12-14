@@ -19,6 +19,7 @@ struct RootView: View {
     @State private var navigationPath = NavigationPath()
     @State private var searchText = ""
     @State private var isSearching = false
+    @State private var isExporting = false
 
     var items: [LogItem] {
         if searchText.isEmpty {
@@ -80,6 +81,7 @@ struct RootView: View {
                 
                 ToolbarItem(placement: .automatic) {
                     Button {
+                        isExporting = true
                         Task {
                             do {
                                 let url = await try ExportManager.csv(store.items).exporter.export()
@@ -87,10 +89,16 @@ struct RootView: View {
                             } catch {
                                 showAlert = true
                             }
+                            isExporting = false
                         }
                     } label: {
-                        Image(systemName: "square.and.arrow.up")
+                        if isExporting {
+                            ProgressView()
+                        } else {
+                            Image(systemName: "square.and.arrow.up")
+                        }
                     }
+                    .disabled(isExporting)
                     .accessibilityLabel("Export")
                 }
             }
@@ -102,6 +110,7 @@ struct RootView: View {
             .popover(item: $exportItem) { item in
                 ActivityView(item: item.data)
             }
+            .loadingOverlay(isPresented: isExporting, text: "Preparing CSV")
         }
     }
     
@@ -141,3 +150,4 @@ extension RootView {
 #Preview {
     RootView()
 }
+
