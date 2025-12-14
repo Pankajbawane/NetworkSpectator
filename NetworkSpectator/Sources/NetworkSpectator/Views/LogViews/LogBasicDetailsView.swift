@@ -66,6 +66,7 @@ struct LogBasicDetailsView: View {
                 .frame(width: 100, alignment: .leading)
 
             Text(value)
+                .textSelection(.enabled)
                 .font(.caption)
                 .foregroundColor(.primary)
             Spacer()
