@@ -1,5 +1,5 @@
 //
-//  LogDetailsLandingView.swift
+//  LogDetailsContainerView.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 19/07/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct LogDetailsLandingView: View {
+struct LogDetailsContainerView: View {
     @Binding var item: LogItem
 
     // Stronger typing for picker selection

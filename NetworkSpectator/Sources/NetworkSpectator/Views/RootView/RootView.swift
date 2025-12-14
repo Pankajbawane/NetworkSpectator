@@ -15,32 +15,39 @@ struct RootView: View {
     @State private var searchText = ""
     @State private var isSearching = false
 
-    var items: [Binding<LogItem>] {
+    var items: [LogItem] {
         if searchText.isEmpty {
-            return Array($store.items)
+            return store.items
         } else {
-            return $store.items.filter { item in
-                item.wrappedValue.url.localizedCaseInsensitiveContains(searchText)
+            return store.items.filter { item in
+                item.url.localizedCaseInsensitiveContains(searchText)
             }
         }
     }
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            List(items, id: \.id) { item in
+            List(items) { item in
                 NavigationLink {
-                    LogDetailsLandingView(item: item)
+                    // Find the binding for this specific item in the store
+                    if let index = store.items.firstIndex(where: { $0.id == item.id }) {
+                        LogDetailsContainerView(item: $store.items[index])
+                    }
                 } label: {
                     LogListItemView(item: item)
                 }
-                .listRowBackground(rowBackgroundColor(item.wrappedValue))
+                .listRowBackground(rowBackgroundColor(item))
             }
             .listStyle(.plain)
+            // TO DO: update search items.
             #if os(iOS)
             .searchable(text: $searchText,
                         isPresented: $isSearching,
                         placement: .navigationBarDrawer(displayMode: .automatic),
                         prompt: "Search by URL")
+            #endif
+            #if os(macOS)
+            .searchable(text: $searchText, placement: .automatic, prompt: "Search by URL")
             #endif
             .navigationTitle("Requests")
             #if os(iOS)
