@@ -80,9 +80,14 @@ struct LogDetailsContainerView: View {
 
     // Helper function for export
     private func exportAction() {
-        if let exportedURL = ExportManager.txt(item).exporter.export() {
-            self.url = exportedURL
-            self.showExport = true
+        Task {
+            do {
+                let exportedURL = await try ExportManager.txt(item).exporter.export()
+                self.url = exportedURL
+                self.showExport = true
+            } catch {
+                
+            }
         }
     }
 }

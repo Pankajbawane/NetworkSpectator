@@ -11,7 +11,7 @@ struct TextExporter: FileExportable {
     let fileExtension: String = "txt"
     let item: LogItem
     
-    func export() -> URL? {
+    func export() async throws -> URL {
         let details: [String] = [
             "URL\n" + item.url,
             "Method\n" + item.method.uppercased(),
@@ -25,6 +25,6 @@ struct TextExporter: FileExportable {
         ]
         
         let text = details.joined(separator: "\n\n")
-        return save(content: text)
+        return await try save(content: text)
     }
 }
