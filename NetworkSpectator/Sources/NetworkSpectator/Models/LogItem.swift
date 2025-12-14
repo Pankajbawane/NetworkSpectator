@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - LogItem
 // Represents a single network log entry.
-struct LogItem: Identifiable, Codable, Equatable, Sendable , Hashable{
+struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
     // Identity & timing
     let id: UUID
     let startTime: Date

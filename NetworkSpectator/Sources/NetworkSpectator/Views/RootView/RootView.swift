@@ -5,12 +5,16 @@
 //  Created by Pankaj Bawane on 19/07/25.
 //
 
+struct ExportItem: Identifiable {
+    let id: UUID
+    let data: Any
+}
+
 import SwiftUI
 
 struct RootView: View {
     @ObservedObject private var store = NetworkLogManager.shared
-    @State private var showExportSheet = false
-    @State private var exportURL: URL?
+    @State private var exportItem: ExportItem?
     @State private var navigationPath = NavigationPath()
     @State private var searchText = ""
     @State private var isSearching = false
@@ -75,14 +79,23 @@ struct RootView: View {
                 
                 ToolbarItem(placement: .automatic) {
                     Button {
-                        exportData()
+                        Task {
+                            do {
+                                let url = await try ExportManager.csv(store.items).exporter.export()
+                                exportItem = ExportItem(id: UUID(), data: url)
+                            } catch {
+                                
+                            }
+                        }
                     } label: {
                         Image(systemName: "square.and.arrow.up")
                     }
                     .accessibilityLabel("Export")
                 }
             }
-            .sheet(isPresented: $showExportSheet, content: exportSheet)
+            .sheet(item: $exportItem) { item in
+                ActivityView(item: item.data)
+            }
         }
     }
     
@@ -96,23 +109,26 @@ struct RootView: View {
         if path == "analytics" {
             AnalyticsDashboardView(data: store.items)
         } else if path == "showExport" {
-            exportSheet()
+            //let exportedCSV = ExportManager.csv(store.items).exporter.export()
+            //ActivityView(item: exportedCSV)
         }
-    }
-
-    private func exportData() {
-        exportURL = ExportManager.csv(store.items).exporter.export()
-        //showExportSheet = true
-        navigationPath.append("showExport")
     }
 
     @ViewBuilder
     private func exportSheet() -> some View {
-        ExportOptionsView(url: exportURL) { type in
-            
-        } onCancel: {
-            
-        }
+//        ExportOptionsView(url: exportURL) { type in
+//            
+//        } onCancel: {
+//            
+//        }
+    }
+}
+
+extension RootView {
+    enum Navigation: Hashable {
+        case analytics
+        case export
+        case clear
     }
 }
 

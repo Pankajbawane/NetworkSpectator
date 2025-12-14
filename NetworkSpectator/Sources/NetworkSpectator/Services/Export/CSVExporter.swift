@@ -15,12 +15,12 @@ struct CSVExporter: FileExportable {
     let items: [LogItem]
     let fileExtension: String = "csv"
     
-    func export() -> URL? {
-        let csv = generateCSV()
-        return save(content: csv)
+    func export() async throws -> URL {
+        let csv = await generateCSV()
+        return await try save(content: csv)
     }
 
-    private func generateCSV() -> String {
+    private func generateCSV() async -> String {
         var csv = headerItems.joined(separator: ",") + "\n"
 
         for request in items {

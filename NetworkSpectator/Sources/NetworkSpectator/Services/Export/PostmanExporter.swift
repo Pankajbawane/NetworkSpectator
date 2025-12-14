@@ -12,17 +12,15 @@ struct PostmanExporter: FileExportable {
     let item: LogItem
     let fileExtension: String = "json"
     
-    func export() -> URL? {
-        if let data = exportToPostmanCollection() {
-            return save(content: data)
-        }
-        return nil
+    func export() async throws -> URL {
+        let data = try exportToPostmanCollection()
+        return await try save(content: data)
     }
     
-    func exportToPostmanCollection() -> Data? {
+    func exportToPostmanCollection() throws -> Data {
         
         guard let urlComponents = URLComponents(string: item.url),
-              let host = urlComponents.host else { return nil }
+              let host = urlComponents.host else { throw ExportError.invalidData }
         
         // 1. Convert host and path for Postman URL format
         let urlDict: [String: Any] = [
@@ -82,6 +80,6 @@ struct PostmanExporter: FileExportable {
         ]
         
         // 7. Serialize to JSON and write to disk
-        return try? JSONSerialization.data(withJSONObject: collection, options: [.prettyPrinted])
+        return try JSONSerialization.data(withJSONObject: collection, options: [.prettyPrinted])
     }
 }

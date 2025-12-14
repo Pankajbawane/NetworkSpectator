@@ -27,7 +27,7 @@ enum ExportManager {
 
 protocol FileExportable {
     var fileExtension: String { get }
-    func export() -> URL?
+    func export() async throws -> URL
 }
 
 extension FileExportable {
@@ -40,25 +40,30 @@ extension FileExportable {
         return "\(prefix)_\(date).\(fileExtension)"
     }
     
-    func save(content: some StringProtocol) -> URL? {
+    func save(content: some StringProtocol) async throws -> URL {
         let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(makeFilename)
         do {
             try String(content).write(to: fileURL, atomically: true, encoding: .utf8)
             return fileURL
         } catch {
             DebugPrint.log("FileExportable failed to write text file: \(fileURL.lastPathComponent), error: \(error)")
-            return nil
+            throw ExportError.writeFailed
         }
     }
 
-    func save(content: Data) -> URL? {
+    func save(content: Data) async throws -> URL {
         let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(makeFilename)
         do {
             try content.write(to: fileURL)
             return fileURL
         } catch {
             DebugPrint.log("FileExportable failed to write data file: \(fileURL.lastPathComponent), error: \(error)")
-            return nil
+            throw ExportError.writeFailed
         }
     }
+}
+
+enum ExportError: Error {
+    case writeFailed
+    case invalidData
 }
