@@ -33,7 +33,7 @@ struct LogHeadersDetailsView: View {
             .cornerRadius(6)
 
             if let headers = headers, !headers.isEmpty {
-                ScrollView(.horizontal) {
+                ScrollView(.vertical) {
                     Text(headers)
                         .font(.caption)
                         .textSelection(.enabled)

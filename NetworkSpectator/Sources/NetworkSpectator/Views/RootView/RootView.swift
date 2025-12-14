@@ -1,5 +1,5 @@
 //
-//  LogsLandingView.swift
+//  RootView.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 19/07/25.
