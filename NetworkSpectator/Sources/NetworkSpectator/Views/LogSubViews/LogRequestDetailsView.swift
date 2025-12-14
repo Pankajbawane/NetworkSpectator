@@ -13,7 +13,7 @@ struct LogRequestDetailsView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            ScrollView(.horizontal) {
+            ScrollView(.vertical) {
                 Text(item.requestBody)
                     .font(.caption)
                     .textSelection(.enabled)
