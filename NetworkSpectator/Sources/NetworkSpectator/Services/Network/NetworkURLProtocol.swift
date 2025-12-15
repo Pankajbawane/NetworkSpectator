@@ -31,6 +31,14 @@ final internal class NetworkURLProtocol: URLProtocol {
             super.startLoading()
             return
         }
+        
+        if IgnoreRequestManager.shared.isEnabled {
+            if let url = request.url, IgnoreRequestManager.shared.shouldIgnore(url) {
+                super.startLoading()
+                return
+            }
+        }
+        
         URLProtocol.setProperty(true, forKey: Self.taskCacheKey, in: thisRequest)
         let log = LogItem.fromRequest(request)
         DebugPrint.log(log)

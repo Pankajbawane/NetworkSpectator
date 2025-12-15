@@ -30,6 +30,10 @@ struct AnalyticsDashboardView: View {
                     .font(.caption)
                     .fontWeight(.bold)
                 HostsChartView(data: hosts)
+                Text("Requests")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                RequestBarChartView(logs: data)
             }
         }
     }
