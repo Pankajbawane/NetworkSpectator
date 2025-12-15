@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum IgnoreRule {
+public enum MatchRule {
     case hostName(String)
     case url(String)
     case path(String)
@@ -17,7 +17,7 @@ public enum IgnoreRule {
 
 public struct IgnoreRequest {
     
-    let rules: [IgnoreRule]
+    let rules: [MatchRule]
     
     private(set) var hostName: String = ""
     private(set) var url: String = ""
@@ -27,7 +27,7 @@ public struct IgnoreRequest {
     private(set) var endPath: String = ""
     private(set) var pathComponent: String = ""
     
-    init(rules: [IgnoreRule]) {
+    init(rules: [MatchRule]) {
         self.rules = rules
         for rule in rules {
             switch rule {
@@ -45,7 +45,7 @@ public struct IgnoreRequest {
         }
     }
     
-    mutating func add(_ rule: IgnoreRule) {
+    mutating func add(_ rule: MatchRule) {
         switch rule {
         case .hostName(let host):
             self.hostName = host
