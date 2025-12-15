@@ -32,6 +32,7 @@ final internal class NetworkURLProtocol: URLProtocol {
             return
         }
         
+        // If the request is ignored for logging using match rules.
         if IgnoreRequestManager.shared.isEnabled {
             if let url = request.url, IgnoreRequestManager.shared.shouldIgnore(url) {
                 super.startLoading()
@@ -46,10 +47,7 @@ final internal class NetworkURLProtocol: URLProtocol {
             await NetworkLogManager.shared.add(log)
         }
         
-        let config = URLSessionConfiguration.default
-        let session = URLSession(configuration: config, delegate: nil, delegateQueue: nil)
-
-        sessionTask = session.dataTask(with: thisRequest as URLRequest) { data, response, error in
+        let completion: (Data?, URLResponse?, Error?) -> Void = { data, response, error in
             let finalUpdatedLog = log.withResponse(response: response, data: data, error: error)
             DebugPrint.log(finalUpdatedLog)
             Task {
@@ -67,6 +65,19 @@ final internal class NetworkURLProtocol: URLProtocol {
                 }
                 self.client?.urlProtocolDidFinishLoading(self)
             }
+        }
+        
+        // If the request is mocked using match rules, return mocked response.
+        if let mock = MockManager.shared.responseIfMocked(request) {
+            completion(mock.response, mock.urlResponse(request), mock.error)
+            return
+        }
+        
+        let config = URLSessionConfiguration.default
+        let session = URLSession(configuration: config, delegate: nil, delegateQueue: nil)
+
+        sessionTask = session.dataTask(with: thisRequest as URLRequest) { data, response, error in
+            completion(data, response, error)
         }
 
         sessionTask?.resume()
