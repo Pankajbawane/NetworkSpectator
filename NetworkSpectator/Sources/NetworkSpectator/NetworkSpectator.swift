@@ -30,7 +30,11 @@ public struct NetworkSpectator: Sendable {
     }
     #endif
     
-    nonisolated(unsafe) public static var configuration: Configuration = .init() {
+    internal nonisolated(unsafe) static let mockServer: MockServer = .init()
+    
+    internal nonisolated(unsafe) static let ignore: IgnoreRequestManager = .init()
+    
+    public nonisolated(unsafe) static var configuration: Configuration = .init() {
         didSet {
             DebugPrint.shared = .init(enabled: configuration.debugPrintEnabled)
         }
@@ -50,5 +54,25 @@ public struct NetworkSpectator: Sendable {
         Task {
             await NetworkLogManager.shared.disable()
         }
+    }
+    
+    public static func registerMock(for mock: Mock) {
+        mockServer.register(mock)
+    }
+    
+    public static func disableMock() {
+        mockServer.clear()
+    }
+    
+    public static func ignoreLogging(for rule: MatchRule) {
+        ignore.register(rule: rule)
+    }
+    
+    public static func ignoreLogging(for rules: [MatchRule]) {
+        ignore.register(rules: rules)
+    }
+    
+    public static func stopIgnoringLogging() {
+        ignore.disable()
     }
 }

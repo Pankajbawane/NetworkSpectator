@@ -33,8 +33,8 @@ final internal class NetworkURLProtocol: URLProtocol {
         }
         
         // If the request is ignored for logging using match rules.
-        if IgnoreRequestManager.shared.isEnabled {
-            if let url = request.url, IgnoreRequestManager.shared.shouldIgnore(url) {
+        if NetworkSpectator.ignore.isEnabled {
+            if let url = request.url, NetworkSpectator.ignore.shouldIgnore(url) {
                 super.startLoading()
                 return
             }
@@ -68,7 +68,7 @@ final internal class NetworkURLProtocol: URLProtocol {
         }
         
         // If the request is mocked using match rules, return mocked response.
-        if let mock = MockManager.shared.responseIfMocked(request) {
+        if let mock = NetworkSpectator.mockServer.responseIfMocked(request) {
             completion(mock.response, mock.urlResponse(request), mock.error)
             return
         }
