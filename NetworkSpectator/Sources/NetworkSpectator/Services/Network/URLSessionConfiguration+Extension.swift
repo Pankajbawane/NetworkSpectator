@@ -97,8 +97,8 @@ internal extension URLSession {
     @objc
     private func swizzled_dataTask(with request: URLRequest,
                                    completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
-        if IgnoreRequestManager.shared.isEnabled {
-            if let url = request.url, IgnoreRequestManager.shared.shouldIgnore(url) {
+        if NetworkSpectator.ignore.isEnabled {
+            if let url = request.url, NetworkSpectator.ignore.shouldIgnore(url) {
                 return self.swizzled_dataTask(with: request, completionHandler: completionHandler)
             }
         }

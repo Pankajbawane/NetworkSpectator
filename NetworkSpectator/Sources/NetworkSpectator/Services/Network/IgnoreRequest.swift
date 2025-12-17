@@ -25,32 +25,26 @@ public struct IgnoreRequest {
     }
 }
 
-public final class IgnoreRequestManager {
+final class IgnoreRequestManager {
 
     private var ignoreRequests: [IgnoreRequest] = []
-
-    public nonisolated(unsafe) static let shared = IgnoreRequestManager()
 
     var isEnabled: Bool {
         !ignoreRequests.isEmpty
     }
 
-    private init() { }
+    init() { }
 
-    public func disable() {
+    func disable() {
         ignoreRequests.removeAll()
     }
 
-    public func register(_ rule: IgnoreRequest) {
-        ignoreRequests.append(rule)
-    }
-
-    public func register(rules: [MatchRule]) {
+    func register(rules: [MatchRule]) {
         let ignoreRequest = IgnoreRequest(rules: rules)
         ignoreRequests.append(ignoreRequest)
     }
 
-    public func register(rule: MatchRule) {
+    func register(rule: MatchRule) {
         let ignoreRequest = IgnoreRequest(rule: rule)
         ignoreRequests.append(ignoreRequest)
     }
