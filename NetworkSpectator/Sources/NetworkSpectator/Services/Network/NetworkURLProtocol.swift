@@ -14,7 +14,18 @@ final internal class NetworkURLProtocol: URLProtocol {
 
     override class func canInit(with request: URLRequest) -> Bool {
         // Avoid intercepting requests twice
-        URLProtocol.property(forKey: taskCacheKey, in: request) == nil
+        if URLProtocol.property(forKey: taskCacheKey, in: request) != nil {
+            return false
+        }
+
+        // If the request is ignored for logging using match rules, don't intercept
+        if NetworkSpectator.ignore.isEnabled,
+           let url = request.url,
+           NetworkSpectator.ignore.shouldIgnore(url) {
+            return false
+        }
+
+        return true
     }
 
     override class func canonicalRequest(for request: URLRequest) -> URLRequest {
@@ -30,14 +41,6 @@ final internal class NetworkURLProtocol: URLProtocol {
         guard let thisRequest = request as? NSMutableURLRequest else {
             super.startLoading()
             return
-        }
-        
-        // If the request is ignored for logging using match rules.
-        if NetworkSpectator.ignore.isEnabled {
-            if let url = request.url, NetworkSpectator.ignore.shouldIgnore(url) {
-                super.startLoading()
-                return
-            }
         }
         
         URLProtocol.setProperty(true, forKey: Self.taskCacheKey, in: thisRequest)
