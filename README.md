@@ -41,6 +41,7 @@ dependencies: [
 ```
 
 ## Usage
+NetworkSpectatorExample app demostrates basic usage of the library - https://github.com/Pankajbawane/NetworkSpectatorExample
 
 ### Basic Setup
 
