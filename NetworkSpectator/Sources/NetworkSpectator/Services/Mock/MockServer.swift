@@ -10,9 +10,9 @@ import Foundation
 /// Manages registered mocks for network request interception.
 final class MockServer {
     
-    internal var mocks: [Mock] = []
+    var mocks: [Mock] = []
     
-    internal init() { }
+    init() { }
     
     /// Registers a mock to intercept matching network requests.
     /// - Parameter mock: The mock configuration to register.
@@ -20,7 +20,7 @@ final class MockServer {
         mocks.append(mock)
     }
     
-    internal func responseIfMocked(_ urlRequest: URLRequest) -> Mock? {
+    func responseIfMocked(_ urlRequest: URLRequest) -> Mock? {
         guard let url = urlRequest.url else { return nil }
         return mocks.first { mock in
             if let matches = mock.matches {
@@ -31,11 +31,10 @@ final class MockServer {
             }
             return false
         }
-        
     }
     
     /// Removes all registered mocks.
-    public func clear() {
+    func clear() {
         mocks.removeAll()
     }
 }

@@ -35,7 +35,7 @@ final class IgnoreRequestManager {
 
     init() { }
 
-    func disable() {
+    func clear() {
         ignoreRequests.removeAll()
     }
 
