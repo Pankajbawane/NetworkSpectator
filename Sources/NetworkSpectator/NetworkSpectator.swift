@@ -14,17 +14,20 @@ import AppKit
 
 public struct NetworkSpectator: Sendable {
     
+    @MainActor
     // Presentable View from SwiftUI.
     public static var rootView: some View {
         RootView()
     }
     
     #if canImport(UIKit)
+    @MainActor
     // UIViewController to present from UIKit.
     public static var rootViewController: UIViewController {
         UIHostingController(rootView: RootView())
     }
     #elseif canImport(AppKit)
+    @MainActor
     public static var rootViewController: NSViewController {
         NSHostingController(rootView: RootView())
     }
