@@ -19,7 +19,7 @@ struct DebugPrint {
         #endif
     }
     
-    fileprivate func log(_ logItem: LogItem) {
+    func log(_ logItem: LogItem) {
         // DEBUG check to ensure logs are printed only while debugging.
         #if DEBUG
         guard enabled else { return }

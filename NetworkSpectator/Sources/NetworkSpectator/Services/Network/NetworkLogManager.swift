@@ -75,6 +75,7 @@ final class NetworkLogManager: ObservableObject, Sendable {
         }
         itemUpdateTask?.cancel()
         itemUpdateTask = nil
+        clear()
     }
     
     func clear() {
