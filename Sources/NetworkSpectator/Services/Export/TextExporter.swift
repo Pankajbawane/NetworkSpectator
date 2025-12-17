@@ -25,6 +25,6 @@ struct TextExporter: FileExportable {
         ]
         
         let text = details.joined(separator: "\n\n")
-        return await try save(content: text)
+        return try await save(content: text)
     }
 }

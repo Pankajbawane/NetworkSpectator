@@ -88,7 +88,7 @@ struct LogDetailsContainerView: View {
         isExporting = true
         Task {
             do {
-                let exportedURL = await try ExportManager.txt(item).exporter.export()
+                let exportedURL = try await ExportManager.txt(item).exporter.export()
                 exportItem = ExportItem(data: exportedURL)
             } catch {
                 showAlert = true
