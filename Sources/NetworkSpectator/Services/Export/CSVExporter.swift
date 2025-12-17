@@ -17,7 +17,7 @@ struct CSVExporter: FileExportable {
     
     func export() async throws -> URL {
         let csv = await generateCSV()
-        return await try save(content: csv)
+        return try await save(content: csv)
     }
 
     private func generateCSV() async -> String {

@@ -14,7 +14,7 @@ struct PostmanExporter: FileExportable {
     
     func export() async throws -> URL {
         let data = try exportToPostmanCollection()
-        return await try save(content: data)
+        return try await save(content: data)
     }
     
     func exportToPostmanCollection() throws -> Data {

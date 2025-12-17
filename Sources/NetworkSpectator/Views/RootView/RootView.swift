@@ -84,7 +84,7 @@ struct RootView: View {
                         isExporting = true
                         Task {
                             do {
-                                let url = await try ExportManager.csv(store.items).exporter.export()
+                                let url = try await ExportManager.csv(store.items).exporter.export()
                                 exportItem = ExportItem(data: url)
                             } catch {
                                 showAlert = true

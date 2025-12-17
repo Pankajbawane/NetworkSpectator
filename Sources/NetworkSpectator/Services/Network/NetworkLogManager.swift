@@ -26,10 +26,8 @@ final class NetworkLogManager: ObservableObject, Sendable {
         URLSessionConfiguration.enableNetworkSwizzling()
         URLSession.enableNetworkSwizzling()
         startObservingUpdates()
-        defer {
-            DebugPrint.log("NETWORK SPECTATOR: Logging initiated.")
-            isLoggingEnabled = true
-        }
+        isLoggingEnabled = true
+        DebugPrint.log("NETWORK SPECTATOR: Logging initiated.")
     }
     
     func disable() {
@@ -37,10 +35,8 @@ final class NetworkLogManager: ObservableObject, Sendable {
         URLSessionConfiguration.disableNetworkSwizzling()
         URLSession.disableNetworkSwizzling()
         stop()
-        defer {
-            DebugPrint.log("NETWORK SPECTATOR: Logging stopped.")
-            isLoggingEnabled = false
-        }
+        isLoggingEnabled = false
+        DebugPrint.log("NETWORK SPECTATOR: Logging stopped.")
     }
 
     /// Adds a new `LogItem` to the log in a concurrent-safe manner.
