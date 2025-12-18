@@ -127,17 +127,3 @@ struct RequestBarChartView: View {
         .padding()
     }
 }
-
-#Preview("Requests Over Time Chart") {
-    let now = Date()
-    var items: [LogItem] = []
-    // Generate sample logs within the last 10 minutes
-    for i in 0..<120 {
-        let secondsBack = TimeInterval(Int.random(in: 0..<600))
-        let start = now.addingTimeInterval(-secondsBack)
-        items.append(LogItem(startTime: start, url: "https://example.com/\(i)"))
-    }
-    return RequestBarChartView(logs: items)
-        .frame(height: 260)
-        .padding()
-}
