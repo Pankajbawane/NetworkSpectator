@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct IgnoreRequest {
+public struct SkipRequestForLogging {
 
     let rules: [MatchRule]
 
@@ -25,31 +25,31 @@ public struct IgnoreRequest {
     }
 }
 
-final class IgnoreRequestManager {
+final class SkipRequestForLoggingHandler {
 
-    private var ignoreRequests: [IgnoreRequest] = []
+    private var skipRequests: [SkipRequestForLogging] = []
 
     var isEnabled: Bool {
-        !ignoreRequests.isEmpty
+        !skipRequests.isEmpty
     }
 
     init() { }
 
     func clear() {
-        ignoreRequests.removeAll()
+        skipRequests.removeAll()
     }
 
     func register(rules: [MatchRule]) {
-        let ignoreRequest = IgnoreRequest(rules: rules)
-        ignoreRequests.append(ignoreRequest)
+        let skipRequest = SkipRequestForLogging(rules: rules)
+        skipRequests.append(skipRequest)
     }
 
     func register(rule: MatchRule) {
-        let ignoreRequest = IgnoreRequest(rule: rule)
-        ignoreRequests.append(ignoreRequest)
+        let skipRequest = SkipRequestForLogging(rule: rule)
+        skipRequests.append(skipRequest)
     }
 
-    func shouldIgnore(_ url: URL) -> Bool {
-        return ignoreRequests.contains { $0.shouldIgnore(url) }
+    func shouldSkipLogging(_ url: URL) -> Bool {
+        return skipRequests.contains { $0.shouldIgnore(url) }
     }
 }

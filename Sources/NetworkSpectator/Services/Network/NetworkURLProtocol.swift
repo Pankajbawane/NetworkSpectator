@@ -19,9 +19,9 @@ final internal class NetworkURLProtocol: URLProtocol {
         }
 
         // If the request is ignored for logging using match rules, don't intercept
-        if NetworkSpectator.ignore.isEnabled,
+        if NetworkSpectator.skipRequestLogging.isEnabled,
            let url = request.url,
-           NetworkSpectator.ignore.shouldIgnore(url) {
+           NetworkSpectator.skipRequestLogging.shouldSkipLogging(url) {
             return false
         }
 
