@@ -37,19 +37,19 @@ A lightweight Swift utility to observe and inspect your app's network traffic du
 Add NetworkSpectator to your project using Swift Package Manager:
 
 1. In Xcode, select **File > Add Package Dependencies...**
-2. Enter the package repository URL - https://github.com/Pankajbawane/NetworkSpectatorExample.git
+2. Enter the package repository URL - https://github.com/Pankajbawane/NetworkSpectator.git
 
 Or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/pankajbawane/NetworkSpectator.git", from: "1.0.0")
+    .package(url: "https://github.com/pankajbawane/NetworkSpectator.git", branch: "main")
 ]
 ```
 
 ## Usage
 
-###Example App
+### Example App
 NetworkSpectatorExample app demostrates basic usage of the library - https://github.com/Pankajbawane/NetworkSpectatorExample
 
 ### Basic Setup
