@@ -23,6 +23,14 @@ struct LogDetailsContainerView: View {
     @State private var showAlert = false
     @State private var exportItem: ExportItem?
     @State private var isExporting: Bool = false
+    @State private var showExportFormatPicker = false
+
+    enum ExportFormat: String, CaseIterable, Identifiable {
+        case text = "Text"
+        case csv = "CSV"
+        case postmanCollection = "Postman Collection"
+        var id: String { rawValue }
+    }
 
     // Filtered picker options depending on item content
     private var availableTabs: [DetailsTab] {
@@ -51,7 +59,7 @@ struct LogDetailsContainerView: View {
         .navigationTitle("Details")
         .toolbar {
             ToolbarItem(placement: .automatic) {
-                Button(action: exportAction) {
+                Button(action: { showExportFormatPicker = true }) {
                     Image(systemName: "square.and.arrow.up")
                 }
                 .accessibilityLabel("Export Log")
@@ -62,6 +70,16 @@ struct LogDetailsContainerView: View {
                 showAlert = false
             }
         })
+        .confirmationDialog("Select Export Format",
+                            isPresented: $showExportFormatPicker,
+                            titleVisibility: .visible) {
+            ForEach(ExportFormat.allCases) { format in
+                Button(format.rawValue) {
+                    exportAction(format: format)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
         .popover(item: $exportItem) { item in
             ActivityView(item: item.data)
         }
@@ -84,11 +102,19 @@ struct LogDetailsContainerView: View {
     }
 
     // Helper function for export
-    private func exportAction() {
+    private func exportAction(format: ExportFormat) {
         isExporting = true
         Task {
             do {
-                let exportedURL = try await ExportManager.txt(item).exporter.export()
+                let exportedURL: URL
+                switch format {
+                case .text:
+                    exportedURL = try await ExportManager.txt(item).exporter.export()
+                case .csv:
+                    exportedURL = try await ExportManager.csv([item]).exporter.export()
+                case .postmanCollection:
+                    exportedURL = try await ExportManager.postman(item).exporter.export()
+                }
                 exportItem = ExportItem(data: exportedURL)
             } catch {
                 showAlert = true

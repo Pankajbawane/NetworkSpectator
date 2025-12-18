@@ -14,6 +14,9 @@ struct CSVExporter: FileExportable {
     ]
     let items: [LogItem]
     let fileExtension: String = "csv"
+    var filePrefix: String {
+        "log_list"
+    }
     
     func export() async throws -> URL {
         let csv = await generateCSV()

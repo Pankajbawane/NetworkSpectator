@@ -167,5 +167,3 @@ Access export options from the UI by tapping the export button in the network lo
 - Swift 6.2+
 - iOS 17.0+ / macOS 13.0+
 - Xcode 16.0+
-
-## License
