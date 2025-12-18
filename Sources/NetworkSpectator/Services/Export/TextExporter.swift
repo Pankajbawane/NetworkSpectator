@@ -9,6 +9,9 @@ import Foundation
 
 struct TextExporter: FileExportable {
     let fileExtension: String = "txt"
+    var filePrefix: String {
+        item.host
+    }
     let item: LogItem
     
     func export() async throws -> URL {

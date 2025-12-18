@@ -11,6 +11,9 @@ struct PostmanExporter: FileExportable {
     
     let item: LogItem
     let fileExtension: String = "json"
+    var filePrefix: String {
+        item.host
+    }
     
     func export() async throws -> URL {
         let data = try exportToPostmanCollection()

@@ -27,13 +27,14 @@ enum ExportManager {
 
 protocol FileExportable {
     var fileExtension: String { get }
+    var filePrefix: String { get }
     func export() async throws -> URL
 }
 
 extension FileExportable {
     // Use a safe and unique filename
     var makeFilename: String {
-        let prefix: String = "export"
+        let prefix: String = "export_" + filePrefix
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd_HHmmss"
         let date = formatter.string(from: Date())
