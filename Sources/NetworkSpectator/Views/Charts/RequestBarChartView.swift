@@ -77,13 +77,9 @@ struct RequestBarChartView: View {
             counts[bucket, default: 0] += 1
         }
 
-        var buckets: [TimeBucket] = []
-        var current = granularity.floor(minTime)
-
-        while current <= endTime {
-            buckets.append(TimeBucket(id: current, count: counts[current] ?? 0))
-            current = granularity.next(current)
-        }
+        // Only include buckets with counts > 0 for better visibility
+        let buckets = counts.map { TimeBucket(id: $0.key, count: $0.value) }
+            .sorted(by: { $0.id < $1.id })
 
         return (buckets, domain)
     }
@@ -93,6 +89,9 @@ struct RequestBarChartView: View {
 
         VStack {
             if let (buckets, domain) = data {
+                let maxCount = buckets.map(\.count).max() ?? 1
+                let yDomain = 0...max(maxCount, 1)
+
                 Chart(buckets) { bucket in
                     BarMark(
                         x: .value("Time", bucket.id),
@@ -101,16 +100,17 @@ struct RequestBarChartView: View {
                     .foregroundStyle(.blue)
                 }
                 .chartXScale(domain: domain)
-                .chartYScale(domain: 0...(buckets.map(\.count).max() ?? 1))
+                .chartYScale(domain: yDomain)
                 .chartXAxis {
                     AxisMarks(values: .automatic(desiredCount: 6))
                 }
                 .chartYAxis {
-                    AxisMarks(position: .leading)
+                    AxisMarks(position: .leading) { value in
+                        AxisGridLine()
+                        AxisValueLabel()
+                    }
                 }
-                .chartPlotStyle { plotArea in
-                    plotArea.frame(maxWidth: .infinity)
-                }
+                .frame(minHeight: 200)
                 .padding(.vertical)
             } else {
                 VStack(spacing: 8) {
