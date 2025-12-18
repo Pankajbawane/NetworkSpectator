@@ -1,21 +1,46 @@
 import SwiftUI
 import Charts
 
-struct HTTPMethodPieChartView: View {
+struct PieChartView: View {
+    let data: [ChartParameter<String>]
+    let title: String
+
+    var body: some View {
+        if #available(macOS 14, *) {
+            Chart(data) {
+                SectorMark(
+                    angle: .value("Count", $0.count),
+                    innerRadius: .ratio(0.4),
+                    angularInset: 1
+                )
+                .foregroundStyle(by: .value(title, $0.value))
+            }
+            .frame(height: 300)
+            .padding()
+        } else {
+            // Fallback for macOS versions earlier than 14
+            Text("Chart requires macOS 14 or later.")
+                .frame(height: 300)
+                .padding()
+        }
+    }
+}
+
+struct HTTPMethodsChartView: View {
     let data: [ChartParameter<String>]
 
     var body: some View {
-        #if targetEnvironment(iOS)
         Chart(data) {
-            SectorMark(
-                angle: .value("Count", $0.count),
-                innerRadius: .ratio(0.4),
-                angularInset: 1
+            BarMark(
+                x: .value("Hosts", $0.value),
+                y: .value("Count", $0.count)
             )
-            .foregroundStyle(by: .value("HTTP Method", $0.value))
+            .foregroundStyle(by: .value("Hosts", $0.value))
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading)
         }
         .frame(height: 300)
         .padding()
-        #endif
     }
 }

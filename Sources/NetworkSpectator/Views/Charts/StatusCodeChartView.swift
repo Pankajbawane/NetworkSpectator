@@ -2,7 +2,7 @@ import SwiftUI
 import Charts
 
 struct StatusCodeChartView: View {
-    let data: [ChartParameter<Int>]
+    let data: [ChartParameter<String>]
     
     var body: some View {
         Chart(data) {
