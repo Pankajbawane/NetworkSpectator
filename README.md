@@ -11,12 +11,20 @@ A lightweight Swift utility to observe and inspect your app's network traffic du
 
 - **Export logs in multiple formats**
   - CSV export for spreadsheets and data analysis
-  - Plain text export for quick sharing and diffs
+  - Plain text export for quick sharing
+
+- **Mock response**
+  - Mock response by applying rules to match the request
+  - Helpful to check behaviours without needing API deployment
+  - Helps to write unit tests for HTTP requests without adding complex stubbing logic
+ 
+- **Skip logging**
+  - Supports skipping to log a particular request using rules
 
 - **Lightweight and easy to integrate**
   - No external dependencies
   - Works with SwiftUI and UIKit/AppKit
-  - Configurable logging and debug options
+  - Configurable logging
 
 - **Cross-platform SwiftUI support**
   - iOS 17.0+
@@ -29,8 +37,7 @@ A lightweight Swift utility to observe and inspect your app's network traffic du
 Add NetworkSpectator to your project using Swift Package Manager:
 
 1. In Xcode, select **File > Add Package Dependencies...**
-2. Enter the package repository URL
-3. Select the version you want to use
+2. Enter the package repository URL - https://github.com/Pankajbawane/NetworkSpectatorExample.git
 
 Or add it to your `Package.swift`:
 
@@ -41,26 +48,28 @@ dependencies: [
 ```
 
 ## Usage
+
+###Example App
 NetworkSpectatorExample app demostrates basic usage of the library - https://github.com/Pankajbawane/NetworkSpectatorExample
 
 ### Basic Setup
 
 1. **Enable NetworkSpectator** in your app's entry point (AppDelegate or App struct):
-
+Call NetworkSpectator.start() to start listening HTTP requests. This will automatically log HTTP requests.
 ```swift
 import NetworkSpectator
 
 @main
 struct MyApp: App {
-    init() {
-        #if DEBUG
-        NetworkSpectator.enable()
-        #endif
-    }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                    .task {
+                        #if DEBUG
+                        NetworkSpectator.start()
+                        #endif
+                      }
         }
     }
 }
@@ -71,6 +80,12 @@ struct MyApp: App {
 #### SwiftUI
 ```swift
 import NetworkSpectator
+
+ContentView() {
+}
+  .sheet(isPresented: $showLogs) {
+      NetworkSpectator.rootView
+  }
 
 ```
 
@@ -92,25 +107,25 @@ presentAsSheet(networkVC)
 
 ### Configuration
 
-Customize NetworkSpectator behavior with the configuration API:
+Customize NetworkSpectator behavior with the configuration methods:
 
 ```swift
-NetworkSpectator.configuration = Configuration()
-    .enableDebugPrint(true)        // Enable console debug prints
+// Printing logs on Debug console
+NetworkSpectator.debugLogsPrint(isEnabled: Bool)
+
+// Register for mock response
+NetworkSpectator.registerMock(for mock: Mock)
+
+// Skip logging a request
+NetworkSpectator.ignoreLogging(for rule: MatchRule)
 ```
 
 ### Disabling NetworkSpectator
 
-You can disable network monitoring at runtime:
+You can stop network monitoring:
 
 ```swift
-NetworkSpectator.disable()
-```
-
-And re-enable it later:
-
-```swift
-NetworkSpectator.enable()
+NetworkSpectator.stop()
 ```
 
 ## Safety and Release Builds
@@ -128,9 +143,7 @@ Because NetworkSpectator captures and displays sensitive network information, yo
 
 ```swift
 #if DEBUG
-NetworkSpectator.enable()
-NetworkSpectator.configuration = Configuration()
-    .enableDebugPrint(true)
+NetworkSpectator.start()
 #endif
 ```
 
@@ -156,7 +169,3 @@ Access export options from the UI by tapping the export button in the network lo
 - Xcode 16.0+
 
 ## License
-
-
-
-## Contributing
