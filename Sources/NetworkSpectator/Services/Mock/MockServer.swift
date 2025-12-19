@@ -10,7 +10,9 @@ import Foundation
 /// Manages registered mocks for network request interception.
 final class MockServer {
     
-    var mocks: [Mock] = []
+    private(set) var mocks: [Mock] = []
+    
+    nonisolated(unsafe) static let shared: MockServer = .init()
     
     init() { }
     

@@ -15,6 +15,18 @@ public enum MatchRule {
     case pathComponent(String)
     case regex(String)
     case queryParameter(key: String, value: String? = nil)
+    
+    var ruleName: String {
+        switch self {
+        case .hostName(let string): return "Host Name" + " " + string
+        case .url(let string): return "URL" + " " + string
+        case .path(let string): return "Path" + " " + string
+        case .endPath(let string): return "End Path" + " " + string
+        case .pathComponent(let string): return "Path Component" + " " + string
+        case .regex(let string): return "Regex" + " " + string
+        case .queryParameter: return "Query Parameter"
+        }
+    }
 
     func matches(_ url: URL) -> Bool {
         switch self {

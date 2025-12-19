@@ -33,8 +33,6 @@ public struct NetworkSpectator: Sendable {
     }
     #endif
     
-    internal nonisolated(unsafe) static let mockServer: MockServer = .init()
-    
     internal nonisolated(unsafe) static let skipRequestLogging: SkipRequestForLoggingHandler = .init()
     
     public static func start() {
@@ -46,29 +44,29 @@ public struct NetworkSpectator: Sendable {
     public static func stop() {
         Task {
             await NetworkLogManager.shared.disable()
-            mockServer.clear()
+            MockServer.shared.clear()
             skipRequestLogging.clear()
         }
     }
     
     public static func registerMock(for mock: Mock) {
-        mockServer.register(mock)
+        MockServer.shared.register(mock)
     }
     
     public static func stopMocking() {
-        mockServer.clear()
+        MockServer.shared.clear()
     }
     
     public static func ignoreLogging(for rule: MatchRule) {
-        skipRequestLogging.register(rule: rule)
+        SkipRequestForLoggingHandler.shared.register(rule: rule)
     }
     
     public static func ignoreLogging(for rules: [MatchRule]) {
-        skipRequestLogging.register(rules: rules)
+        SkipRequestForLoggingHandler.shared.register(rules: rules)
     }
     
     public static func stopIgnoringLog() {
-        skipRequestLogging.clear()
+        SkipRequestForLoggingHandler.shared.clear()
     }
     
     public  static func debugLogsPrint(isEnabled: Bool) {
