@@ -1,5 +1,5 @@
 //
-//  Basic.swift
+//  LogBasicDetailsView.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 19/07/25.
@@ -10,80 +10,127 @@ import SwiftUI
 struct LogBasicDetailsView: View {
     @Binding var item: LogItem
 
-    // Represent a detail key/value pair
     struct DetailRow: Identifiable {
         var id: String { title }
         let title: String
         let value: String
+        let icon: String?
+        let valueColor: Color?
+
+        init(title: String, value: String, icon: String? = nil, valueColor: Color? = nil) {
+            self.title = title
+            self.value = value
+            self.icon = icon
+            self.valueColor = valueColor
+        }
     }
 
-    // Gather displayable details
     private var details: [DetailRow] {
         var rows: [DetailRow] = [
-            .init(title: "HTTP Method", value: item.method.uppercased()),
-            .init(title: "URL", value: item.url),
-            .init(title: "Start time", value: item.startTime.formatted(date: .numeric, time: .standard))
+            .init(title: "HTTP Method", value: item.method.uppercased(), icon: "arrow.left.arrow.right", valueColor: methodColor),
+            .init(title: "URL", value: item.url, icon: "link"),
+            .init(title: "Start time", value: item.startTime.formatted(date: .numeric, time: .standard), icon: "clock")
         ]
         if let finishTime = item.finishTime {
-            rows.append(.init(title: "End time", value: finishTime.formatted(date: .numeric, time: .standard)))
-            rows.append(.init(title: "Response time", value: String(format: "%.4fs", item.responseTime)))
+            rows.append(.init(title: "End time", value: finishTime.formatted(date: .numeric, time: .standard), icon: "clock.fill"))
+            rows.append(.init(title: "Response time", value: String(format: "%.4fs", item.responseTime), icon: "timer", valueColor: responseTimeColor))
 
             if let mimetype = item.mimetype {
-                rows.append(.init(title: "Mime type", value: mimetype))
+                rows.append(.init(title: "Mime type", value: mimetype, icon: "doc.text"))
             }
             if let textEncoding = item.textEncodingName {
-                rows.append(.init(title: "Text encoding", value: textEncoding))
+                rows.append(.init(title: "Text encoding", value: textEncoding, icon: "textformat"))
             }
             if item.statusCode != 0 {
-                rows.append(.init(title: "Status code", value: "\(item.statusCode)"))
+                rows.append(.init(title: "Status code", value: "\(item.statusCode)", icon: "number", valueColor: statusCodeColor))
             }
             if let errorDesc = item.errorDescription {
-                rows.append(.init(title: "Error occurred", value: errorDesc))
+                rows.append(.init(title: "Error occurred", value: errorDesc, icon: "exclamationmark.triangle.fill", valueColor: .red))
             }
         }
         return rows
     }
 
+    private var methodColor: Color {
+        switch item.method.uppercased() {
+        case "GET": return .blue
+        case "POST": return .green
+        case "PUT": return .orange
+        case "DELETE": return .red
+        case "PATCH": return .purple
+        default: return .primary
+        }
+    }
+
+    private var statusCodeColor: Color {
+        let code = item.statusCode
+        switch code {
+        case 200..<300: return .green
+        case 300..<400: return .orange
+        case 400..<500: return .red
+        case 500..<600: return .purple
+        default: return .primary
+        }
+    }
+
+    private var responseTimeColor: Color {
+        let time = item.responseTime
+        if time < 0.5 { return .green }
+        else if time < 2.0 { return .orange }
+        else { return .red }
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             if item.finishTime == nil {
                 loadingView()
             } else {
                 ForEach(details) { row in
-                    rowItem(row.title, row.value)
+                    rowItem(row)
+                        .padding(.vertical, 4)
                 }
             }
         }
         .padding(.horizontal)
     }
 
-    private func rowItem(_ title: String, _ value: String) -> some View {
-        HStack(alignment: .top, spacing: 4) {
-            Text(title + ":")
-                .font(.caption)
-                .fontWeight(.medium)
-                .foregroundColor(.secondary)
-                .frame(width: 100, alignment: .leading)
+    private func rowItem(_ row: DetailRow) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                if let icon = row.icon {
+                    Image(systemName: icon)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .frame(width: 14)
+                }
+                Text(row.title)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+            }
 
-            Text(value)
+            Text(row.value)
                 .textSelection(.enabled)
-                .font(.caption)
-                .foregroundColor(.primary)
-            Spacer()
+                .font(.system(.body, design: row.title == "URL" ? .monospaced : .default))
+                .foregroundColor(row.valueColor ?? .primary)
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.secondary.opacity(0.2))
+                .cornerRadius(8)
         }
     }
 
     @ViewBuilder
     private func loadingView() -> some View {
-        HStack {
-            Spacer()
+        VStack(spacing: 16) {
             ProgressView()
                 .progressViewStyle(.circular)
-                .padding(.trailing, 8)
-            Text("Loading...")
-                .font(.caption)
+                .scaleEffect(1.2)
+            Text("Loading request details...")
+                .font(.subheadline)
                 .foregroundColor(.secondary)
-            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
     }
 }

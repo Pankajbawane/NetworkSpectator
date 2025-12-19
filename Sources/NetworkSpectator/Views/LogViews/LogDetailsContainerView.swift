@@ -43,32 +43,42 @@ struct LogDetailsContainerView: View {
     }
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             Picker("", selection: $selected) {
                 ForEach(availableTabs) { tab in
                     Text(tab.rawValue).tag(tab)
                 }
             }
             .pickerStyle(.segmented)
-            .padding(.bottom, 8)
+            .padding(.horizontal)
+            .padding(.vertical, 12)
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 2)
 
             ScrollView {
                 detailsView(for: selected)
+                    .padding(.top, 12)
+                    .animation(.easeInOut(duration: 0.2), value: selected)
             }
+            .background(Color(.systemGray).opacity(0.2))
         }
-        .navigationTitle("Details")
+        .navigationTitle("Request Details")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Button(action: { showExportFormatPicker = true }) {
-                    Image(systemName: "square.and.arrow.up")
+                    Label("Export", systemImage: "square.and.arrow.up")
                 }
                 .accessibilityLabel("Export Log")
             }
         }
-        .alert("Export failed", isPresented: $showAlert, actions: {
-            Button("Ok") {
+        .alert("Export Failed", isPresented: $showAlert, actions: {
+            Button("OK") {
                 showAlert = false
             }
+        }, message: {
+            Text("Unable to export the log. Please try again.")
         })
         .confirmationDialog("Select Export Format",
                             isPresented: $showExportFormatPicker,
@@ -79,11 +89,13 @@ struct LogDetailsContainerView: View {
                 }
             }
             Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Choose a format to export this network log")
         }
         .popover(item: $exportItem) { item in
             ActivityView(item: item.data)
         }
-        .loadingOverlay(isPresented: isExporting, text: "Preparing")
+        .loadingOverlay(isPresented: isExporting, text: "Preparing export...")
     }
 
     // Extracted view builder for each tab
