@@ -36,8 +36,12 @@ final class SkipRequestForLoggingHandler {
         !skipRequests.isEmpty
     }
 
-    init() { }
+    private init() { }
 
+    func remove(id: UUID) {
+        skipRequests.removeAll { $0.id == id }
+    }
+    
     func clear() {
         skipRequests.removeAll()
     }

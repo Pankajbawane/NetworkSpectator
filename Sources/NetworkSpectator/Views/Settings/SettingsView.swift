@@ -34,11 +34,6 @@ struct SettingsView: View {
 
     @State private var showAddMockSheet = false
     @State private var showAddSkipSheet = false
-    
-    init() {
-        mocks = MockServer.shared.mocks.map { Item(mock: $0) }
-        skipLogging = SkipRequestForLoggingHandler.shared.skipRequests.map(Item.init(skipRequest:))
-    }
 
     var body: some View {
         List {
@@ -48,9 +43,12 @@ struct SettingsView: View {
                 }
                 ForEach(mocks, id: \.id) { item in
                     Text(item.text)
+                        .font(Font.caption.bold())
                 }
                 .onDelete { indexSet in
                     mocks.remove(atOffsets: indexSet)
+                    guard let index = indexSet.first else { return }
+                    MockServer.shared.remove(id: mocks[index].id)
                 }
             }
             
@@ -60,22 +58,25 @@ struct SettingsView: View {
                 }
                 ForEach(skipLogging, id: \.id) { item in
                     Text(item.text)
+                        .font(Font.caption.bold())
                 }
                 .onDelete { indexSet in
                     skipLogging.remove(atOffsets: indexSet)
+                    guard let index = indexSet.first else { return }
+                    SkipRequestForLoggingHandler.shared.remove(id: skipLogging[index].id)
                 }
             }
         }
+        .onAppear {
+            mocks = MockServer.shared.mocks.map { Item(mock: $0) }
+            skipLogging = SkipRequestForLoggingHandler.shared.skipRequests.map(Item.init(skipRequest:))
+        }
         .navigationTitle("Settings")
         .sheet(isPresented: $showAddMockSheet) {
-            AddRuleItemView(isMock: true, title: "Add Mock", placeholder: "Enter mock") {
-                mocks = MockServer.shared.mocks.map { Item(mock: $0) }
-            }
+            AddRuleItemView(isMock: true, title: "Add Mock", placeholder: "Enter mock")
         }
         .sheet(isPresented: $showAddSkipSheet) {
-            AddRuleItemView(isMock: false, title: "Skip Logging", placeholder: "Enter pattern to skip") {
-                skipLogging = SkipRequestForLoggingHandler.shared.skipRequests.map(Item.init(skipRequest:))
-            }
+            AddRuleItemView(isMock: false, title: "Skip Logging", placeholder: "Enter pattern to skip")
         }
     }
 
