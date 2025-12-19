@@ -36,105 +36,130 @@ struct AddRuleItemView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Match Rule") {
-                    Picker("Select rule", selection: $rule) {
+                Section {
+                    Picker("Rule Type", selection: $rule) {
                         ForEach(Rule.allCases) { rule in
                             Text(rule.title).tag(rule)
                         }
                     }
-                    .pickerStyle(.inline)
-                }
-                
-                #if os(macOS)
-                Spacer().frame(minHeight: 10)
-                #endif
-                
-                #if os(macOS)
-                Spacer().frame(minHeight: 15)
-                Divider()
-                Spacer().frame(minHeight: 15)
-                #endif
-                
-                Section("Enter rule criteria") {
-                    TextEditor(text: $text)
-                        .autocorrectionDisabled()
                     #if os(iOS)
-                        .textInputAutocapitalization(.never)
-                        .keyboardType(.asciiCapable)
+                    .pickerStyle(.menu)
+                    #else
+                    .pickerStyle(.inline)
                     #endif
-                    #if os(macOS)
-                        .frame(minHeight: 40)
-                    #endif
-                        .border(Color(.systemGray))
+                } header: {
+                    Text("Match Rule")
+                } footer: {
+                    Text(ruleDescription)
+                        .font(.caption)
                 }
-                
-                #if os(macOS)
-                Spacer().frame(minHeight: 15)
-                Divider()
-                Divider()
-                Spacer().frame(minHeight: 15)
-                #endif
-                
-                if isMock {
-                    Section("Mock Response") {
-                        
-                        HStack(alignment: .top) {
-                            Text("Response")
-                                .font(Font.caption.bold())
-                            TextEditor(text: $response)
-                                .font(.footnote)
-                                .autocorrectionDisabled()
-                            #if os(iOS)
-                                .textInputAutocapitalization(.never)
-                                .keyboardType(.asciiCapable)
-                            #endif
-                                .frame(minHeight: 90)
-                                .border(Color(.systemGray))
-                        }
-                        
-                        #if os(macOS)
-                        Spacer().frame(minHeight: 15)
-                        Divider()
-                        Spacer().frame(minHeight: 15)
+
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        #if os(iOS)
+                        Text("Criteria")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                         #endif
-                        
-                        HStack(alignment: .top) {
-                            Text("Status Code")
-                                .font(Font.caption.bold())
-                            TextEditor(text: $statusCode)
-                                .autocorrectionDisabled()
-                            #if os(iOS)
-                                .textInputAutocapitalization(.never)
-                                .keyboardType(.numberPad)
-                            #endif
-                                .frame(minHeight: 40)
-                                .border(Color(.systemGray))
-                        }
-                        
-                        #if os(macOS)
-                        Spacer().frame(minHeight: 15)
-                        Divider()
-                        Spacer().frame(minHeight: 15)
+                        TextEditor(text: $text)
+                            .font(.body)
+                            .autocorrectionDisabled()
+                        #if os(iOS)
+                            .textInputAutocapitalization(.never)
+                            .keyboardType(.asciiCapable)
+                            .frame(minHeight: 80)
+                        #else
+                            .frame(minHeight: 60)
                         #endif
-                        
-                        HStack(alignment: .top) {
-                            Text("Headers")
-                                .font(Font.caption.bold())
-                            TextEditor(text: $headers)
-                                .font(.footnote)
-                                .autocorrectionDisabled()
-                            #if os(iOS)
-                                .textInputAutocapitalization(.never)
-                                .keyboardType(.asciiCapable)
-                            #endif
-                                .frame(minHeight: 60)
-                                .border(Color(.systemGray))
-                        }
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(text.isEmpty ? Color.red.opacity(0.3) : Color.clear, lineWidth: 1)
+                            )
                     }
-                    .listRowSeparator(.hidden)
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("Rule Criteria")
+                } footer: {
+                    Text("Enter the pattern to match (e.g., https://api.example.com)")
+                        .font(.caption)
+                }
+
+                if isMock {
+                    Section {
+                        VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Label("Response Body", systemImage: "doc.text")
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(.primary)
+
+                                TextEditor(text: $response)
+                                    .font(.system(.body, design: .monospaced))
+                                    .autocorrectionDisabled()
+                                #if os(iOS)
+                                    .textInputAutocapitalization(.never)
+                                    .keyboardType(.asciiCapable)
+                                    .frame(minHeight: 120)
+                                #else
+                                    .frame(minHeight: 100)
+                                #endif
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                                    )
+                            }
+
+                            Divider()
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Label("Status Code", systemImage: "number")
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(.primary)
+
+                                #if os(iOS)
+                                TextField("200", text: $statusCode)
+                                    .keyboardType(.numberPad)
+                                    .textFieldStyle(.roundedBorder)
+                                #else
+                                TextField("200", text: $statusCode)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(maxWidth: 150)
+                                #endif
+                            }
+
+                            Divider()
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Label("Headers", systemImage: "list.bullet.rectangle")
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(.primary)
+
+                                TextEditor(text: $headers)
+                                    .font(.system(.callout, design: .monospaced))
+                                    .autocorrectionDisabled()
+                                #if os(iOS)
+                                    .textInputAutocapitalization(.never)
+                                    .keyboardType(.asciiCapable)
+                                    .frame(minHeight: 80)
+                                #else
+                                    .frame(minHeight: 70)
+                                #endif
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                                    )
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    } header: {
+                        Text("Mock Response")
+                    } footer: {
+                        Text("Provide JSON response body, HTTP status code (e.g., 200), and headers in key=value or key:value format)")
+                            .font(.caption)
+                    }
                 }
             }
             #if os(macOS)
+            .formStyle(.grouped)
             .padding(20)
             .navigationTitle(title)
             #endif
@@ -145,46 +170,67 @@ struct AddRuleItemView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") {
+                        dismiss()
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        let matchRule: MatchRule
-                        switch rule {
-                        case .url:
-                            matchRule = .url(text)
-                        case .endPath:
-                            matchRule = .endPath(text)
-                        case .path:
-                            matchRule = .path(text)
-                        case .pathComponent:
-                            matchRule = .pathComponent(text)
-                        }
-                        if isMock {
-                            do {
-                                let responseData = try HTTPInputConverter.jsonData(from: response)
-                                let statuscode = try HTTPInputConverter.statusCode(from: statusCode)
-                                let headersData = try HTTPInputConverter.headers(from: headers)
-                                let mock = try Mock(rules: [matchRule],
-                                                    response: responseData,
-                                                    headers: headersData,
-                                                    statusCode: statuscode)
-                                MockServer.shared.register(mock)
-                            } catch {
-                                self.errorMessage = error.localizedDescription
-                                self.showErrorAlert = true
-                                return
-                            }
-                        } else {
-                            SkipRequestForLoggingHandler.shared.register(rule: matchRule)
-                        }
-                        guard !showErrorAlert else { return }
-                        dismiss()
+                        addRule()
                     }
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
         }
+    }
+
+    private var ruleDescription: String {
+        switch rule {
+        case .url:
+            return "Match the complete URL"
+        case .path:
+            return "Match the URL path"
+        case .endPath:
+            return "Match URLs ending with this path"
+        case .pathComponent:
+            return "Match any path component"
+        }
+    }
+
+    private func addRule() {
+        let matchRule: MatchRule
+        switch rule {
+        case .url:
+            matchRule = .url(text)
+        case .endPath:
+            matchRule = .endPath(text)
+        case .path:
+            matchRule = .path(text)
+        case .pathComponent:
+            matchRule = .pathComponent(text)
+        }
+
+        if isMock {
+            do {
+                let responseData = try HTTPInputConverter.jsonData(from: response)
+                let statuscode = try HTTPInputConverter.statusCode(from: statusCode)
+                let headersData = try HTTPInputConverter.headers(from: headers)
+                let mock = Mock(rules: [matchRule],
+                               response: responseData,
+                               headers: headersData,
+                               statusCode: statuscode)
+                MockServer.shared.register(mock)
+            } catch {
+                self.errorMessage = error.localizedDescription
+                self.showErrorAlert = true
+                return
+            }
+        } else {
+            SkipRequestForLoggingHandler.shared.register(rule: matchRule)
+        }
+
+        guard !showErrorAlert else { return }
+        dismiss()
     }
 }
 
