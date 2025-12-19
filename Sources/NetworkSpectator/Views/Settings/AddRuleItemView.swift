@@ -12,23 +12,17 @@ struct AddRuleItemView: View {
         case url = "URL"
         case path = "Path"
         case endPath = "EndPath"
-        case pathComponent = "PathComponent"
+        case pathComponent = "Path Component"
 
         var id: Self { self }
 
         var title: String {
-            switch self {
-            case .url: return "URL"
-            case .path: return "Path"
-            case .endPath: return "End Path"
-            case .pathComponent: return "Path Component"
-            }
+            rawValue
         }
     }
 
     let isMock: Bool
     let title: String
-    let placeholder: String
 
     @Environment(\.dismiss) private var dismiss
     @State private var text: String = ""
@@ -38,13 +32,12 @@ struct AddRuleItemView: View {
     @State private var rule: Rule = .url
     @State private var showErrorAlert: Bool = false
     @State private var errorMessage: String = ""
-    var complete: (() -> Void)?
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Match Rule") {
-                    Picker("", selection: $rule) {
+                    Picker("Select rule", selection: $rule) {
                         ForEach(Rule.allCases) { rule in
                             Text(rule.title).tag(rule)
                         }
@@ -52,66 +45,104 @@ struct AddRuleItemView: View {
                     .pickerStyle(.inline)
                 }
                 
-                Section("Enter matching criteria") {
+                #if os(macOS)
+                Spacer().frame(minHeight: 10)
+                #endif
+                
+                #if os(macOS)
+                Spacer().frame(minHeight: 15)
+                Divider()
+                Spacer().frame(minHeight: 15)
+                #endif
+                
+                Section("Enter rule criteria") {
                     TextEditor(text: $text)
                         .autocorrectionDisabled()
                     #if os(iOS)
                         .textInputAutocapitalization(.never)
                         .keyboardType(.asciiCapable)
                     #endif
+                    #if os(macOS)
                         .frame(minHeight: 40)
+                    #endif
+                        .border(Color(.systemGray))
                 }
+                
+                #if os(macOS)
+                Spacer().frame(minHeight: 15)
+                Divider()
+                Divider()
+                Spacer().frame(minHeight: 15)
+                #endif
                 
                 if isMock {
                     Section("Mock Response") {
                         
-                        Text("Response")
-                            .font(Font.caption.bold())
-                        TextEditor(text: $response)
-                            .autocorrectionDisabled()
-                        #if os(iOS)
-                            .textInputAutocapitalization(.never)
-                            .keyboardType(.asciiCapable)
-                            .border(Color(.secondarySystemBackground))
+                        HStack(alignment: .top) {
+                            Text("Response")
+                                .font(Font.caption.bold())
+                            TextEditor(text: $response)
+                                .font(.footnote)
+                                .autocorrectionDisabled()
+                            #if os(iOS)
+                                .textInputAutocapitalization(.never)
+                                .keyboardType(.asciiCapable)
+                            #endif
+                                .frame(minHeight: 90)
+                                .border(Color(.systemGray))
+                        }
+                        
+                        #if os(macOS)
+                        Spacer().frame(minHeight: 15)
+                        Divider()
+                        Spacer().frame(minHeight: 15)
                         #endif
-                            .frame(minHeight: 90)
                         
-                        
-                        HStack {
+                        HStack(alignment: .top) {
                             Text("Status Code")
                                 .font(Font.caption.bold())
-                            TextField("Enter", text: $statusCode)
+                            TextEditor(text: $statusCode)
                                 .autocorrectionDisabled()
                             #if os(iOS)
                                 .textInputAutocapitalization(.never)
                                 .keyboardType(.numberPad)
-                                .border(Color(.secondarySystemBackground))
                             #endif
                                 .frame(minHeight: 40)
+                                .border(Color(.systemGray))
                         }
                         
-                        
-                        Text("Headers")
-                            .font(Font.caption.bold())
-                        TextEditor(text: $headers)
-                            .autocorrectionDisabled()
-                        #if os(iOS)
-                            .textInputAutocapitalization(.never)
-                            .keyboardType(.asciiCapable)
-                            .border(Color(.secondarySystemBackground))
+                        #if os(macOS)
+                        Spacer().frame(minHeight: 15)
+                        Divider()
+                        Spacer().frame(minHeight: 15)
                         #endif
-                            .frame(minHeight: 60)
                         
+                        HStack(alignment: .top) {
+                            Text("Headers")
+                                .font(Font.caption.bold())
+                            TextEditor(text: $headers)
+                                .font(.footnote)
+                                .autocorrectionDisabled()
+                            #if os(iOS)
+                                .textInputAutocapitalization(.never)
+                                .keyboardType(.asciiCapable)
+                            #endif
+                                .frame(minHeight: 60)
+                                .border(Color(.systemGray))
+                        }
                     }
                     .listRowSeparator(.hidden)
                 }
             }
+            #if os(macOS)
+            .padding(20)
+            .navigationTitle(title)
+            #endif
             .alert("Error", isPresented: $showErrorAlert) {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(errorMessage)
             }
-            .navigationTitle(title)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -148,7 +179,6 @@ struct AddRuleItemView: View {
                             SkipRequestForLoggingHandler.shared.register(rule: matchRule)
                         }
                         guard !showErrorAlert else { return }
-                        complete?()
                         dismiss()
                     }
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -158,3 +188,6 @@ struct AddRuleItemView: View {
     }
 }
 
+#Preview {
+    AddRuleItemView(isMock: true, title: "Add mock")
+}

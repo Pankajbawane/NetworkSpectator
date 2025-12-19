@@ -18,13 +18,13 @@ public enum MatchRule {
     
     var ruleName: String {
         switch self {
-        case .hostName(let string): return "Host Name" + " " + string
-        case .url(let string): return "URL" + " " + string
-        case .path(let string): return "Path" + " " + string
-        case .endPath(let string): return "End Path" + " " + string
-        case .pathComponent(let string): return "Path Component" + " " + string
-        case .regex(let string): return "Regex" + " " + string
-        case .queryParameter: return "Query Parameter"
+        case .hostName(let string): return "Rule_Host Name" + ": " + string
+        case .url(let string): return "Rule_URL" + ": " + string
+        case .path(let string): return "Rule_Path" + ": " + string
+        case .endPath(let string): return "Rule_End Path" + ": " + string
+        case .pathComponent(let string): return "Rule_Path Component" + ": " + string
+        case .regex(let string): return "Rule_Regex" + ": " + string
+        case .queryParameter: return "Rule_Query Parameter"
         }
     }
 

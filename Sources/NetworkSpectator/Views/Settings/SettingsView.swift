@@ -20,12 +20,12 @@ struct SettingsView: View {
         
         init(mock: Mock) {
             id = mock.id
-            text = mock.rules?.first?.ruleName ?? "Unknown Rule"
+            text = mock.rules?.first?.ruleName ?? "Rule NA"
         }
         
         init(skipRequest: SkipRequestForLogging) {
             id = skipRequest.id
-            text = skipRequest.rules.first?.ruleName ?? "Unknown Rule"
+            text = skipRequest.rules.first?.ruleName ?? "Rule NA"
         }
     }
     
@@ -46,9 +46,10 @@ struct SettingsView: View {
                         .font(Font.caption.bold())
                 }
                 .onDelete { indexSet in
-                    mocks.remove(atOffsets: indexSet)
                     guard let index = indexSet.first else { return }
-                    MockServer.shared.remove(id: mocks[index].id)
+                    let id = mocks[index].id
+                    mocks.remove(atOffsets: indexSet)
+                    MockServer.shared.remove(id: id)
                 }
             }
             
@@ -61,9 +62,10 @@ struct SettingsView: View {
                         .font(Font.caption.bold())
                 }
                 .onDelete { indexSet in
-                    skipLogging.remove(atOffsets: indexSet)
                     guard let index = indexSet.first else { return }
-                    SkipRequestForLoggingHandler.shared.remove(id: skipLogging[index].id)
+                    let id = skipLogging[index].id
+                    skipLogging.remove(atOffsets: indexSet)
+                    SkipRequestForLoggingHandler.shared.remove(id: id)
                 }
             }
         }
@@ -73,10 +75,10 @@ struct SettingsView: View {
         }
         .navigationTitle("Settings")
         .sheet(isPresented: $showAddMockSheet) {
-            AddRuleItemView(isMock: true, title: "Add Mock", placeholder: "Enter mock")
+            AddRuleItemView(isMock: true, title: "Add Mock")
         }
         .sheet(isPresented: $showAddSkipSheet) {
-            AddRuleItemView(isMock: false, title: "Skip Logging", placeholder: "Enter pattern to skip")
+            AddRuleItemView(isMock: false, title: "Skip Logging")
         }
     }
 
