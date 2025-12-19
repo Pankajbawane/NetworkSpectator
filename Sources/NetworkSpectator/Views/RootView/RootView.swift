@@ -7,14 +7,9 @@
 
 import SwiftUI
 
-struct ExportItem: Identifiable {
-    let id: UUID = UUID()
-    let data: Any
-}
-
 struct RootView: View {
     @ObservedObject private var store = NetworkLogManager.shared
-    @State private var exportItem: ExportItem?
+    @State private var exportItem: ShareExportedItem?
     @State private var showAlert: Bool = false
     @State private var navigationPath = NavigationPath()
     @State private var searchText = ""
@@ -90,7 +85,7 @@ struct RootView: View {
                         Task {
                             do {
                                 let url = try await ExportManager.csv(store.items).exporter.export()
-                                exportItem = ExportItem(data: url)
+                                exportItem = ShareExportedItem(data: url)
                             } catch {
                                 showAlert = true
                             }
@@ -121,7 +116,6 @@ struct RootView: View {
                     AnalyticsDashboardView(data: store.items)
                 case .settings:
                     SettingsView()
-                    //Text("Settings navigation")
                 }
             }
         }
