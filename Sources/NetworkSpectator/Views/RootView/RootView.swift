@@ -45,7 +45,6 @@ struct RootView: View {
                 .listRowBackground(rowBackgroundColor(item))
             }
             .listStyle(.plain)
-            // TO DO: update search items.
             #if os(iOS)
             .searchable(text: $searchText,
                         isPresented: $isSearching,
@@ -59,13 +58,19 @@ struct RootView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .navigationDestination(for: String.self,
-                                   destination: analyticsNavigationDestination)
             .toolbar {
                 
                 ToolbarItem(placement: .automatic) {
                     Button {
-                        navigationPath.append("analytics")
+                        navigationPath.append(NavigationItem.settings)
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                }
+                
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        navigationPath.append(NavigationItem.analytics)
                     } label: {
                         Image(systemName: "chart.bar.xaxis.ascending")
                     }
@@ -99,7 +104,6 @@ struct RootView: View {
                         }
                     }
                     .disabled(isExporting)
-                    .accessibilityLabel("Export")
                 }
             }
             .alert("Export failed", isPresented: $showAlert, actions: {
@@ -111,6 +115,15 @@ struct RootView: View {
                 ActivityView(item: item.data)
             }
             .loadingOverlay(isPresented: isExporting, text: "Preparing CSV")
+            .navigationDestination(for: NavigationItem.self) { navigation in
+                switch navigation {
+                case .analytics:
+                    AnalyticsDashboardView(data: store.items)
+                case .settings:
+                    SettingsView()
+                    //Text("Settings navigation")
+                }
+            }
         }
     }
     
@@ -118,32 +131,12 @@ struct RootView: View {
         (item.errorDescription != nil) ? Color.red.opacity(0.1)
         : (item.isLoading ? Color.yellow.opacity(0.1) : Color.clear)
     }
-
-    @ViewBuilder
-    private func analyticsNavigationDestination(_ path: String) -> some View {
-        if path == "analytics" {
-            AnalyticsDashboardView(data: store.items)
-        } else if path == "showExport" {
-            //let exportedCSV = ExportManager.csv(store.items).exporter.export()
-            //ActivityView(item: exportedCSV)
-        }
-    }
-
-    @ViewBuilder
-    private func exportSheet() -> some View {
-//        ExportOptionsView(url: exportURL) { type in
-//            
-//        } onCancel: {
-//            
-//        }
-    }
 }
 
 extension RootView {
-    enum Navigation: Hashable {
+    enum NavigationItem: String {
         case analytics
-        case export
-        case clear
+        case settings
     }
 }
 

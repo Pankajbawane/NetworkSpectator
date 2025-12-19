@@ -71,7 +71,7 @@ final internal class NetworkURLProtocol: URLProtocol {
         }
         
         // If the request is mocked using match rules, return mocked response.
-        if let mock = NetworkSpectator.mockServer.responseIfMocked(request) {
+        if let mock = MockServer.shared.responseIfMocked(request) {
             completion(mock.response, mock.urlResponse(request), mock.error)
             return
         }

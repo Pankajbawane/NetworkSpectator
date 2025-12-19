@@ -9,7 +9,8 @@
 import Foundation
 
 /// Represents a mock HTTP response for network request interception.
-public struct Mock {
+public struct Mock: Identifiable, Equatable {
+    public let id: UUID = UUID()
     let headers: [String: String]
     let statusCode: Int
     let response: Data?
@@ -97,5 +98,9 @@ public struct Mock {
                 error: Error? = nil,
                 matches: @escaping (URLRequest) -> Bool) {
         self.init(response: response, headers: headers, statusCode: statusCode, error: error, rules: nil, matches: matches)
+    }
+    
+    public static func == (lhs: Mock, rhs: Mock) -> Bool {
+        lhs.id == rhs.id
     }
 }

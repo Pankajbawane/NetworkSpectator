@@ -7,8 +7,9 @@
 
 import Foundation
 
-public struct SkipRequestForLogging {
+public struct SkipRequestForLogging: Identifiable {
 
+    public let id: UUID = UUID()
     let rules: [MatchRule]
 
     public init(rules: [MatchRule]) {
@@ -27,7 +28,9 @@ public struct SkipRequestForLogging {
 
 final class SkipRequestForLoggingHandler {
 
-    private var skipRequests: [SkipRequestForLogging] = []
+    internal nonisolated(unsafe) static let shared: SkipRequestForLoggingHandler = .init()
+    
+    var skipRequests: [SkipRequestForLogging] = []
 
     var isEnabled: Bool {
         !skipRequests.isEmpty
