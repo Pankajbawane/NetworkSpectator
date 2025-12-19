@@ -97,9 +97,9 @@ internal extension URLSession {
     @objc
     private func swizzled_dataTask(with request: URLRequest,
                                    completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
-        if NetworkSpectator.skipRequestLogging.isEnabled,
+        if SkipRequestForLoggingHandler.shared.isEnabled,
            let url = request.url,
-           NetworkSpectator.skipRequestLogging.shouldSkipLogging(url) {
+           SkipRequestForLoggingHandler.shared.shouldSkipLogging(url) {
                 return self.swizzled_dataTask(with: request, completionHandler: completionHandler)
         }
         let log = LogItem.fromRequest(request)

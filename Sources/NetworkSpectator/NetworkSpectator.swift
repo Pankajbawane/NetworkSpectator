@@ -33,8 +33,6 @@ public struct NetworkSpectator: Sendable {
     }
     #endif
     
-    internal nonisolated(unsafe) static let skipRequestLogging: SkipRequestForLoggingHandler = .init()
-    
     public static func start() {
         Task {
             await NetworkLogManager.shared.enable()
@@ -45,7 +43,7 @@ public struct NetworkSpectator: Sendable {
         Task {
             await NetworkLogManager.shared.disable()
             MockServer.shared.clear()
-            skipRequestLogging.clear()
+            SkipRequestForLoggingHandler.shared.clear()
         }
     }
     

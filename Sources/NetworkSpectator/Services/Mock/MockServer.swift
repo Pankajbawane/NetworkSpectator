@@ -14,7 +14,7 @@ final class MockServer {
     
     nonisolated(unsafe) static let shared: MockServer = .init()
     
-    init() { }
+    private init() { }
     
     /// Registers a mock to intercept matching network requests.
     /// - Parameter mock: The mock configuration to register.
@@ -33,6 +33,11 @@ final class MockServer {
             }
             return false
         }
+    }
+    
+    /// Removes registered mock.
+    func remove(id: UUID) {
+        mocks.removeAll { $0.id == id }
     }
     
     /// Removes all registered mocks.
