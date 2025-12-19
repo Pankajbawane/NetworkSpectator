@@ -21,7 +21,7 @@ struct LogDetailsContainerView: View {
 
     @State private var selected: DetailsTab = .basic
     @State private var showAlert = false
-    @State private var exportItem: ExportItem?
+    @State private var exportItem: ShareExportedItem?
     @State private var isExporting: Bool = false
     @State private var showExportFormatPicker = false
 
@@ -115,7 +115,7 @@ struct LogDetailsContainerView: View {
                 case .postmanCollection:
                     exportedURL = try await ExportManager.postman(item).exporter.export()
                 }
-                exportItem = ExportItem(data: exportedURL)
+                exportItem = ShareExportedItem(data: exportedURL)
             } catch {
                 showAlert = true
             }
