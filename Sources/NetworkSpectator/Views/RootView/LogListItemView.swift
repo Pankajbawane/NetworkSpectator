@@ -8,40 +8,201 @@
 import SwiftUI
 
 struct LogListItemView: View {
-    
+
     let item: LogItem
-    
+
     var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text("\(item.url)")
-                    .lineLimit(1)
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                
-                HStack {
-                    Text("\(item.startTime.formatted(date: .abbreviated, time: .standard)) \(!item.isLoading ? "| Response Time: \(item.responseTime, specifier: "%.2f") sec" : "")")
+        HStack(alignment: .top, spacing: 12) {
+            // HTTP Method Badge
+            HTTPMethodBadge(method: item.method)
+
+            VStack(alignment: .leading, spacing: 6) {
+                // URL with host highlighted
+                HStack(spacing: 6) {
+                    Text(item.host)
                         .font(.caption)
-                    
+                        .fontWeight(.bold)
+                        .foregroundStyle(.primary)
+
+                    if !item.path.isEmpty && item.path != "/" {
+                        Text(item.path)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    Spacer()
+
+                    // Status Code Badge
+                    if !item.isLoading {
+                        StatusCodeBadge(statusCode: item.statusCode)
+                    }
+                }
+
+                // Timing and metadata
+                HStack(spacing: 8) {
+                    Label {
+                        Text(item.startTime.formatted(date: .omitted, time: .shortened))
+                    } icon: {
+                        Image(systemName: "clock")
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                    if !item.isLoading {
+                        Label {
+                            Text("\(item.responseTime, specifier: "%.2f")s")
+                        } icon: {
+                            Image(systemName: "timer")
+                        }
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    }
+
+                    // Show request/response size if available
+                    if !item.requestBody.isEmpty {
+                        Label {
+                            Text(formatBytes(item.requestBody.count))
+                        } icon: {
+                            Image(systemName: "arrow.up.circle.fill")
+                        }
+                        .font(.caption2)
+                        .foregroundStyle(.blue)
+                    }
+
+                    if !item.responseBody.isEmpty && !item.isLoading {
+                        Label {
+                            Text(formatBytes(item.responseBody.count))
+                        } icon: {
+                            Image(systemName: "arrow.down.circle.fill")
+                        }
+                        .font(.caption2)
+                        .foregroundStyle(.green)
+                    }
+
                     Spacer()
                 }
-                
+
+                // Error display
                 if let error = item.errorLocalizedDescription {
-                    Text("Error: \(error)")
-                        .lineLimit(1)
-                        .font(.caption)
-                        .foregroundStyle(Color.red)
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption2)
+                        Text(error)
+                            .font(.caption2)
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(.red)
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(6)
                 }
             }
-            
-            Spacer()
-            
+
+            // Loading indicator
             if item.isLoading {
                 ProgressView()
                     .progressViewStyle(.circular)
-                    .frame(width: 5, height: 5)
-                    .padding(.leading, 5)
+                    .controlSize(.small)
             }
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    // MARK: - Helper Methods
+
+    private func formatBytes(_ bytes: Int) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .binary
+        formatter.allowedUnits = [.useKB, .useMB]
+        formatter.includesUnit = true
+        return formatter.string(fromByteCount: Int64(bytes))
+    }
+
+    private var accessibilityLabel: String {
+        var label = "\(item.method) request to \(item.host)"
+        if !item.isLoading {
+            label += ", status \(item.statusCode)"
+            label += ", response time \(item.responseTime) seconds"
+        } else {
+            label += ", loading"
+        }
+        if let error = item.errorLocalizedDescription {
+            label += ", error: \(error)"
+        }
+        return label
+    }
+}
+
+// MARK: - HTTP Method Badge
+
+struct HTTPMethodBadge: View {
+    let method: String
+
+    var body: some View {
+        Text(method.isEmpty ? "?" : method)
+            .font(.caption2)
+            .fontWeight(.bold)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(methodColor)
+            .cornerRadius(6)
+            .frame(minWidth: 44)
+    }
+
+    private var methodColor: Color {
+        switch method.uppercased() {
+        case "GET": return .blue
+        case "POST": return .green
+        case "PUT": return .orange
+        case "PATCH": return .purple
+        case "DELETE": return .red
+        case "HEAD": return .gray
+        case "OPTIONS": return .brown
+        default: return .secondary
+        }
+    }
+}
+
+// MARK: - Status Code Badge
+
+struct StatusCodeBadge: View {
+    let statusCode: Int
+
+    var body: some View {
+        if statusCode > 0 {
+            Text("\(statusCode)")
+                .font(.caption2)
+                .fontWeight(.semibold)
+                .foregroundStyle(statusTextColor)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(statusBackgroundColor)
+                .cornerRadius(4)
+        }
+    }
+
+    private var statusTextColor: Color {
+        switch statusCode {
+        case 200..<300: return .white
+        case 300..<400: return .primary
+        case 400..<500: return .white
+        case 500..<600: return .white
+        default: return .primary
+        }
+    }
+
+    private var statusBackgroundColor: Color {
+        switch statusCode {
+        case 200..<300: return .green
+        case 300..<400: return .yellow.opacity(0.3)
+        case 400..<500: return .orange
+        case 500..<600: return .red
+        default: return .gray.opacity(0.2)
         }
     }
 }
