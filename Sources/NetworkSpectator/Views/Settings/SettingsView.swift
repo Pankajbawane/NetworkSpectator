@@ -42,7 +42,7 @@ struct SettingsView: View {
         #if os(iOS)
         .listStyle(.insetGrouped)
         #else
-        .listStyle(.sidebar)
+        .listStyle(.inset)
         #endif
         .onAppear {
             loadData()
@@ -236,7 +236,7 @@ struct SettingsView: View {
 
             Button(action: addAction) {
                 Image(systemName: "plus.circle.fill")
-                    .font(.title3)
+                    .font(.title2)
                     .symbolRenderingMode(.hierarchical)
             }
             .buttonStyle(.plain)
