@@ -13,8 +13,18 @@ struct LogListItemView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            // HTTP Method Badge
-            HTTPMethodBadge(method: item.method)
+            
+            VStack {
+                // HTTP Method Badge
+                HTTPMethodBadge(method: item.method)
+                
+                // Loading indicator
+                if item.isLoading {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .controlSize(.mini)
+                }
+            }
 
             VStack(alignment: .leading, spacing: 6) {
                 // URL with host highlighted
@@ -22,6 +32,7 @@ struct LogListItemView: View {
                     Text(item.host)
                         .font(.caption)
                         .fontWeight(.bold)
+                        .lineLimit(1)
                         .foregroundStyle(.primary)
 
                     if !item.path.isEmpty && item.path != "/" {
@@ -40,14 +51,15 @@ struct LogListItemView: View {
                 }
 
                 // Timing and metadata
-                HStack(spacing: 5) {
+                HStack(spacing: 10) {
                     Label {
-                        Text(item.startTime.formatted(date: .omitted, time: .standard))
+                        Text(item.startTime.formatted(date: .omitted, time: .shortened))
                     } icon: {
                         Image(systemName: "clock")
                     }
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                    .labelStyle(CompactLabelStyle(spacing: 2))
 
                     if !item.isLoading {
                         Label {
@@ -57,25 +69,17 @@ struct LogListItemView: View {
                         }
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                    }
-
-                    // Show request/response size if available
-                    if !item.requestBody.isEmpty {
-                        Label {
-                            Text(formatBytes(item.requestBody.count))
-                        } icon: {
-                            Image(systemName: "arrow.up.circle.fill")
-                        }
-                        .font(.caption2)
+                        .labelStyle(CompactLabelStyle(spacing: 2))
                     }
 
                     if !item.responseBody.isEmpty && !item.isLoading {
                         Label {
                             Text(formatBytes(item.responseBody.count))
                         } icon: {
-                            Image(systemName: "arrow.down.circle.fill")
+                            Image(systemName: "arrow.down.circle")
                         }
                         .font(.caption2)
+                        .labelStyle(CompactLabelStyle(spacing: 2))
                     }
 
                     Spacer()
@@ -97,13 +101,6 @@ struct LogListItemView: View {
                     .cornerRadius(6)
                 }
             }
-
-            // Loading indicator
-            if item.isLoading {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .controlSize(.small)
-            }
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
@@ -115,7 +112,7 @@ struct LogListItemView: View {
     private func formatBytes(_ bytes: Int) -> String {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .binary
-        formatter.allowedUnits = [.useKB, .useMB]
+        formatter.allowedUnits = [.useKB, .useMB, .useBytes]
         formatter.includesUnit = true
         return formatter.string(fromByteCount: Int64(bytes))
     }
@@ -202,5 +199,20 @@ struct StatusCodeBadge: View {
         case 500..<600: return .red
         default: return .gray.opacity(0.2)
         }
+    }
+}
+
+
+// MARK: - Tight Label Style
+
+struct CompactLabelStyle: LabelStyle {
+    var spacing: CGFloat = 2
+
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: spacing) {
+            configuration.icon
+            configuration.title
+        }
+        .foregroundStyle(.secondary)
     }
 }
