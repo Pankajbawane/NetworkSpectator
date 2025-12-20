@@ -15,46 +15,176 @@ struct AnalyticsDashboardView: View {
         ChartItemFactory.get(items: data, key: \.host)
     }
     
+    private var totalRequests: Int {
+        data.count
+    }
+    
+    private var successRate: Double {
+        guard !data.isEmpty else { return 0 }
+        let successCount = data.filter { $0.statusCode >= 200 && $0.statusCode < 300 }.count
+        return Double(successCount) / Double(data.count) * 100
+    }
+
     var body: some View {
         if data.isEmpty {
-            Text("No data to display.")
+            emptyStateView
         } else {
             ScrollView {
-                VStack {
-                    HStack {
-                        VStack {
-                            Text("Status Code")
-                                .font(.caption)
-                                .fontWeight(.bold)
-                            StatusCodeChartView(data: statusCode)
+                VStack(spacing: 20) {
+                    summaryCardsView
+
+                    chartSectionView(
+                        title: "Status Codes",
+                        icon: "checkmark.circle.fill",
+                        barChart: StatusCodeChartView(data: statusCode),
+                        pieChart: PieChartView(data: statusCode, title: "Status Code")
+                    )
+
+                    chartSectionView(
+                        title: "HTTP Methods",
+                        icon: "arrow.left.arrow.right",
+                        barChart: HTTPMethodsChartView(data: httpMethod),
+                        pieChart: PieChartView(data: httpMethod, title: "HTTP Methods")
+                    )
+
+                    chartSectionView(
+                        title: "Hosts",
+                        icon: "server.rack",
+                        barChart: HostsChartView(data: hosts),
+                        pieChart: PieChartView(data: hosts, title: "Hosts")
+                    )
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "chart.line.uptrend.xyaxis")
+                                .foregroundStyle(.blue)
+                                .font(.title3)
+                            Text("Request Timeline")
+                                .font(.headline)
+                                .fontWeight(.semibold)
                         }
-                        
-                        PieChartView(data: statusCode, title: "Status Code")
+                        .padding(.horizontal)
+
+                        RequestBarChartView(logs: data)
+                        #if os(macOS)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color(.controlBackgroundColor))
+                            )
+                        #endif
                     }
-                    HStack {
-                        VStack {
-                            Text("HTTP Method")
-                                .font(.caption)
-                                .fontWeight(.bold)
-                            HTTPMethodsChartView(data: httpMethod)
-                        }
-                        
-                        PieChartView(data: httpMethod, title: "HTTP Methods")
-                    }
-                    HStack {
-                        VStack {
-                            Text("Host")
-                                .font(.caption)
-                                .fontWeight(.bold)
-                            HostsChartView(data: hosts)
-                        }
-                        PieChartView(data: hosts, title: "Hosts")
-                    }
-                    Text("Requests")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                    RequestBarChartView(logs: data)
                 }
+                .padding()
+            }
+        }
+    }
+
+    private var emptyStateView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "chart.bar.doc.horizontal")
+                .font(.system(size: 60))
+                .foregroundStyle(.secondary)
+            Text("No Analytics Data")
+                .font(.title2)
+                .fontWeight(.semibold)
+            Text("Start monitoring network requests to see analytics.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+    }
+
+    private var summaryCardsView: some View {
+        HStack(spacing: 16) {
+            summaryCard(
+                title: "Total Requests",
+                value: "\(totalRequests)",
+                icon: "network",
+                color: .blue
+            )
+
+            summaryCard(
+                title: "Success Rate",
+                value: String(format: "%.1f%%", successRate),
+                icon: "checkmark.circle",
+                color: .green
+            )
+
+            summaryCard(
+                title: "Unique Hosts",
+                value: "\(hosts.count)",
+                icon: "server.rack",
+                color: .orange
+            )
+        }
+    }
+
+    private func summaryCard(title: String, value: String, icon: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundStyle(color)
+                    .font(.title3)
+                Spacer()
+            }
+            Text(value)
+                .font(.title)
+                .fontWeight(.bold)
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+#if os(macOS)
+    .background(
+        RoundedRectangle(cornerRadius: 12)
+            .fill(Color(.controlBackgroundColor))
+    )
+#endif
+    }
+
+    private func chartSectionView<BarChart: View, PieChart: View>(
+        title: String,
+        icon: String,
+        barChart: BarChart,
+        pieChart: PieChart
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundStyle(.blue)
+                    .font(.title3)
+                Text(title)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+            }
+            .padding(.horizontal)
+
+            HStack(spacing: 16) {
+                VStack {
+                    barChart
+                }
+                .frame(maxWidth: .infinity)
+#if os(macOS)
+    .background(
+        RoundedRectangle(cornerRadius: 12)
+            .fill(Color(.controlBackgroundColor))
+    )
+#endif
+
+                VStack {
+                    pieChart
+                }
+                .frame(maxWidth: .infinity)
+#if os(macOS)
+    .background(
+        RoundedRectangle(cornerRadius: 12)
+            .fill(Color(.controlBackgroundColor))
+    )
+#endif
             }
         }
     }
