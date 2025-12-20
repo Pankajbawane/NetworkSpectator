@@ -1,6 +1,6 @@
 # NetworkSpectator
 
-A lightweight Swift utility to observe and inspect your app's network traffic during development and testing. NetworkSpectator captures requests and responses, lets you browse and mock them in a simple UI, and export logs for sharing.
+A lightweight Swift utility for observing and inspecting your app's network traffic during development and testing. NetworkSpectator captures requests and responses, provides a simple UI for browsing and mocking them, and allows you to export logs for sharing.
 
 ## Features
 
@@ -11,8 +11,8 @@ A lightweight Swift utility to observe and inspect your app's network traffic du
  
 - **Filters and Search**
   - Filter requests by status codes and HTTP methods
-  - Quick search functionality to instantly locate specific requests by URL
-  - Combine filters for precise request search
+  - Locate specific requests by URL using search
+  - Combine filters for precise request searching
 
 - **Export logs in multiple formats**
 
@@ -23,8 +23,8 @@ A lightweight Swift utility to observe and inspect your app's network traffic du
 
 - **Mock responses**
   - Define custom mock responses using flexible rule-based matching
-  - Test different scenarios and edge cases without requiring backend API deployment
-  - **Programmatic mocking** - Add mocks via code to create reliable unit tests without complex stubbing frameworks
+  - Test different scenarios and edge cases without backend API deployment
+  - **Programmatic mocking** - Add mocks via code for reliable unit tests without complex stubbing setups
   - **UI-based mocking** - Enable QA testers to validate business logic in test builds independently, without developer intervention or Xcode
   - Perfect for offline development
 
@@ -34,10 +34,10 @@ A lightweight Swift utility to observe and inspect your app's network traffic du
   - Configure skip rules both programmatically (in code) and dynamically (via UI)
 
 - **Lightweight and easy to integrate**
-  - One liner setup to start monitoring and logging
+  - One-line setup to start monitoring and logging
   - No external dependencies
   - Works with SwiftUI and UIKit/AppKit
-  - Configurable debug logging print
+  - Configurable logging on Xcode debug console
 
 - **Cross-platform SwiftUI support**
   - iOS 17.0+
@@ -64,12 +64,13 @@ dependencies: [
 ## Usage
 
 ### Example App
-NetworkSpectatorExample app demostrates basic usage of the library - https://github.com/Pankajbawane/NetworkSpectatorExample
+The NetworkSpectatorExample app demonstrates basic usage of the library: https://github.com/Pankajbawane/NetworkSpectatorExample
 
 ### Basic Setup
 
 1. **Enable NetworkSpectator** in your app's entry point (AppDelegate or App struct):
-Call NetworkSpectator.start() to start listening HTTP requests. This will automatically log HTTP requests.
+
+Call `NetworkSpectator.start()` to begin listening to HTTP requests. This will automatically log all HTTP traffic.
 ```swift
 import NetworkSpectator
 
@@ -124,19 +125,19 @@ presentAsSheet(networkVC)
 Customize NetworkSpectator behavior with the configuration methods:
 
 ```swift
-// Printing logs on Debug console
+// Enable or disable printing logs to the debug console
 NetworkSpectator.debugLogsPrint(isEnabled: Bool)
 
-// Register for mock response
+// Register a mock response
 NetworkSpectator.registerMock(for mock: Mock)
 
-// Skip logging a request
+// Skip logging for specific requests
 NetworkSpectator.ignoreLogging(for rule: MatchRule)
 ```
 
 ### Disabling NetworkSpectator
 
-You can stop network monitoring:
+If enabled, then, to stop network monitoring:
 
 ```swift
 NetworkSpectator.stop()
@@ -145,18 +146,18 @@ NetworkSpectator.stop()
 ## NetworkSpectator UI on iOS
 The following screenshots demonstrate NetworkSpectator running on iOS in light mode.
 
-| List of Requests | Filters | URL Search | Basic Details |
+| List of Requests | Filters | URL Search | Details |
 |---------|---------|------------|------------|
 | <img width="300" height="652" alt="landing" src="https://github.com/user-attachments/assets/e58d675a-1ab7-4a8f-8232-f45323b61b20" /> | <img width="300" height="652" alt="filters_ios" src="https://github.com/user-attachments/assets/32087e71-0c66-4204-aa4e-873a1a28cf67" /> | <img width="300" height="652" alt="url_search_ios" src="https://github.com/user-attachments/assets/5db9d07e-d311-49e6-b1c1-3bf8a2da0a2d" /> | <img width="300" height="652" alt="basic_ios" src="https://github.com/user-attachments/assets/d6d86fc3-eece-4bae-b557-519966040815" /> |
 
-| Headers | Response | Settings | Share |
+| Headers | Response | Settings | Export & Share |
 |---------|----------|----------|-------|
 | <img width="300" height="652" alt="headers_ios" src="https://github.com/user-attachments/assets/1fc211e9-382e-4491-af7d-0f590dad5a9d" /> | <img width="300" height="652" alt="response_response" src="https://github.com/user-attachments/assets/9623b659-a0b5-4414-bf59-cd91c600047d" /> | <img width="300" height="652" alt="settings_ios" src="https://github.com/user-attachments/assets/c3f4e364-aa95-4d65-955d-4a35c8a94d68" /> | <img width="300" height="652" alt="share_ios" src="https://github.com/user-attachments/assets/96b0fc82-dcfe-4159-8458-00b815466802" /> |
 
 ## NetworkSpectator UI on macOS
 The following screenshots demonstrate NetworkSpectator running on macOS in dark mode.
 
-| List of Requests | Filters | Basic Details |
+| List of Requests | Filters | Details |
 |------------------|---------|---------------|
 | <img width="1169" height="620" alt="landing_mac" src="https://github.com/user-attachments/assets/2006355b-7a6a-47f4-89e2-14f7cf76e8df" /> | <img width="1152" height="609" alt="filters_mac" src="https://github.com/user-attachments/assets/2007cc11-672e-420d-9f13-7110e8b95a2d" /> | <img width="1152" height="833" alt="basic_details_mac" src="https://github.com/user-attachments/assets/65f946ff-90da-4815-b27f-8d02c8bd06f2" /> |
 
@@ -170,13 +171,13 @@ The following screenshots demonstrate NetworkSpectator running on macOS in dark 
 
 ## Safety and Release Builds
 
-Because NetworkSpectator captures and displays sensitive network information, you should **limit it to debug builds only**. Wrap your integration points with `#if DEBUG` so nothing leaks into release builds.
+Because NetworkSpectator captures and displays network information, you should **limit it to debug builds only**. Wrap your integration points with `#if DEBUG` to ensure nothing leaks into release builds.
 
 ### Recommendations:
 
-- Avoid shipping any implementation using NetworkSpectaror in production
-- Consider guarding with `#if DEBUG` and/or internal feature flags
-- Avoid NetworkSpectator initialization in release configurations
+- Never ship NetworkSpectator in production builds
+- Always guard with `#if DEBUG` and/or internal feature flags
+- Ensure NetworkSpectator is not initialized in release configurations
 
 ### Example:
 
@@ -188,6 +189,6 @@ NetworkSpectator.start()
 
 ## Requirements
 
-- Swift 6.2+
+- Swift 6+
 - iOS 17.0+ / macOS 13.0+
 - Xcode 16.0+
