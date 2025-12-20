@@ -38,13 +38,18 @@ final internal class NetworkURLProtocol: URLProtocol {
     }
     
     override func startLoading() {
-        guard let thisRequest = request as? NSMutableURLRequest else {
+        guard let thisRequest = (request as NSURLRequest).mutableCopy() as? NSMutableURLRequest else {
             super.startLoading()
             return
         }
         
         URLProtocol.setProperty(true, forKey: Self.taskCacheKey, in: thisRequest)
-        let log = LogItem.fromRequest(request)
+
+        // Capture the HTTP body if it's provided as a stream so our logger can see it
+        captureHTTPBodyIfNeeded(on: thisRequest)
+
+        // Log the request including headers and body (if any)
+        let log = LogItem.fromRequest(thisRequest as URLRequest)
         DebugPrint.log(log)
         Task {
             await NetworkLogManager.shared.add(log)
@@ -71,8 +76,8 @@ final internal class NetworkURLProtocol: URLProtocol {
         }
         
         // If the request is mocked using match rules, return mocked response.
-        if let mock = MockServer.shared.responseIfMocked(request) {
-            completion(mock.response, mock.urlResponse(request), mock.error)
+        if let mock = MockServer.shared.responseIfMocked(thisRequest as URLRequest) {
+            completion(mock.response, mock.urlResponse(thisRequest as URLRequest), mock.error)
             return
         }
         
@@ -84,6 +89,44 @@ final internal class NetworkURLProtocol: URLProtocol {
         }
 
         sessionTask?.resume()
+    }
+
+    private func captureHTTPBodyIfNeeded(on request: NSMutableURLRequest) {
+        if let body = request.httpBody, !body.isEmpty {
+            return
+        }
+
+        guard let stream = request.httpBodyStream else {
+            return
+        }
+
+        let data = readData(from: stream)
+
+        // Replace the stream so the forwarded request can still send the body
+        request.httpBodyStream = InputStream(data: data)
+
+        // Set httpBody so our logger can read it easily
+        request.httpBody = data
+    }
+
+    private func readData(from stream: InputStream) -> Data {
+        stream.open()
+        defer { stream.close() }
+
+        let bufferSize = 16 * 1024
+        var data = Data()
+        var buffer = [UInt8](repeating: 0, count: bufferSize)
+
+        while stream.hasBytesAvailable {
+            let read = stream.read(&buffer, maxLength: bufferSize)
+            if read > 0 {
+                data.append(buffer, count: read)
+            } else {
+                break
+            }
+        }
+
+        return data
     }
 
     override func stopLoading() {
