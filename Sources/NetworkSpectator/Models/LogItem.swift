@@ -57,6 +57,17 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         default: return statusCode == 0 ? "Unknown" : "Other"
         }
     }
+    
+    var statusCodeRange: String {
+        switch statusCode {
+        case 100..<200: return "100..<200"
+        case 200..<300: return "200..<300"
+        case 300..<400: return "300..<400"
+        case 400..<500: return "400..<500"
+        case 500..<600: return "500..<600"
+        default: return statusCode == 0 ? "Unknown" : "Other"
+        }
+    }
 
     var isError: Bool { (400..<600).contains(statusCode) || errorDescription != nil }
 

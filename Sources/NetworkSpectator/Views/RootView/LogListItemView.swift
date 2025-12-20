@@ -18,7 +18,7 @@ struct LogListItemView: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 // URL with host highlighted
-                HStack(spacing: 6) {
+                HStack(spacing: 4) {
                     Text(item.host)
                         .font(.caption)
                         .fontWeight(.bold)
@@ -40,9 +40,9 @@ struct LogListItemView: View {
                 }
 
                 // Timing and metadata
-                HStack(spacing: 8) {
+                HStack(spacing: 5) {
                     Label {
-                        Text(item.startTime.formatted(date: .omitted, time: .shortened))
+                        Text(item.startTime.formatted(date: .omitted, time: .standard))
                     } icon: {
                         Image(systemName: "clock")
                     }
@@ -67,7 +67,6 @@ struct LogListItemView: View {
                             Image(systemName: "arrow.up.circle.fill")
                         }
                         .font(.caption2)
-                        .foregroundStyle(.blue)
                     }
 
                     if !item.responseBody.isEmpty && !item.isLoading {
@@ -77,7 +76,6 @@ struct LogListItemView: View {
                             Image(systemName: "arrow.down.circle.fill")
                         }
                         .font(.caption2)
-                        .foregroundStyle(.green)
                     }
 
                     Spacer()
@@ -144,20 +142,20 @@ struct HTTPMethodBadge: View {
 
     var body: some View {
         Text(method.isEmpty ? "?" : method)
-            .font(.caption2)
+            .font(Font.system(size: 8, weight: .semibold, design: .default))
             .fontWeight(.bold)
             .foregroundStyle(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
             .background(methodColor)
-            .cornerRadius(6)
+            .cornerRadius(4)
             .frame(minWidth: 44)
     }
 
     private var methodColor: Color {
         switch method.uppercased() {
         case "GET": return .blue
-        case "POST": return .green
+        case "POST": return .indigo
         case "PUT": return .orange
         case "PATCH": return .purple
         case "DELETE": return .red
@@ -176,11 +174,11 @@ struct StatusCodeBadge: View {
     var body: some View {
         if statusCode > 0 {
             Text("\(statusCode)")
-                .font(.caption2)
+                .font(Font.system(size: 8, weight: .semibold, design: .default))
                 .fontWeight(.semibold)
                 .foregroundStyle(statusTextColor)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
                 .background(statusBackgroundColor)
                 .cornerRadius(4)
         }

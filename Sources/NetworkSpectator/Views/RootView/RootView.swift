@@ -17,6 +17,7 @@ struct RootView: View {
     @State private var isExporting = false
     @State private var selectedMethods: Set<String> = []
     @State private var selectedStatusCategories: Set<String> = []
+    @State private var selectedStatusCodes: Set<String> = []
     @State private var showFilterSheet = false
 
     var items: [LogItem] {
@@ -124,6 +125,7 @@ struct RootView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
+                /*
                 #if os(iOS)
                 // Leading items - iOS only
                 ToolbarItemGroup(placement: .navigationBarLeading) {
@@ -140,9 +142,11 @@ struct RootView: View {
                     }
                 }
                 #endif
+                 */
 
                 // Trailing items
                 ToolbarItemGroup(placement: .automatic) {
+                    /*
                     #if os(macOS)
                     // Request count badge for macOS
                     if !store.items.isEmpty {
@@ -151,6 +155,7 @@ struct RootView: View {
                             .foregroundStyle(.secondary)
                     }
                     #endif
+                     */
 
                     // Filter button
                     Button {
@@ -231,7 +236,7 @@ struct RootView: View {
             .sheet(isPresented: $showFilterSheet) {
                 FilterSheetView(
                     selectedMethods: $selectedMethods,
-                    selectedStatusCategories: $selectedStatusCategories,
+                    selectedStatusCodeCategory: $selectedStatusCodes,
                     availableMethods: availableMethods
                 )
             }
@@ -255,6 +260,8 @@ struct RootView: View {
         if item.isLoading {
             return Color.blue.opacity(0.05)
         }
+        
+        return .clear
 
         // Status code based coloring
         switch item.statusCode {

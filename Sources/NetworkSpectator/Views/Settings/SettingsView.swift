@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
 
-    struct Item: Identifiable {
+    struct SettingsRuleItem: Identifiable {
         let id: UUID
         let text: String
 
@@ -29,8 +29,8 @@ struct SettingsView: View {
         }
     }
 
-    @State private var mocks: [Item] = []
-    @State private var skipLogging: [Item] = []
+    @State private var mocks: [SettingsRuleItem] = []
+    @State private var skipLogging: [SettingsRuleItem] = []
     @State private var showAddMockSheet = false
     @State private var showAddSkipSheet = false
 
@@ -106,7 +106,7 @@ struct SettingsView: View {
         }
     }
 
-    private func mockItemRow(_ item: Item) -> some View {
+    private func mockItemRow(_ item: SettingsRuleItem) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.title3)
@@ -175,7 +175,7 @@ struct SettingsView: View {
         }
     }
 
-    private func skipLoggingItemRow(_ item: Item) -> some View {
+    private func skipLoggingItemRow(_ item: SettingsRuleItem) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "minus.circle.fill")
                 .font(.title3)
@@ -270,8 +270,8 @@ struct SettingsView: View {
 
     private func loadData() {
         withAnimation {
-            mocks = MockServer.shared.mocks.map { Item(mock: $0) }
-            skipLogging = SkipRequestForLoggingHandler.shared.skipRequests.map(Item.init(skipRequest:))
+            mocks = MockServer.shared.mocks.map { SettingsRuleItem(mock: $0) }
+            skipLogging = SkipRequestForLoggingHandler.shared.skipRequests.map(SettingsRuleItem.init(skipRequest:))
         }
     }
 
