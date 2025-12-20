@@ -27,14 +27,13 @@ struct LogBasicDetailsView: View {
 
     private var details: [DetailRow] {
         var rows: [DetailRow] = [
-            .init(title: "HTTP Method", value: item.method.uppercased(), icon: "arrow.left.arrow.right", valueColor: methodColor),
+            .init(title: "HTTP Method", value: item.method.uppercased(), icon: "arrow.left.arrow.right"),
             .init(title: "URL", value: item.url, icon: "link"),
             .init(title: "Start time", value: item.startTime.formatted(date: .numeric, time: .standard), icon: "clock")
         ]
         if let finishTime = item.finishTime {
             rows.append(.init(title: "End time", value: finishTime.formatted(date: .numeric, time: .standard), icon: "clock.fill"))
-            rows.append(.init(title: "Response time", value: String(format: "%.4fs", item.responseTime), icon: "timer", valueColor: responseTimeColor))
-
+            rows.append(.init(title: "Response time", value: String(format: "%.4fs", item.responseTime), icon: "timer"))
             if let mimetype = item.mimetype {
                 rows.append(.init(title: "Mime type", value: mimetype, icon: "doc.text"))
             }
@@ -42,7 +41,7 @@ struct LogBasicDetailsView: View {
                 rows.append(.init(title: "Text encoding", value: textEncoding, icon: "textformat"))
             }
             if item.statusCode != 0 {
-                rows.append(.init(title: "Status code", value: "\(item.statusCode)", icon: "number", valueColor: statusCodeColor))
+                rows.append(.init(title: "Status code", value: "\(item.statusCode)", icon: "number"))
             }
             if let errorDesc = item.errorDescription {
                 rows.append(.init(title: "Error occurred", value: errorDesc, icon: "exclamationmark.triangle.fill", valueColor: .red))
@@ -75,8 +74,8 @@ struct LogBasicDetailsView: View {
 
     private var responseTimeColor: Color {
         let time = item.responseTime
-        if time < 0.5 { return .green }
-        else if time < 2.0 { return .orange }
+        if time < 2.0 { return .primary }
+        else if time < 4.0 { return .orange }
         else { return .red }
     }
 

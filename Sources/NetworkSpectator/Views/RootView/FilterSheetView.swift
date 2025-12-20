@@ -10,10 +10,10 @@ import SwiftUI
 struct FilterSheetView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedMethods: Set<String>
-    @Binding var selectedStatusCategories: Set<String>
+    @Binding var selectedStatusCodeCategory: Set<String>
+    
     let availableMethods: [String]
-
-    private let statusCategories = ["Success", "Redirection", "Client Error", "Server Error", "Informational", "Unknown"]
+    private let statusCodeCategory = ["100..<200", "200..<300", "300..<400", "400..<500", "500..<600", "Unknown"]
 
     var body: some View {
         NavigationStack {
@@ -55,22 +55,22 @@ struct FilterSheetView: View {
                     }
                 }
 
-                // Status Categories Section
+                // Status Code Categories Section
                 Section {
-                    ForEach(statusCategories, id: \.self) { category in
+                    ForEach(statusCodeCategory, id: \.self) { category in
                         Toggle(isOn: Binding(
-                            get: { selectedStatusCategories.contains(category) },
+                            get: { selectedStatusCodeCategory.contains(category) },
                             set: { isSelected in
                                 if isSelected {
-                                    selectedStatusCategories.insert(category)
+                                    selectedStatusCodeCategory.insert(category)
                                 } else {
-                                    selectedStatusCategories.remove(category)
+                                    selectedStatusCodeCategory.remove(category)
                                 }
                             }
                         )) {
                             HStack {
                                 Circle()
-                                    .fill(statusCategoryColor(category))
+                                    .fill(statusCodeCategoryColor(category))
                                     .frame(width: 12, height: 12)
                                 Text(category)
                             }
@@ -78,17 +78,20 @@ struct FilterSheetView: View {
                     }
                 } header: {
                     HStack {
-                        Text("Status Categories")
+                        Text("Status Codes")
                         Spacer()
-                        if !selectedStatusCategories.isEmpty {
+                        if !selectedStatusCodeCategory.isEmpty {
                             Button("Clear") {
-                                selectedStatusCategories.removeAll()
+                                selectedStatusCodeCategory.removeAll()
                             }
                             .font(.caption)
                         }
                     }
                 }
             }
+            #if os(macOS)
+            .padding(20)
+            #endif
             .navigationTitle("Filter Requests")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -101,10 +104,10 @@ struct FilterSheetView: View {
                 }
 
                 ToolbarItem(placement: .destructiveAction) {
-                    if !selectedMethods.isEmpty || !selectedStatusCategories.isEmpty {
+                    if !selectedMethods.isEmpty || !selectedStatusCodeCategory.isEmpty {
                         Button("Clear All") {
                             selectedMethods.removeAll()
-                            selectedStatusCategories.removeAll()
+                            selectedStatusCodeCategory.removeAll()
                         }
                     }
                 }
@@ -115,23 +118,15 @@ struct FilterSheetView: View {
         .presentationDragIndicator(.visible)
         #endif
     }
-
-    private func statusCategoryColor(_ category: String) -> Color {
-        switch category {
-        case "Success": return .green
-        case "Redirection": return .yellow
-        case "Client Error": return .orange
-        case "Server Error": return .red
-        case "Informational": return .blue
+    
+    private func statusCodeCategoryColor(_ range: String) -> Color {
+        switch range {
+        case "100..<200": return .green
+        case "200..<300": return .yellow
+        case "300..<400": return .orange
+        case "400..<500": return .red
+        case "500..<600": return .blue
         default: return .gray
         }
     }
-}
-
-#Preview {
-    FilterSheetView(
-        selectedMethods: .constant(["GET", "POST"]),
-        selectedStatusCategories: .constant(["Success"]),
-        availableMethods: ["GET", "POST", "PUT", "DELETE"]
-    )
 }
