@@ -31,30 +31,34 @@ struct LogResponseDetailsView: View {
                 ScrollView(.vertical) {
                     VStack(alignment: .leading, spacing: 12) {
                         responseMetadata()
-
-                        Text(item.responseBody)
-                            .font(.system(.caption, design: .monospaced))
-                            .textSelection(.enabled)
-                            .padding(12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.secondary.opacity(0.2))
-                            .cornerRadius(8)
-                            .contextMenu {
-                                Button(action: {
-                                    #if canImport(UIKit)
-                                    UIPasteboard.general.string = item.responseBody
-                                    #elseif canImport(AppKit)
-                                    NSPasteboard.general.setString(item.responseBody, forType: .string)
-                                    #endif
-                                }) {
-                                    Label("Copy", systemImage: "doc.on.doc")
-                                }
-                            }
+                        responseBodyView()
                     }
                     .padding(.horizontal)
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func responseBodyView() -> some View {
+        TextEditor(text: .constant(item.responseBody))
+            .font(.system(.caption, design: .monospaced))
+            .scrollContentBackground(.hidden)
+            .frame(minHeight: 200)
+            .padding(12)
+            .background(Color.secondary.opacity(0.2))
+            .cornerRadius(8)
+            .contextMenu {
+                Button(action: {
+            #if canImport(UIKit)
+                    UIPasteboard.general.string = item.responseBody
+            #elseif canImport(AppKit)
+                    NSPasteboard.general.setString(item.responseBody, forType: .string)
+            #endif
+                }) {
+                    Label("Copy Full Response", systemImage: "doc.on.doc")
+                }
+            }
     }
 
     @ViewBuilder
@@ -76,7 +80,7 @@ struct LogResponseDetailsView: View {
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(Color(.systemGray))
+                    .background(Color(.systemGray).opacity(0.15))
                     .cornerRadius(8)
             }
 
