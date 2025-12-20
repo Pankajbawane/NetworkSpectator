@@ -5,30 +5,44 @@ A lightweight Swift utility to observe and inspect your app's network traffic du
 ## Features
 
 - **Monitor network requests and responses in real time**
-  - URL, method, status code, duration, request/response headers, and body (when available)
+  - URL, method, status code, duration, request/response headers, and response body
   - Simple list and detail views for quick inspection
   - Analytics dashboard with charts for HTTP methods, status codes, and host distribution
+ 
+- **Filters and Search**
+  - Filter requests by status codes and HTTP methods
+  - Quick search functionality to instantly locate specific requests by URL
+  - Combine filters for precise request inspection
 
 - **Export logs in multiple formats**
-  - CSV export for spreadsheets and data analysis
-  - Plain text export for quick sharing
 
-- **Mock response**
-  - Mock response by applying rules to match the request
-  - Helpful to check behaviours without needing API deployment
-  - Helps to write unit tests for HTTP requests without adding complex stubbing logic
- 
+  NetworkSpectator supports multiple export formats:
+  - **CSV export** - Perfect for importing into spreadsheet applications or data analysis tools
+  - **Plain text export** - Human-readable format for quick sharing or viewing in text editors
+  - **Postman Collection format** - Import directly into Postman for API testing and collaboration
+
+- **Mock responses**
+  - Define custom mock responses using flexible rule-based matching
+  - Test different scenarios and edge cases without requiring backend API deployment
+  - **Programmatic mocking** - Add mocks via code to create reliable unit tests without complex stubbing frameworks
+  - **UI-based mocking** - Enable QA testers to validate business logic in test builds independently, without developer intervention or Xcode
+  - Perfect for offline development
+
 - **Skip logging**
-  - Supports skipping to log a particular request using rules
+  - Exclude specific or sensitive requests from logging using matching rules
+  - Reduce noise by filtering out irrelevant requests
+  - Configure skip rules both programmatically (in code) and dynamically (via UI)
 
 - **Lightweight and easy to integrate**
+  - One liner setup to start monitoring and logging
   - No external dependencies
   - Works with SwiftUI and UIKit/AppKit
-  - Configurable logging
+  - Configurable debug logging print
 
 - **Cross-platform SwiftUI support**
   - iOS 17.0+
   - macOS 13.0+
+
 
 ## Installation
 
@@ -128,15 +142,40 @@ You can stop network monitoring:
 NetworkSpectator.stop()
 ```
 
+## NetworkSpectator UI on iOS
+The following screenshots demonstrate NetworkSpectator running on iOS in light mode.
+
+| List of Requests | Filters | URL Search | Basic Details |
+|---------|---------|------------|------------|
+| <img width="300" height="652" alt="landing" src="https://github.com/user-attachments/assets/e58d675a-1ab7-4a8f-8232-f45323b61b20" /> | <img width="300" height="652" alt="filters_ios" src="https://github.com/user-attachments/assets/32087e71-0c66-4204-aa4e-873a1a28cf67" /> | <img width="300" height="652" alt="url_search_ios" src="https://github.com/user-attachments/assets/5db9d07e-d311-49e6-b1c1-3bf8a2da0a2d" /> | <img width="300" height="652" alt="basic_ios" src="https://github.com/user-attachments/assets/d6d86fc3-eece-4bae-b557-519966040815" /> |
+
+| Headers | Response | Settings | Share |
+|---------|----------|----------|-------|
+| <img width="300" height="652" alt="headers_ios" src="https://github.com/user-attachments/assets/1fc211e9-382e-4491-af7d-0f590dad5a9d" /> | <img width="300" height="652" alt="response_response" src="https://github.com/user-attachments/assets/9623b659-a0b5-4414-bf59-cd91c600047d" /> | <img width="300" height="652" alt="settings_ios" src="https://github.com/user-attachments/assets/c3f4e364-aa95-4d65-955d-4a35c8a94d68" /> | <img width="300" height="652" alt="share_ios" src="https://github.com/user-attachments/assets/96b0fc82-dcfe-4159-8458-00b815466802" /> |
+
+## NetworkSpectator UI on macOS
+The following screenshots demonstrate NetworkSpectator running on macOS in dark mode.
+
+| List of Requests | Filters | Basic Details |
+|------------------|---------|---------------|
+| <img width="1169" height="620" alt="landing_mac" src="https://github.com/user-attachments/assets/2006355b-7a6a-47f4-89e2-14f7cf76e8df" /> | <img width="1152" height="609" alt="filters_mac" src="https://github.com/user-attachments/assets/2007cc11-672e-420d-9f13-7110e8b95a2d" /> | <img width="1152" height="833" alt="basic_details_mac" src="https://github.com/user-attachments/assets/65f946ff-90da-4815-b27f-8d02c8bd06f2" /> |
+
+| Headers | Response | Analytics |
+|---------|----------|-----------|
+| <img width="1152" height="833" alt="headers_mac" src="https://github.com/user-attachments/assets/72a63e17-de57-4218-ab90-5fd2935e0468" /> | <img width="1152" height="833" alt="response_mac" src="https://github.com/user-attachments/assets/0507e4a5-4c24-4a70-838c-4a2802620218" /> | <img width="1152" height="949" alt="analytics_mac" src="https://github.com/user-attachments/assets/152e8e49-7dbb-41f4-9bf8-2e5d3ce6c1af" /> |
+
+| Settings | Add Mock | Skip Logging |
+|----------|----------|--------------|
+| <img width="1169" height="620" alt="settings_mac" src="https://github.com/user-attachments/assets/e6a7ebee-cd44-415a-910d-ef0273d57495" /> | <img width="1169" height="632" alt="add_mock_mac" src="https://github.com/user-attachments/assets/8353ae97-69b1-46ec-bc32-273463f2c95c" /> | <img width="1169" height="632" alt="skip_logging_mac" src="https://github.com/user-attachments/assets/04400e4b-0e59-4dd1-827f-257c9eda131f" /> |
+
 ## Safety and Release Builds
 
 Because NetworkSpectator captures and displays sensitive network information, you should **limit it to debug builds only**. Wrap your integration points with `#if DEBUG` so nothing leaks into release builds.
 
 ### Recommendations:
 
-- Avoid shipping any debug-only menu items, overlays, or UI that reveals network logs in production
-- Consider guarding runtime toggles with `#if DEBUG` and/or internal feature flags
-- Ensure exported files (CSV/text) aren't created in release builds
+- Avoid shipping any implementation using NetworkSpectaror in production
+- Consider guarding with `#if DEBUG` and/or internal feature flags
 - Avoid NetworkSpectator initialization in release configurations
 
 ### Example:
@@ -146,15 +185,6 @@ Because NetworkSpectator captures and displays sensitive network information, yo
 NetworkSpectator.start()
 #endif
 ```
-
-## Export Options
-
-NetworkSpectator supports multiple export formats:
-
-- **CSV**: Perfect for importing into spreadsheet applications or data analysis tools
-- **Text**: Human-readable format for quick sharing or viewing in text editors
-
-Access export options from the UI by tapping the export button in the network logs view.
 
 ## Notes and Tips
 
