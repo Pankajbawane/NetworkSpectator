@@ -11,8 +11,7 @@ A lightweight Swift utility for observing and inspecting your app's network traf
  
 - **Filters and Search**
   - Filter requests by status codes and HTTP methods
-  - Locate specific requests by URL using search
-  - Combine filters for precise request searching
+  - Find specific requests by URL using search
 
 - **Export logs in multiple formats**
 
@@ -26,12 +25,14 @@ A lightweight Swift utility for observing and inspecting your app's network traf
   - Test different scenarios and edge cases without backend API deployment
   - **Programmatic mocking** - Add mocks via code for reliable unit tests without complex stubbing setups
   - **UI-based mocking** - Enable QA testers to validate business logic in test builds independently, without developer intervention or Xcode
-  - Perfect for offline development
+  - Good for offline development
+  - Edit mock rules from UI
 
 - **Skip logging**
   - Exclude specific or sensitive requests from logging using matching rules
   - Reduce noise by filtering out irrelevant requests
   - Configure skip rules both programmatically (in code) and dynamically (via UI)
+  - Edit skip rules from UI
 
 - **Lightweight and easy to integrate**
   - One-line setup to start monitoring and logging
@@ -40,7 +41,7 @@ A lightweight Swift utility for observing and inspecting your app's network traf
   - Configurable logging on Xcode debug console
 
 - **Cross-platform SwiftUI support**
-  - iOS 17.0+
+  - iOS 16.0+
   - macOS 13.0+
 
 
@@ -190,5 +191,5 @@ NetworkSpectator.start()
 ## Requirements
 
 - Swift 6+
-- iOS 17.0+ / macOS 13.0+
+- iOS 16.0+ / macOS 13.0+
 - Xcode 16.0+
