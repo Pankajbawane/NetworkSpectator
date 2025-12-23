@@ -113,7 +113,6 @@ struct RootView: View {
             }
             #if os(iOS)
             .searchable(text: $searchText,
-                        isPresented: $isSearching,
                         placement: .navigationBarDrawer(displayMode: .automatic),
                         prompt: "Search by URL")
             #endif
