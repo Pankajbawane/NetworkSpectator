@@ -33,6 +33,8 @@ struct SettingsView: View {
     @State private var skipLogging: [SettingsRuleItem] = []
     @State private var showAddMockSheet = false
     @State private var showAddSkipSheet = false
+    @State private var editingMockItem: AddRuleItem?
+    @State private var editingSkipItem: AddRuleItem?
 
     var body: some View {
         List {
@@ -69,6 +71,16 @@ struct SettingsView: View {
                 .onDisappear {
                     loadData()
                 }
+        }
+        .sheet(item: $editingMockItem) { item in
+            AddRuleItemView(isMock: true, title: "Edit Mock", item: item) { _ in
+                loadData()
+            }
+        }
+        .sheet(item: $editingSkipItem) { item in
+            AddRuleItemView(isMock: false, title: "Edit Skip Rule", item: item) { _ in
+                loadData()
+            }
         }
     }
 
@@ -130,6 +142,12 @@ struct SettingsView: View {
         }
         .padding(.vertical, 8)
         .contentShape(Rectangle())
+        .onTapGesture {
+            if let mock = MockServer.shared.mocks.first(where: { $0.id == item.id }),
+               let ruleItem = AddRuleItem(mock: mock) {
+                editingMockItem = ruleItem
+            }
+        }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
                 if let index = mocks.firstIndex(where: { $0.id == item.id }) {
@@ -199,6 +217,12 @@ struct SettingsView: View {
         }
         .padding(.vertical, 8)
         .contentShape(Rectangle())
+        .onTapGesture {
+            if let skipRequest = SkipRequestForLoggingHandler.shared.skipRequests.first(where: { $0.id == item.id }),
+               let ruleItem = AddRuleItem(skipRequest: skipRequest) {
+                editingSkipItem = ruleItem
+            }
+        }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
                 if let index = skipLogging.firstIndex(where: { $0.id == item.id }) {
