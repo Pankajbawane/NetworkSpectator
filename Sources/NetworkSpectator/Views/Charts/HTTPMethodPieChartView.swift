@@ -6,7 +6,7 @@ struct PieChartView: View {
     let title: String
 
     var body: some View {
-        if #available(macOS 14, *) {
+        if #available(iOS 17, macOS 14, *) {
             Chart(data) {
                 SectorMark(
                     angle: .value("Count", $0.count),
@@ -18,8 +18,8 @@ struct PieChartView: View {
             .frame(height: 300)
             .padding()
         } else {
-            // Fallback for macOS versions earlier than 14
-            Text("Chart requires macOS 14 or later.")
+            // Fallback for iOS/macOS versions earlier than 17/14
+            Text("Chart requires iOS 17/macOS 14 or later.")
                 .frame(height: 300)
                 .padding()
         }
