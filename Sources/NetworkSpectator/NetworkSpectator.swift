@@ -35,13 +35,13 @@ public struct NetworkSpectator: Sendable {
     
     public static func start() {
         Task {
-            await NetworkLogManager.shared.enable()
+            await NetworkLogContainer.shared.enable()
         }
     }
     
     public static func stop() {
         Task {
-            await NetworkLogManager.shared.disable()
+            await NetworkLogContainer.shared.disable()
             MockServer.shared.clear()
             SkipRequestForLoggingHandler.shared.clear()
         }

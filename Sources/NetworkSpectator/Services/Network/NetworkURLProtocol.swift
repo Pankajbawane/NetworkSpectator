@@ -52,14 +52,14 @@ final internal class NetworkURLProtocol: URLProtocol {
         let log = LogItem.fromRequest(thisRequest as URLRequest)
         DebugPrint.log(log)
         Task {
-            await NetworkLogManager.shared.add(log)
+            await NetworkLogContainer.shared.add(log)
         }
         
         let completion: (Data?, URLResponse?, Error?) -> Void = { data, response, error in
             let finalUpdatedLog = log.withResponse(response: response, data: data, error: error)
             DebugPrint.log(finalUpdatedLog)
             Task {
-                await NetworkLogManager.shared.add(finalUpdatedLog)
+                await NetworkLogContainer.shared.add(finalUpdatedLog)
             }
 
             if let error = error {
