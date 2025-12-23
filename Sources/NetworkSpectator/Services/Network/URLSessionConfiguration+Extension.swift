@@ -102,6 +102,13 @@ internal extension URLSession {
             return self.swizzled_dataTask(with: request, completionHandler: completionHandler)
         }
         
+        // If the request is ignored for logging using match rules, don't intercept
+        if SkipRequestForLoggingHandler.shared.isEnabled,
+           let url = request.url,
+           SkipRequestForLoggingHandler.shared.shouldSkipLogging(url) {
+            return self.swizzled_dataTask(with: request, completionHandler: completionHandler)
+        }
+        
         let log = LogItem.fromRequest(request)
         DebugPrint.log(log)
         
@@ -117,7 +124,12 @@ internal extension URLSession {
                 await NetworkLogManager.shared.add(finalUpdatedLog)
             }
             
-            completionHandler(data, response, error)
+            // If the request is mocked using match rules, return mocked response.
+            if let mock = MockServer.shared.responseIfMocked(request) {
+                completionHandler(mock.response, mock.urlResponse(request), mock.error)
+            } else {
+                completionHandler(data, response, error)
+            }
         }
         
         return self.swizzled_dataTask(with: request, completionHandler: wrappedHandler)

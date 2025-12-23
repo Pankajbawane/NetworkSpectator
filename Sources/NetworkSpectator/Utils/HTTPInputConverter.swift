@@ -50,7 +50,7 @@ struct HTTPInputConverter {
         return data
     }
     
-    // Converts a status code string (e.g., "200") to Int
+    // Converts a status code string to Int
     static func statusCode(from string: String) throws -> Int {
         if string.isEmpty { return 200 }
         let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -70,8 +70,7 @@ struct HTTPInputConverter {
             .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         
         for line in lines {
-            // Try ":" first, then "="
-            if let range = line.range(of: ":") ?? line.range(of: "=") {
+            if let range = line.range(of: "===") {
                 let key = String(line[..<range.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
                 let value = String(line[range.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
                 if key.isEmpty {
