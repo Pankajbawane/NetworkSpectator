@@ -23,6 +23,8 @@ struct AddRuleItemView: View {
 
     let isMock: Bool
     let title: String
+    let item: AddRuleItem?
+    let onSave: ((AddRuleItem) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @State private var text: String = ""
@@ -32,6 +34,21 @@ struct AddRuleItemView: View {
     @State private var rule: Rule = .url
     @State private var showErrorAlert: Bool = false
     @State private var errorMessage: String = ""
+
+    init(isMock: Bool, title: String, item: AddRuleItem? = nil, onSave: ((AddRuleItem) -> Void)? = nil) {
+        self.isMock = isMock
+        self.title = title
+        self.item = item
+        self.onSave = onSave
+
+        if let item = item {
+            _text = State(initialValue: item.text)
+            _response = State(initialValue: item.response)
+            _statusCode = State(initialValue: item.statusCode)
+            _headers = State(initialValue: item.headers)
+            _rule = State(initialValue: item.rule)
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -80,7 +97,7 @@ struct AddRuleItemView: View {
                 } header: {
                     Text("Rule Criteria")
                 } footer: {
-                    Text("Enter the pattern to match (e.g., https://api.example.com)")
+                    Text("Enter the pattern to match")
                         .font(.caption)
                 }
 
@@ -153,7 +170,7 @@ struct AddRuleItemView: View {
                     } header: {
                         Text("Mock Response")
                     } footer: {
-                        Text("Provide JSON response body, HTTP status code (e.g., 200), and headers in key=value or key:value format)")
+                        Text("Provide JSON response body, HTTP status code, and headers in key===value format)")
                             .font(.caption)
                     }
                 }
@@ -175,7 +192,7 @@ struct AddRuleItemView: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
+                    Button(item == nil ? "Add" : "Save") {
                         addRule()
                     }
                     .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -210,6 +227,15 @@ struct AddRuleItemView: View {
             matchRule = .pathComponent(text)
         }
 
+        // If we're editing an existing item, remove the old one first
+        if let existingItem = item {
+            if isMock {
+                MockServer.shared.remove(id: existingItem.id)
+            } else {
+                SkipRequestForLoggingHandler.shared.remove(id: existingItem.id)
+            }
+        }
+
         if isMock {
             do {
                 let responseData = try HTTPInputConverter.jsonData(from: response)
@@ -220,6 +246,20 @@ struct AddRuleItemView: View {
                                headers: headersData,
                                statusCode: statuscode)
                 MockServer.shared.register(mock)
+
+                // Call onSave callback if provided
+                if let onSave = onSave {
+                    let updatedItem = AddRuleItem(
+                        id: mock.id,
+                        text: text,
+                        response: response,
+                        statusCode: statusCode,
+                        headers: headers,
+                        rule: rule,
+                        isMock: isMock
+                    )
+                    onSave(updatedItem)
+                }
             } catch {
                 self.errorMessage = error.localizedDescription
                 self.showErrorAlert = true
@@ -227,6 +267,21 @@ struct AddRuleItemView: View {
             }
         } else {
             SkipRequestForLoggingHandler.shared.register(rule: matchRule)
+
+            // Call onSave callback if provided
+            if let onSave = onSave {
+                let skipRequest = SkipRequestForLoggingHandler.shared.skipRequests.last!
+                let updatedItem = AddRuleItem(
+                    id: skipRequest.id,
+                    text: text,
+                    response: "",
+                    statusCode: "",
+                    headers: "",
+                    rule: rule,
+                    isMock: isMock
+                )
+                onSave(updatedItem)
+            }
         }
 
         guard !showErrorAlert else { return }
