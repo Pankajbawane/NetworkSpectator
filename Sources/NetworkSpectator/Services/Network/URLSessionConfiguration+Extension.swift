@@ -113,7 +113,7 @@ internal extension URLSession {
         DebugPrint.log(log)
         
         Task {
-            await NetworkLogManager.shared.add(log)
+            await NetworkLogContainer.shared.add(log)
         }
         
         let wrappedHandler: (Data?, URLResponse?, Error?) -> Void = { data, response, error in
@@ -121,7 +121,7 @@ internal extension URLSession {
             DebugPrint.log(finalUpdatedLog)
             
             Task {
-                await NetworkLogManager.shared.add(finalUpdatedLog)
+                await NetworkLogContainer.shared.add(finalUpdatedLog)
             }
             
             // If the request is mocked using match rules, return mocked response.

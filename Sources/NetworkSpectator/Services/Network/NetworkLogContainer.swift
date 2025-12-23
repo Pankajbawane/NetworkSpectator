@@ -1,5 +1,5 @@
 //
-//  NetworkLogManager.swift
+//  NetworkLogContainer.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 19/07/25.
@@ -9,12 +9,12 @@ import SwiftUI
 
 /// Manages network log updates and publishes.
 @MainActor
-final class NetworkLogManager: ObservableObject, Sendable {
-    static let shared = NetworkLogManager()
+final class NetworkLogContainer: ObservableObject, Sendable {
+    static let shared = NetworkLogContainer()
 
     @Published var items: [LogItem] = []
     private var itemUpdateTask: Task<Void, Never>?
-    private let container = NetworkItemContainer()
+    private let store = NetworkLogStore()
     private var isLoggingEnabled: Bool = false
 
     private init() {
@@ -42,7 +42,7 @@ final class NetworkLogManager: ObservableObject, Sendable {
     /// Adds a new `LogItem` to the log in a concurrent-safe manner.
     func add(_ item: LogItem) {
         Task {
-            await container.add(item)
+            await store.add(item)
         }
     }
 
@@ -52,7 +52,7 @@ final class NetworkLogManager: ObservableObject, Sendable {
             guard let self else { return }
 
             // Iterate the async stream produced by the actor
-            for await updatedItems in await container.itemUpdates() {
+            for await updatedItems in await store.itemUpdates() {
                 if Task.isCancelled { break }
                 // Hop to the main actor to update published state
                 self.updateItems(updatedItems)
@@ -67,7 +67,7 @@ final class NetworkLogManager: ObservableObject, Sendable {
     /// Cancels ongoing observation of network log updates.
     private func stop() {
         Task {
-            await container.stop()
+            await store.stop()
         }
         itemUpdateTask?.cancel()
         itemUpdateTask = nil
@@ -76,14 +76,14 @@ final class NetworkLogManager: ObservableObject, Sendable {
     
     func clear() {
         Task {
-            await container.clear()
+            await store.clear()
         }
         items.removeAll()
     }
 }
 
 /// Container actor for thread-safe management and streaming of network log items.
-fileprivate actor NetworkItemContainer {
+fileprivate actor NetworkLogStore {
 
     private var items: [LogItem] = []
     private var cache: [UUID: Int] = [:]

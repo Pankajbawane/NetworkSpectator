@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct RootView: View {
-    @ObservedObject private var store = NetworkLogManager.shared
+    @ObservedObject private var store = NetworkLogContainer.shared
     @State private var exportItem: ShareExportedItem?
     @State private var showAlert: Bool = false
     @State private var navigationPath = NavigationPath()
