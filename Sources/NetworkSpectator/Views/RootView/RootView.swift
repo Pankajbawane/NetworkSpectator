@@ -96,7 +96,7 @@ struct RootView: View {
                             if !items.isEmpty {
                                 HStack {
                                     Text("\(items.count) Request\(items.count == 1 ? "" : "s")")
-                                        .font(.caption)
+                                        .font(.caption.bold())
                                         .foregroundStyle(.secondary)
                                     Spacer()
                                 }
@@ -124,38 +124,8 @@ struct RootView: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                /*
-                #if os(iOS)
-                // Leading items - iOS only
-                ToolbarItemGroup(placement: .navigationBarLeading) {
-                    // Request count badge
-                    if !store.items.isEmpty {
-                        Text("\(store.items.count)")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Color.blue)
-                            .cornerRadius(12)
-                    }
-                }
-                #endif
-                 */
-
                 // Trailing items
                 ToolbarItemGroup(placement: .automatic) {
-                    /*
-                    #if os(macOS)
-                    // Request count badge for macOS
-                    if !store.items.isEmpty {
-                        Text("\(store.items.count) requests")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    #endif
-                     */
-
                     // Filter button
                     Button {
                         showFilterSheet = true
@@ -263,24 +233,10 @@ struct RootView: View {
         }
 
         if item.isLoading {
-            return Color.blue.opacity(0.05)
+            return Color.yellow.opacity(0.1)
         }
         
         return .clear
-
-        // Status code based coloring
-        switch item.statusCode {
-        case 200..<300:
-            return Color.green.opacity(0.03)
-        case 300..<400:
-            return Color.yellow.opacity(0.05)
-        case 400..<500:
-            return Color.orange.opacity(0.05)
-        case 500..<600:
-            return Color.red.opacity(0.08)
-        default:
-            return Color.clear
-        }
     }
 }
 
@@ -294,4 +250,3 @@ extension RootView {
 #Preview {
     RootView()
 }
-
