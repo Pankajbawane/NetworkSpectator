@@ -9,7 +9,7 @@ import SwiftUI
 #if canImport(UIKit)
 import UIKit
 
-struct ActivityView: UIViewControllerRepresentable {
+struct ShareActivityView: UIViewControllerRepresentable {
     let item: Any
     
     func makeUIViewController(context: Context) -> UIActivityViewController {
@@ -22,33 +22,57 @@ struct ActivityView: UIViewControllerRepresentable {
 }
 
 #elseif canImport(AppKit)
-import AppKit
+// Extension to add macOS share functionality directly to any View
+extension View {
+    func macOSShareSheet<T: Identifiable>(item: Binding<T?>, content: @escaping (T) -> Any) -> some View where T.ID == UUID {
+        background(ShareActivityView(item: item, content: content))
+    }
+}
 
-struct ActivityView: NSViewControllerRepresentable {
-    let item: Any
+struct ShareActivityView<T: Identifiable>: NSViewRepresentable where T.ID == UUID {
+    @Binding var item: T?
+    let content: (T) -> Any
 
-    func makeNSViewController(context: Context) -> NSViewController {
-        let controller = NSViewController()
-        controller.view = NSView(frame: .zero)
-        return controller
+    func makeNSView(context: Context) -> NSView {
+        NSView()
     }
 
-    func updateNSViewController(_ nsViewController: NSViewController, context: Context) {
-        // Present the macOS share sheet using NSSharingServicePicker
-        guard context.coordinator.hasPresented == false else { return }
-        context.coordinator.hasPresented = true
+    func updateNSView(_ nsView: NSView, context: Context) {
+        guard let currentItem = item,
+              context.coordinator.lastItemID != currentItem.id else {
+            return
+        }
 
-        let picker = NSSharingServicePicker(items: [item])
-        picker.delegate = context.coordinator
+        context.coordinator.lastItemID = currentItem.id
+        let shareData = content(currentItem)
 
-        let view = nsViewController.view
-        picker.show(relativeTo: view.bounds, of: view, preferredEdge: .minY)
+        DispatchQueue.main.async {
+            guard let window = nsView.window,
+                  let contentView = window.contentView else {
+                context.coordinator.lastItemID = nil
+                return
+            }
+
+            let picker = NSSharingServicePicker(items: [shareData])
+            picker.delegate = context.coordinator
+
+            let rect = NSRect(
+                x: contentView.bounds.maxX,
+                y: contentView.bounds.midY,
+                width: 1,
+                height: 1
+            )
+
+            picker.show(relativeTo: rect, of: contentView, preferredEdge: .minY)
+        }
     }
 
-    func makeCoordinator() -> Coordinator { Coordinator() }
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
 
-    final class Coordinator: NSObject, NSSharingServicePickerDelegate {
-        var hasPresented = false
+    class Coordinator: NSObject, NSSharingServicePickerDelegate {
+        var lastItemID: UUID?
     }
 }
 #endif
