@@ -228,9 +228,15 @@ struct RootView: View {
                     showAlert = false
                 }
             })
+            #if canImport(UIKit)
             .popover(item: $exportItem) { item in
-                ActivityView(item: item.data)
+                ShareActivityView(item: item.data)
             }
+            #elseif canImport(AppKit)
+            .macOSShareSheet(item: $exportItem) { item in
+                item.data
+            }
+            #endif
             .loadingOverlay(isPresented: isExporting, text: "Preparing CSV")
             .sheet(isPresented: $showFilterSheet) {
                 FilterSheetView(
