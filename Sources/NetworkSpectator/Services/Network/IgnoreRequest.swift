@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct SkipRequestForLogging: Identifiable {
+public struct SkipRequestForLogging: Identifiable, Hashable {
 
     public let id: UUID = UUID()
     let rules: [MatchRule]
@@ -24,13 +24,17 @@ public struct SkipRequestForLogging: Identifiable {
         guard !rules.isEmpty else { return false }
         return rules.allSatisfy { $0.matches(urlRequest) }
     }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(rules)
+    }
 }
 
 final class SkipRequestForLoggingHandler {
 
     internal nonisolated(unsafe) static let shared: SkipRequestForLoggingHandler = .init()
     
-    var skipRequests: [SkipRequestForLogging] = []
+    var skipRequests: Set<SkipRequestForLogging> = []
 
     var isEnabled: Bool {
         !skipRequests.isEmpty
@@ -39,7 +43,9 @@ final class SkipRequestForLoggingHandler {
     private init() { }
 
     func remove(id: UUID) {
-        skipRequests.removeAll { $0.id == id }
+        if let item = skipRequests.first { $0.id == id } {
+            skipRequests.remove(item)
+        }
     }
     
     func clear() {
@@ -48,12 +54,12 @@ final class SkipRequestForLoggingHandler {
 
     func register(rules: [MatchRule]) {
         let skipRequest = SkipRequestForLogging(rules: rules)
-        skipRequests.append(skipRequest)
+        skipRequests.insert(skipRequest)
     }
 
     func register(rule: MatchRule) {
         let skipRequest = SkipRequestForLogging(rule: rule)
-        skipRequests.append(skipRequest)
+        skipRequests.insert(skipRequest)
     }
 
     func shouldSkipLogging(_ urlRequest: URLRequest) -> Bool {

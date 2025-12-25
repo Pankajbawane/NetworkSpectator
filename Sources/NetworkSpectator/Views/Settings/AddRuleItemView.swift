@@ -270,9 +270,8 @@ struct AddRuleItemView: View {
 
             // Call onSave callback if provided
             if let onSave = onSave {
-                let skipRequest = SkipRequestForLoggingHandler.shared.skipRequests.last!
                 let updatedItem = AddRuleItem(
-                    id: skipRequest.id,
+                    id: UUID(),
                     text: text,
                     response: "",
                     statusCode: "",
