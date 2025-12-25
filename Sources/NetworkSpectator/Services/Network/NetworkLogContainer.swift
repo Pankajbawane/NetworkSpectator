@@ -24,7 +24,7 @@ final class NetworkLogContainer: ObservableObject, Sendable {
     func enable() {
         guard !isLoggingEnabled else { return }
         URLProtocol.registerClass(NetworkURLProtocol.self)
-        URLSessionConfiguration.enableNetworkSwizzling()
+        URLSessionConfiguration.enableNetworkMonitoring()
         startObservingUpdates()
         isLoggingEnabled = true
         DebugPrint.log("NETWORK SPECTATOR: Logging initiated.")
@@ -33,7 +33,7 @@ final class NetworkLogContainer: ObservableObject, Sendable {
     func disable() {
         guard isLoggingEnabled else { return }
         URLProtocol.unregisterClass(NetworkURLProtocol.self)
-        URLSessionConfiguration.disableNetworkSwizzling()
+        URLSessionConfiguration.disableNetworkMonitoring()
         stop()
         isLoggingEnabled = false
         DebugPrint.log("NETWORK SPECTATOR: Logging stopped.")

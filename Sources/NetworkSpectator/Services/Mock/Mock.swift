@@ -9,27 +9,24 @@
 import Foundation
 
 /// Represents a mock HTTP response for network request interception.
-public struct Mock: Identifiable, Equatable {
+public struct Mock: Identifiable {
     public let id: UUID = UUID()
     let headers: [String: String]
     let statusCode: Int
     let response: Data?
     let error: Error?
-    let rules: [MatchRule]?
-    let matches: ((URLRequest) -> Bool)?
+    let rules: [MatchRule]
 
     private init(response: Data?,
                  headers: [String: String],
                  statusCode: Int,
                  error: Error?,
-                 rules: [MatchRule]?,
-                 matches: ((URLRequest) -> Bool)?) {
+                 rules: [MatchRule]) {
         self.headers = headers
         self.statusCode = statusCode
         self.response = response
         self.error = error
         self.rules = rules
-        self.matches = matches
     }
 
     internal func urlResponse(_ request: URLRequest) -> HTTPURLResponse? {
@@ -51,7 +48,7 @@ public struct Mock: Identifiable, Equatable {
                 statusCode: Int = 200,
                 error: Error? = nil) throws {
         let responseData = try response.map { try JSONSerialization.data(withJSONObject: $0, options: []) }
-        self.init(response: responseData, headers: headers, statusCode: statusCode, error: error, rules: rules, matches: nil)
+        self.init(response: responseData, headers: headers, statusCode: statusCode, error: error, rules: rules)
     }
 
     /// Creates a mock with rule-based matching and raw data response.
@@ -66,41 +63,26 @@ public struct Mock: Identifiable, Equatable {
                 headers: [String: String] = [:],
                 statusCode: Int = 200,
                 error: Error? = nil) {
-        self.init(response: response, headers: headers, statusCode: statusCode, error: error, rules: rules, matches: nil)
+        self.init(response: response, headers: headers, statusCode: statusCode, error: error, rules: rules)
     }
+}
 
-    /// Creates a mock with custom matching logic and JSON response.
-    /// - Parameters:
-    ///   - response: JSON object to be serialized as the response body.
-    ///   - headers: HTTP headers to include in the response.
-    ///   - statusCode: HTTP status code for the response.
-    ///   - error: Optional error to return instead of a successful response.
-    ///   - matches: Custom closure to determine if this mock matches a request.
-    public init(response: [AnyHashable: Any]?,
-                headers: [String: String] = [:],
-                statusCode: Int = 200,
-                error: Error? = nil,
-                matches: @escaping (URLRequest) -> Bool) throws {
-        let responseData = try response.map { try JSONSerialization.data(withJSONObject: $0, options: []) }
-        self.init(response: responseData, headers: headers, statusCode: statusCode, error: error, rules: nil, matches: matches)
-    }
-
-    /// Creates a mock with custom matching logic and raw data response.
-    /// - Parameters:
-    ///   - response: Raw data to return as the response body.
-    ///   - headers: HTTP headers to include in the response.
-    ///   - statusCode: HTTP status code for the response.
-    ///   - error: Optional error to return instead of a successful response.
-    ///   - matches: Custom closure to determine if this mock matches a request.
-    public init(response: Data?,
-                headers: [String: String] = [:],
-                statusCode: Int = 200,
-                error: Error? = nil,
-                matches: @escaping (URLRequest) -> Bool) {
-        self.init(response: response, headers: headers, statusCode: statusCode, error: error, rules: nil, matches: matches)
-    }
-    
+extension Mock: Equatable {
     public static func == (lhs: Mock, rhs: Mock) -> Bool {
-        lhs.id == rhs.id
+        lhs.headers == rhs.headers &&
+        lhs.statusCode == rhs.statusCode &&
+        lhs.response == rhs.response &&
+        lhs.rules == rhs.rules &&
+        lhs.error?.localizedDescription == rhs.error?.localizedDescription
+    }
+}
+
+extension Mock: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(headers)
+        hasher.combine(statusCode)
+        hasher.combine(response)
+        hasher.combine(rules)
+        hasher.combine(error?.localizedDescription)
     }
 }
