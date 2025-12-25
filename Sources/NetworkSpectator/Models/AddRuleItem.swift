@@ -30,7 +30,7 @@ struct AddRuleItem: Identifiable {
         }
 
         init?(mock: Mock) {
-            guard let matchRule = mock.rules?.first else { return nil }
+            guard let matchRule = mock.rules.first else { return nil }
             self.id = mock.id
 
             switch matchRule {

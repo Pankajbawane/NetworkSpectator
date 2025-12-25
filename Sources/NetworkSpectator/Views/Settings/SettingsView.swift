@@ -20,7 +20,7 @@ struct SettingsView: View {
 
         init(mock: Mock) {
             id = mock.id
-            text = mock.rules?.first?.ruleName ?? "Rule NA"
+            text = mock.rules.first?.ruleName ?? "Rule NA"
         }
 
         init(skipRequest: SkipRequestForLogging) {

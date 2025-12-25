@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum MatchRule {
+public enum MatchRule: Equatable, Hashable {
     case hostName(String)
     case url(String)
     case path(String)
@@ -15,6 +15,7 @@ public enum MatchRule {
     case pathComponent(String)
     case regex(String)
     case queryParameter(key: String, value: String? = nil)
+    case urlRequest(URLRequest)
     
     var ruleName: String {
         switch self {
@@ -25,10 +26,15 @@ public enum MatchRule {
         case .pathComponent(let string): return "Rule_Path Component" + ": " + string
         case .regex(let string): return "Rule_Regex" + ": " + string
         case .queryParameter: return "Rule_Query Parameter"
+        case .urlRequest(_): return "Rule_URLRequest"
         }
     }
 
-    func matches(_ url: URL) -> Bool {
+    func matches(_ urlRequest: URLRequest) -> Bool {
+        guard let url = urlRequest.url else {
+            return self == .urlRequest(urlRequest)
+        }
+        
         switch self {
         case .hostName(let pattern):
             guard let host = url.host else { return false }
@@ -68,6 +74,7 @@ public enum MatchRule {
             } else {
                 return queryItems.contains { $0.name == key }
             }
+        case .urlRequest(let thisRequest): return urlRequest == thisRequest
         }
     }
 

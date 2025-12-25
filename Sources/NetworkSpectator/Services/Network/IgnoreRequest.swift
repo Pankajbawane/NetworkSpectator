@@ -20,9 +20,9 @@ public struct SkipRequestForLogging: Identifiable {
         self.rules = [rule]
     }
 
-    func shouldIgnore(_ url: URL) -> Bool {
+    func shouldIgnore(_ urlRequest: URLRequest) -> Bool {
         guard !rules.isEmpty else { return false }
-        return rules.allSatisfy { $0.matches(url) }
+        return rules.allSatisfy { $0.matches(urlRequest) }
     }
 }
 
@@ -56,7 +56,7 @@ final class SkipRequestForLoggingHandler {
         skipRequests.append(skipRequest)
     }
 
-    func shouldSkipLogging(_ url: URL) -> Bool {
-        return skipRequests.contains { $0.shouldIgnore(url) }
+    func shouldSkipLogging(_ urlRequest: URLRequest) -> Bool {
+        return skipRequests.contains { $0.shouldIgnore(urlRequest) }
     }
 }

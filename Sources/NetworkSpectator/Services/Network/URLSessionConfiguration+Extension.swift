@@ -9,40 +9,40 @@ import Foundation
 
 internal extension URLSessionConfiguration {
     
-    static func enableNetworkSwizzling() {
+    static func enableNetworkMonitoring() {
         let defaultSelector = #selector(getter: URLSessionConfiguration.default)
         let ephemeralSelector = #selector(getter: URLSessionConfiguration.ephemeral)
 
         guard let defaultMethod = class_getClassMethod(URLSessionConfiguration.self, defaultSelector),
-              let swizzledDefaultMethod = class_getClassMethod(URLSessionConfiguration.self,
+              let customDefaultMethod = class_getClassMethod(URLSessionConfiguration.self,
                                                                #selector(URLSessionConfiguration.nwDefault)),
 
               let ephemeralMethod = class_getClassMethod(URLSessionConfiguration.self, ephemeralSelector),
-              let swizzledEphemeralMethod = class_getClassMethod(URLSessionConfiguration.self,
+              let customEphemeralMethod = class_getClassMethod(URLSessionConfiguration.self,
                                                                  #selector(URLSessionConfiguration.nwEphemeral)) else {
             return
         }
 
-        method_exchangeImplementations(defaultMethod, swizzledDefaultMethod)
-        method_exchangeImplementations(ephemeralMethod, swizzledEphemeralMethod)
+        method_exchangeImplementations(defaultMethod, customDefaultMethod)
+        method_exchangeImplementations(ephemeralMethod, customEphemeralMethod)
     }
     
-    static func disableNetworkSwizzling() {
+    static func disableNetworkMonitoring() {
         let defaultSelector = #selector(getter: URLSessionConfiguration.default)
         let ephemeralSelector = #selector(getter: URLSessionConfiguration.ephemeral)
 
         guard let defaultMethod = class_getClassMethod(URLSessionConfiguration.self, defaultSelector),
-              let swizzledDefaultMethod = class_getClassMethod(URLSessionConfiguration.self,
+              let customDefaultMethod = class_getClassMethod(URLSessionConfiguration.self,
                                                                #selector(URLSessionConfiguration.nwDefault)),
 
               let ephemeralMethod = class_getClassMethod(URLSessionConfiguration.self, ephemeralSelector),
-              let swizzledEphemeralMethod = class_getClassMethod(URLSessionConfiguration.self,
+              let customEphemeralMethod = class_getClassMethod(URLSessionConfiguration.self,
                                                                  #selector(URLSessionConfiguration.nwEphemeral)) else {
             return
         }
 
-        method_exchangeImplementations(swizzledDefaultMethod, defaultMethod)
-        method_exchangeImplementations(swizzledEphemeralMethod, ephemeralMethod)
+        method_exchangeImplementations(customDefaultMethod, defaultMethod)
+        method_exchangeImplementations(customEphemeralMethod, ephemeralMethod)
     }
 
     @objc class func nwDefault() -> URLSessionConfiguration {
@@ -68,45 +68,45 @@ internal extension URLSessionConfiguration {
 
 internal extension URLSession {
     
-    static func enableNetworkSwizzling() {
+    static func enableNetworkMonitoring() {
         
         let originalSelector = #selector(URLSession.dataTask(with:completionHandler:) as (URLSession) -> (URLRequest, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask)
-        let swizzledSelector = #selector(URLSession.swizzled_dataTask(with:completionHandler:))
+        let customSelector = #selector(URLSession.custom_dataTask(with:completionHandler:))
         
         guard let originalMethod = class_getInstanceMethod(URLSession.self, originalSelector),
-              let swizzledMethod = class_getInstanceMethod(URLSession.self, swizzledSelector) else {
+              let customMethod = class_getInstanceMethod(URLSession.self, customSelector) else {
             return
         }
         
-        method_exchangeImplementations(originalMethod, swizzledMethod)
+        method_exchangeImplementations(originalMethod, customMethod)
     }
     
-    static func disableNetworkSwizzling() {
+    static func disableNetworkMonitoring() {
         let originalSelector = #selector(URLSession.dataTask(with:completionHandler:) as (URLSession) -> (URLRequest, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask)
-        let swizzledSelector = #selector(URLSession.swizzled_dataTask(with:completionHandler:))
+        let customSelector = #selector(URLSession.custom_dataTask(with:completionHandler:))
         
         guard let originalMethod = class_getInstanceMethod(URLSession.self, originalSelector),
-              let swizzledMethod = class_getInstanceMethod(URLSession.self, swizzledSelector) else {
+              let customMethod = class_getInstanceMethod(URLSession.self, customSelector) else {
             return
         }
         
-        // Reverse the swizzle by swapping the implementations back
-        method_exchangeImplementations(swizzledMethod, originalMethod)
+        // Reset by swapping the implementations back
+        method_exchangeImplementations(customMethod, originalMethod)
     }
     
     @objc
-    private func swizzled_dataTask(with request: URLRequest,
+    private func custom_dataTask(with request: URLRequest,
                                    completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
         // Avoid intercepting requests twice
         if !NetworkURLProtocol.canInit(with: request) {
-            return self.swizzled_dataTask(with: request, completionHandler: completionHandler)
+            return self.custom_dataTask(with: request, completionHandler: completionHandler)
         }
         
         // If the request is ignored for logging using match rules, don't intercept
         if SkipRequestForLoggingHandler.shared.isEnabled,
            let url = request.url,
-           SkipRequestForLoggingHandler.shared.shouldSkipLogging(url) {
-            return self.swizzled_dataTask(with: request, completionHandler: completionHandler)
+           SkipRequestForLoggingHandler.shared.shouldSkipLogging(request) {
+            return self.custom_dataTask(with: request, completionHandler: completionHandler)
         }
         
         let log = LogItem.fromRequest(request)
@@ -132,6 +132,6 @@ internal extension URLSession {
             }
         }
         
-        return self.swizzled_dataTask(with: request, completionHandler: wrappedHandler)
+        return self.custom_dataTask(with: request, completionHandler: wrappedHandler)
     }
 }

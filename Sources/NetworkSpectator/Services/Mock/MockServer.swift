@@ -10,7 +10,7 @@ import Foundation
 /// Manages registered mocks for network request interception.
 final class MockServer {
     
-    private(set) var mocks: [Mock] = []
+    private(set) var mocks: Set<Mock> = []
     
     nonisolated(unsafe) static let shared: MockServer = .init()
     
@@ -19,25 +19,22 @@ final class MockServer {
     /// Registers a mock to intercept matching network requests.
     /// - Parameter mock: The mock configuration to register.
     func register(_ mock: Mock) {
-        mocks.append(mock)
+        mocks.insert(mock)
     }
     
     func responseIfMocked(_ urlRequest: URLRequest) -> Mock? {
         guard let url = urlRequest.url else { return nil }
         return mocks.first { mock in
-            if let matches = mock.matches {
-                return matches(urlRequest)
-            }
-            if let rules = mock.rules {
-                return rules.allSatisfy { $0.matches(url) }
-            }
+                return mock.rules.allSatisfy { $0.matches(urlRequest) }
             return false
         }
     }
     
     /// Removes registered mock.
     func remove(id: UUID) {
-        mocks.removeAll { $0.id == id }
+        if let mock = mocks.first(where: { $0.id == id }) {
+            mocks.remove(mock)
+        }
     }
     
     /// Removes all registered mocks.
