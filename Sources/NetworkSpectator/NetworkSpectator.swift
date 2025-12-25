@@ -39,6 +39,7 @@ public struct NetworkSpectator: Sendable {
         }
     }
     
+    /// Calling this method is not required if 'start()' is not invoked.
     public static func stop() {
         Task {
             await NetworkLogContainer.shared.disable()

@@ -14,7 +14,7 @@ final class NetworkLogContainer: ObservableObject, Sendable {
 
     @Published var items: [LogItem] = []
     private var itemUpdateTask: Task<Void, Never>?
-    private let store = NetworkLogStore()
+    private let store = NetworkLogStore.shared
     private var isLoggingEnabled: Bool = false
 
     private init() {
@@ -66,51 +66,53 @@ final class NetworkLogContainer: ObservableObject, Sendable {
 
     /// Cancels ongoing observation of network log updates.
     private func stop() {
+        itemUpdateTask?.cancel()
+        itemUpdateTask = nil
+        items.removeAll()
+
         Task {
             await store.stop()
         }
-        itemUpdateTask?.cancel()
-        itemUpdateTask = nil
-        clear()
     }
     
     func clear() {
+        items.removeAll()
         Task {
             await store.clear()
         }
-        items.removeAll()
     }
 }
 
 /// Container actor for thread-safe management and streaming of network log items.
-fileprivate actor NetworkLogStore {
+internal actor NetworkLogStore {
 
     private var items: [LogItem] = []
     private var cache: [UUID: Int] = [:]
     private var continuations: [UUID: AsyncStream<[LogItem]>.Continuation] = [:]
+    static let shared = NetworkLogStore()
 
-    fileprivate init() {}
+    private init() {}
 
     /// Provides a stream of live updates to the item list.
     func itemUpdates() -> AsyncStream<[LogItem]> {
-        AsyncStream { continuation in
+        AsyncStream { [weak self] continuation in
+            guard let self else {
+                continuation.finish()
+                return
+            }
+
             let id = UUID()
 
-            continuation.onTermination = { @Sendable _ in
-                Task { [weak self] in
+            continuation.onTermination = { @Sendable [weak self] _ in
+                Task {
                     await self?.removeContinuation(id)
                 }
             }
 
-            Task { [weak self] in
-                guard let self else {
-                    continuation.finish()
-                    return
-                }
-
+            // Store continuation and yield current items synchronously within the actor
+            Task {
                 await self.storeContinuation(continuation, for: id)
-                let currentItems = await self.items
-                continuation.yield(currentItems)
+                await continuation.yield(self.items)
             }
         }
     }
