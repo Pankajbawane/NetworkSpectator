@@ -57,8 +57,8 @@ final internal class NetworkURLProtocol: URLProtocol {
         }
         
         let completion: (Data?, URLResponse?, Error?) -> Void = { data, response, error in
+            let finalUpdatedLog = log.withResponse(response: response, data: data, error: error)
             Task {
-                let finalUpdatedLog = log.withResponse(response: response, data: data, error: error)
                 DebugPrint.log(finalUpdatedLog)
                 await NetworkLogContainer.shared.add(finalUpdatedLog)
             }
