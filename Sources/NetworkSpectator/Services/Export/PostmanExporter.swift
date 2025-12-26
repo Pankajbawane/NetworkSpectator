@@ -8,72 +8,67 @@
 import Foundation
 
 struct PostmanExporter: FileExportable {
-    
+
     let item: LogItem
     let fileExtension: String = "json"
     var filePrefix: String {
         item.host
     }
-    
+
     func export() async throws -> URL {
         let data = try exportToPostmanCollection()
         return try await save(content: data)
     }
-    
+
     func exportToPostmanCollection() throws -> Data {
-        
+
         guard let urlComponents = URLComponents(string: item.url),
-              let host = urlComponents.host else { throw ExportError.invalidData }
-        
+              let host = urlComponents.host else {
+            throw ExportError.invalidData
+        }
+
         // 1. Convert host and path for Postman URL format
+        let pathComponents = urlComponents.path
+            .split(separator: "/")
+            .map(String.init)
+
         let urlDict: [String: Any] = [
             "raw": item.url,
             "protocol": urlComponents.scheme ?? "https",
             "host": host.components(separatedBy: "."),
-            "path": urlComponents.path
-                .split(separator: "/")
-                .map(String.init),
+            "path": pathComponents.isEmpty ? [] : pathComponents,
             "query": urlComponents.queryItems?.map {
                 ["key": $0.name, "value": $0.value ?? ""]
             } ?? []
         ]
-        
-        // 2. Convert headers dictionary into Postman format
-        var headers: [[String: String]] = []
-        if let headersData = item.headers.data(using: .utf8),
-           let headersDict = try? JSONDecoder().decode([String: String].self, from: headersData) {
-            headers = headersDict.map {
-                ["key": $0.key, "value": $0.value]
-            }
-        }
-        
+
+        // 2. Parse headers from "key:value" format into Postman format
+        let requestHeaders = parseHeaders(from: item.headers)
+
         // 3. Build request dictionary
         var requestDict: [String: Any] = [
             "method": item.method.uppercased(),
-            "header": headers,
+            "header": requestHeaders,
             "url": urlDict
         ]
-        
+
         // 4. Add body if applicable
         if !item.requestBody.isEmpty {
-            requestDict["body"] = [
-                "mode": "raw",
-                "raw": item.requestBody,
-                "options": [
-                    "raw": ["language": "json"] // You can adjust this if needed
-                ]
-            ]
+            let bodyMode = detectBodyMode(from: item.requestBody, headers: item.headers)
+            requestDict["body"] = createBodyDict(content: item.requestBody, mode: bodyMode)
         }
-        
-        // 5. Create item (one API request)
-        let collectionItem: [[String: Any]] = [
-            [
-                "name": "\(item.method.uppercased()) \(urlComponents.path)",
-                "request": requestDict
-            ]
+
+        // 5. Create item (one API request) with response data
+        var collectionItemDict: [String: Any] = [
+            "name": generateItemName(method: item.method, path: urlComponents.path),
+            "request": requestDict
         ]
-        
-        // 6. Build collection JSON
+
+        // 6. Add response example if available
+
+        let collectionItem: [[String: Any]] = [collectionItemDict]
+
+        // 7. Build collection JSON
         let collection: [String: Any] = [
             "info": [
                 "name": "Exported Network Logs",
@@ -81,8 +76,83 @@ struct PostmanExporter: FileExportable {
             ],
             "item": collectionItem
         ]
-        
-        // 7. Serialize to JSON and write to disk
+
+        // 8. Serialize to JSON
         return try JSONSerialization.data(withJSONObject: collection, options: [.prettyPrinted])
+    }
+
+    // MARK: - Private Helpers
+
+    private func parseHeaders(from headersString: String) -> [[String: String]] {
+        guard !headersString.isEmpty else { return [] }
+
+        return headersString
+            .split(separator: "\n")
+            .compactMap { line -> [String: String]? in
+                let parts = line.split(separator: ":", maxSplits: 1)
+                guard parts.count == 2 else { return nil }
+
+                let key = parts[0].trimmingCharacters(in: .whitespaces)
+                let value = parts[1].trimmingCharacters(in: .whitespaces)
+
+                return ["key": key, "value": value]
+            }
+    }
+
+    private func detectBodyMode(from body: String, headers: String) -> String {
+        let lowercasedHeaders = headers.lowercased()
+
+        if lowercasedHeaders.contains("content-type:application/json") ||
+           lowercasedHeaders.contains("content-type: application/json") {
+            return "json"
+        } else if lowercasedHeaders.contains("content-type:application/x-www-form-urlencoded") ||
+                  lowercasedHeaders.contains("content-type: application/x-www-form-urlencoded") {
+            return "urlencoded"
+        } else if lowercasedHeaders.contains("content-type:application/xml") ||
+                  lowercasedHeaders.contains("content-type: application/xml") {
+            return "xml"
+        }
+
+        return "raw"
+    }
+
+    private func createBodyDict(content: String, mode: String) -> [String: Any] {
+        var bodyDict: [String: Any] = [
+            "mode": mode,
+            mode: content
+        ]
+
+        if mode == "json" || mode == "raw" {
+            bodyDict["options"] = [
+                mode: ["language": mode == "json" ? "json" : "text"]
+            ]
+        }
+
+        return bodyDict
+    }
+
+    private func generateItemName(method: String, path: String) -> String {
+        let cleanPath = path.isEmpty ? "/" : path
+        return "\(method.uppercased()) \(cleanPath)"
+    }
+
+    private func createResponseExample() -> [String: Any]? {
+        guard item.statusCode > 0 else { return nil }
+
+        let responseHeaders = parseHeaders(from: item.responseHeaders)
+
+        var responseDict: [String: Any] = [
+            "name": "Example Response",
+            "originalRequest": [:],
+            "status": "Status \(item.statusCode)",
+            "code": item.statusCode,
+            "header": responseHeaders
+        ]
+
+        if !item.responseBody.isEmpty {
+            responseDict["body"] = item.responseBody
+        }
+
+        return responseDict
     }
 }
