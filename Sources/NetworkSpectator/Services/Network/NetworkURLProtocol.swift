@@ -60,7 +60,7 @@ final internal class NetworkURLProtocol: URLProtocol {
             let finalUpdatedLog = log.withResponse(response: response, data: data, error: error)
             Task {
                 DebugPrint.log(finalUpdatedLog)
-                await NetworkLogContainer.shared.add(finalUpdatedLog)
+                await NetworkLogStore.shared.add(finalUpdatedLog)
             }
 
             if let error = error {
