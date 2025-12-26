@@ -7,20 +7,25 @@
 
 import SwiftUI
 
-/// Manages network log updates and publishes.
+/// Manages network log updates and publishes on MainActor.
+/// Communicates with UI layer for updates.
 @MainActor
-final class NetworkLogContainer: ObservableObject, Sendable {
+internal final class NetworkLogContainer: ObservableObject, Sendable {
+    /// Singleton.
     static let shared = NetworkLogContainer()
 
+    /// Items on the MainActor to update on UI layer.
     @Published var items: [LogItem] = []
+    
+    /// Task to observe item updates from the store actor.
     private var itemUpdateTask: Task<Void, Never>?
-    private let store = NetworkLogStore.shared
+    
+    /// Safeguard againts redudant calls. Avoids multiple calls to start/stop monitoring.
     private var isLoggingEnabled: Bool = false
 
-    private init() {
-        
-    }
+    private init() { }
     
+    /// Enables monitoring and logging. 'isLoggingEnabled' flag avoids redudant invocation.
     func enable() {
         guard !isLoggingEnabled else { return }
         URLProtocol.registerClass(NetworkURLProtocol.self)
@@ -30,6 +35,7 @@ final class NetworkLogContainer: ObservableObject, Sendable {
         DebugPrint.log("NETWORK SPECTATOR: Logging initiated.")
     }
     
+    /// Disables monitoring and logging. 'isLoggingEnabled' flag avoids redudant invocation.
     func disable() {
         guard isLoggingEnabled else { return }
         URLProtocol.unregisterClass(NetworkURLProtocol.self)
@@ -39,29 +45,18 @@ final class NetworkLogContainer: ObservableObject, Sendable {
         DebugPrint.log("NETWORK SPECTATOR: Logging stopped.")
     }
 
-    /// Adds a new `LogItem` to the log in a concurrent-safe manner.
-    func add(_ item: LogItem) {
-        Task {
-            await store.add(item)
-        }
-    }
-
-    /// Starts observing updates from the network log container.
+    /// Starts observing updates from the network log store.
     private func startObservingUpdates() {
         itemUpdateTask = Task { [weak self] in
             guard let self else { return }
 
-            // Iterate the async stream produced by the actor
-            for await updatedItems in await store.itemUpdates() {
+            // Iterate the async stream produced by the LogStore
+            for await updatedItems in await NetworkLogStore.shared.itemUpdates() {
                 if Task.isCancelled { break }
                 // Hop to the main actor to update published state
-                self.updateItems(updatedItems)
+                self.items = updatedItems
             }
         }
-    }
-
-    private func updateItems(_ newItems: [LogItem]) {
-        self.items = newItems
     }
 
     /// Cancels ongoing observation of network log updates.
@@ -71,24 +66,32 @@ final class NetworkLogContainer: ObservableObject, Sendable {
         items.removeAll()
 
         Task {
-            await store.stop()
+            await NetworkLogStore.shared.stop()
         }
     }
     
+    /// Clears current list of items. This does not stop the monitoring.
     func clear() {
         items.removeAll()
         Task {
-            await store.clear()
+            await NetworkLogStore.shared.clear()
         }
     }
 }
 
-/// Container actor for thread-safe management and streaming of network log items.
+/// LogStore actor for thread-safe management and streaming of network log items.
 internal actor NetworkLogStore {
 
+    /// List of logged items.
     private var items: [LogItem] = []
+    
+    /// Cache to update the items.
     private var cache: [UUID: Int] = [:]
+    
+    /// AsyncStream to stream the item updates to the UI layer.
     private var continuations: [UUID: AsyncStream<[LogItem]>.Continuation] = [:]
+    
+    /// Singleton.
     static let shared = NetworkLogStore()
 
     private init() {}
@@ -129,6 +132,7 @@ internal actor NetworkLogStore {
     func add(_ item: LogItem) {
         if let index = cache[item.id] {
             items[index] = item
+            cache[item.id] = nil
         } else {
             cache[item.id] = items.count
             items.append(item)
@@ -139,7 +143,7 @@ internal actor NetworkLogStore {
         }
     }
 
-    /// Disables the container and finishes all active streams.
+    /// Disables the store and finishes all active streams.
     func stop() {
         for continuation in continuations.values {
             continuation.finish()
