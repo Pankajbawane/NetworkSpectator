@@ -224,7 +224,7 @@ struct AddRuleItemView: View {
         case .path:
             matchRule = .path(text)
         case .pathComponent:
-            matchRule = .pathComponent(text)
+            matchRule = .subPath(text)
         }
 
         // If we're editing an existing item, remove the old one first

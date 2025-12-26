@@ -12,7 +12,7 @@ public enum MatchRule: Equatable, Hashable {
     case url(String)
     case path(String)
     case endPath(String)
-    case pathComponent(String)
+    case subPath(String)
     case regex(String)
     case queryParameter(key: String, value: String? = nil)
     case urlRequest(URLRequest)
@@ -23,7 +23,7 @@ public enum MatchRule: Equatable, Hashable {
         case .url(let string): return "Rule_URL" + ": " + string
         case .path(let string): return "Rule_Path" + ": " + string
         case .endPath(let string): return "Rule_End Path" + ": " + string
-        case .pathComponent(let string): return "Rule_Path Component" + ": " + string
+        case .subPath(let string): return "Rule_Sub Path" + ": " + string
         case .regex(let string): return "Rule_Regex" + ": " + string
         case .queryParameter: return "Rule_Query Parameter"
         case .urlRequest(_): return "Rule_URLRequest"
@@ -49,11 +49,8 @@ public enum MatchRule: Equatable, Hashable {
         case .endPath(let pattern):
             return compare(url.lastPathComponent, with: pattern)
 
-        case .pathComponent(let pattern):
-            let pathComponents = url.pathComponents
-            return pathComponents.contains { component in
-                compare(component, with: pattern)
-            }
+        case .subPath(let pattern):
+            return url.absoluteString.lowercased().contains(pattern.lowercased())
 
         case .regex(let pattern):
             guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
