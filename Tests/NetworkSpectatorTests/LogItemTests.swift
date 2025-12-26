@@ -1,3 +1,10 @@
+//
+//  LogItemTests.swift
+//  NetworkSpectator
+//
+//  Created by Pankaj Bawane on 19/12/25.
+//
+
 import Testing
 import Foundation
 @testable import NetworkSpectator
@@ -69,6 +76,42 @@ struct LogItemTests {
     func testStatusCategoryUnknown() async throws {
         let item = LogItem(url: "https://example.com", statusCode: 0)
         #expect(item.statusCategory == "Unknown")
+    }
+
+    @Test("LogItem status code range informational")
+    func testStatusCodeRangeInformational() async throws {
+        let item = LogItem(url: "https://example.com", statusCode: 100)
+        #expect(item.statusCodeRange == "100..<200")
+    }
+
+    @Test("LogItem status code range success")
+    func testStatusCodeRangeSuccess() async throws {
+        let item = LogItem(url: "https://example.com", statusCode: 200)
+        #expect(item.statusCodeRange == "200..<300")
+    }
+
+    @Test("LogItem status code range redirection")
+    func testStatusCodeRangeRedirection() async throws {
+        let item = LogItem(url: "https://example.com", statusCode: 301)
+        #expect(item.statusCodeRange == "300..<400")
+    }
+
+    @Test("LogItem status code range client error")
+    func testStatusCodeRangeClientError() async throws {
+        let item = LogItem(url: "https://example.com", statusCode: 404)
+        #expect(item.statusCodeRange == "400..<500")
+    }
+
+    @Test("LogItem status code range server error")
+    func testStatusCodeRangeServerError() async throws {
+        let item = LogItem(url: "https://example.com", statusCode: 500)
+        #expect(item.statusCodeRange == "500..<600")
+    }
+
+    @Test("LogItem status code range unknown")
+    func testStatusCodeRangeUnknown() async throws {
+        let item = LogItem(url: "https://example.com", statusCode: 0)
+        #expect(item.statusCodeRange == "Unknown")
     }
 
     @Test("LogItem is error with 4xx status")

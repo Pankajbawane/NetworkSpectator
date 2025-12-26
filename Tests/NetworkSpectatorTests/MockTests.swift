@@ -1,3 +1,10 @@
+//
+//  MockTests.swift
+//  NetworkSpectator
+//
+//  Created by Pankaj Bawane on 19/12/25.
+//
+
 import Testing
 import Foundation
 @testable import NetworkSpectator
@@ -15,7 +22,7 @@ struct MockTests {
 
         #expect(mock.statusCode == 200)
         #expect(mock.response != nil)
-        #expect(mock.rules?.count == 1)
+        #expect(mock.rules.count == 1)
     }
 
     @Test("Mock with rules and data response")
@@ -29,23 +36,21 @@ struct MockTests {
         #expect(mock.response == data)
     }
 
-    @Test("Mock with custom matcher and JSON")
-    func testMockWithCustomMatcherAndJSON() async throws {
+    @Test("Mock with rules and JSON")
+    func testMockWithRulesAndJSON2() async throws {
+        let rules = [MatchRule.hostName("example.com")]
         let response: [AnyHashable: Any] = ["message": "matched"]
-        let mock = try Mock(response: response, statusCode: 200) { request in
-            request.httpMethod == "POST"
-        }
+        let mock = try Mock(rules: rules, response: response, statusCode: 200)
 
         #expect(mock.statusCode == 200)
-        #expect(mock.matches != nil)
+        #expect(mock.rules.count == 1)
     }
 
-    @Test("Mock with custom matcher and data")
-    func testMockWithCustomMatcherAndData() async throws {
+    @Test("Mock with rules and data")
+    func testMockWithRulesAndData2() async throws {
+        let rules = [MatchRule.path("/test")]
         let data = "Custom data".data(using: .utf8)
-        let mock = Mock(response: data, statusCode: 201) { request in
-            request.url?.absoluteString.contains("test") ?? false
-        }
+        let mock = Mock(rules: rules, response: data, statusCode: 201)
 
         #expect(mock.statusCode == 201)
         #expect(mock.response == data)
@@ -83,12 +88,14 @@ struct MockTests {
         #expect(headerValue == "value")
     }
 
-    @Test("Mock equality by id")
+    @Test("Mock equality")
     func testMockEquality() async throws {
         let mock1 = Mock(rules: [.hostName("example.com")], response: nil as Data?, statusCode: 200)
         let mock2 = Mock(rules: [.hostName("example.com")], response: nil as Data?, statusCode: 200)
+        let mock3 = Mock(rules: [.hostName("different.com")], response: nil as Data?, statusCode: 404)
 
-        #expect(mock1 == mock1)
-        #expect(mock1 != mock2) // Different IDs
+        // Equality is based on content (headers, statusCode, response, rules, error), not ID
+        #expect(mock1 == mock2) // Same content
+        #expect(mock1 != mock3) // Different content
     }
 }

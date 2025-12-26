@@ -1,3 +1,10 @@
+//
+//  DictionaryExtensionTests.swift
+//  NetworkSpectator
+//
+//  Created by Pankaj Bawane on 19/12/25.
+//
+
 import Testing
 import Foundation
 @testable import NetworkSpectator
