@@ -169,7 +169,7 @@ private extension LogItem {
             partial[key] = value
         }
         let sorted = mapped.keys.sorted()
-        let lines = sorted.map { "\($0): \(mapped[$0] ?? "")" }
+        let lines = sorted.map { "\($0):\(mapped[$0] ?? "")" }
         return lines.joined(separator: "\n")
     }
 

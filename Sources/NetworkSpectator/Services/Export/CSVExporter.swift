@@ -17,7 +17,11 @@ struct CSVExporter: FileExportable {
     let items: [LogItem]
     let fileExtension: String = "csv"
     var filePrefix: String {
-        "log_list"
+        if items.count == 1, let name = items.first?.host {
+            return "log_csv_\(name)"
+        } else {
+            return "log_csv_list"
+        }
     }
 
     func export() async throws -> URL {
