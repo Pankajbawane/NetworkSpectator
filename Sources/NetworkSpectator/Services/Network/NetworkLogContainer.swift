@@ -27,7 +27,10 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     
     /// Enables monitoring and logging. 'isLoggingEnabled' flag avoids redudant invocation.
     func enable() {
-        guard !isLoggingEnabled else { return }
+        guard !isLoggingEnabled else {
+            DebugPrint.log("NETWORK SPECTATOR: Monitoring was already active.")
+            return
+        }
         URLProtocol.registerClass(NetworkURLProtocol.self)
         URLSessionConfiguration.enableNetworkMonitoring()
         startObservingUpdates()
@@ -37,24 +40,38 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     
     /// Disables monitoring and logging. 'isLoggingEnabled' flag avoids redudant invocation.
     func disable() {
-        guard isLoggingEnabled else { return }
+        guard isLoggingEnabled else {
+            DebugPrint.log("NETWORK SPECTATOR: Monitoring was inactive.")
+            return
+        }
         URLProtocol.unregisterClass(NetworkURLProtocol.self)
         URLSessionConfiguration.disableNetworkMonitoring()
         stop()
         isLoggingEnabled = false
-        DebugPrint.log("NETWORK SPECTATOR: Logging stopped.")
+        DebugPrint.log("NETWORK SPECTATOR: Monitoring stopped.")
     }
 
     /// Starts observing updates from the network log store.
     private func startObservingUpdates() {
-        itemUpdateTask = Task { [weak self] in
+        itemUpdateTask = Task { @MainActor [weak self] in
             guard let self else { return }
 
             // Iterate the async stream produced by the LogStore
             for await updatedItems in await NetworkLogStore.shared.itemUpdates() {
                 if Task.isCancelled { break }
                 // Hop to the main actor to update published state
-                self.items = updatedItems
+                switch updatedItems {
+                case .append(let item):
+                    self.items.append(item)
+                case .update(let item, let index):
+                    // Updated LogItem
+                    if index < self.items.count, self.items[index].id == item.id {
+                        self.items[index] = item
+                    } else {
+                        // Recovery - If item not found, treat as new
+                        self.items.append(item)
+                    }
+                }
             }
         }
     }
@@ -81,78 +98,82 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
 
 /// LogStore actor for thread-safe management and streaming of network log items.
 internal actor NetworkLogStore {
-
-    /// List of logged items.
-    private var items: [LogItem] = []
     
-    /// Cache to update the items.
+    enum ItemStream {
+        case append(LogItem)
+        case update(LogItem, Int)
+    }
+    
+    /// Cache to track which items have been added.
     private var cache: [UUID: Int] = [:]
     
-    /// AsyncStream to stream the item updates to the UI layer.
-    private var continuations: [UUID: AsyncStream<[LogItem]>.Continuation] = [:]
+    private var continuation: AsyncStream<ItemStream>.Continuation?
+    
+    /// Buffer updates that arrive before a continuation is registered.
+    private var pending: [ItemStream] = []
     
     /// Singleton.
     static let shared = NetworkLogStore()
 
-    private init() {}
+    private init() { }
 
-    /// Provides a stream of live updates to the item list.
-    func itemUpdates() -> AsyncStream<[LogItem]> {
-        AsyncStream { [weak self] continuation in
+    func itemUpdates() -> AsyncStream<ItemStream> {
+        AsyncStream<ItemStream> { [weak self] continuation in
+            
             guard let self else {
                 continuation.finish()
                 return
             }
-
-            let id = UUID()
-
-            continuation.onTermination = { @Sendable [weak self] _ in
-                Task {
-                    await self?.removeContinuation(id)
-                }
-            }
-
-            // Store continuation and yield current items synchronously within the actor
             Task {
-                await self.storeContinuation(continuation, for: id)
-                await continuation.yield(self.items)
+                await storeContinuation(continuation)
             }
         }
     }
-
-    private func storeContinuation(_ continuation: AsyncStream<[LogItem]>.Continuation, for id: UUID) {
-        continuations[id] = continuation
+    
+    func storeContinuation(_ continuation: AsyncStream<ItemStream>.Continuation) {
+        if self.continuation != nil {
+            self.continuation?.finish()
+        }
+        self.continuation = continuation
+        // Deliver any pending updates that were buffered before a subscriber attached.
+        if !pending.isEmpty {
+            for update in pending {
+                self.continuation?.yield(update)
+            }
+            pending.removeAll()
+        }
     }
 
-    private func removeContinuation(_ id: UUID) {
-        continuations.removeValue(forKey: id)
-    }
-
-    /// Adds or updates an item and notifies all observers.
+    /// Adds or updates an item and notifies LogContainer.
     func add(_ item: LogItem) {
+        let update: ItemStream
+        
         if let index = cache[item.id] {
-            items[index] = item
-            cache[item.id] = nil
+            // Item exists - send update
+            update = .update(item, index)
         } else {
-            cache[item.id] = items.count
-            items.append(item)
+            // New item - add to cache and send append
+            cache[item.id] = cache.count
+            update = .append(item)
         }
 
-        for continuation in continuations.values {
-            continuation.yield(items)
+        if let continuation {
+            continuation.yield(update)
+        } else {
+            pending.append(update)
         }
     }
 
     /// Disables the store and finishes all active streams.
     func stop() {
-        for continuation in continuations.values {
-            continuation.finish()
-        }
-        continuations.removeAll()
+        continuation?.finish()
+        continuation = nil
+        pending.removeAll()
+        cache.removeAll()
     }
     
     func clear() {
-        items.removeAll()
         cache.removeAll()
+        pending.removeAll()
     }
 }
