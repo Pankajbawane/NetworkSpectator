@@ -1,3 +1,10 @@
+//
+//  HTTPInputConverterTests.swift
+//  NetworkSpectator
+//
+//  Created by Pankaj Bawane on 19/12/25.
+//
+
 import Testing
 import Foundation
 @testable import NetworkSpectator
@@ -90,35 +97,11 @@ struct HTTPInputConverterTests {
         }
     }
 
-    @Test("Headers from valid colon-separated format")
-    func testHeadersFromColonSeparated() async throws {
+    @Test("Headers from valid triple-equals-separated format")
+    func testHeadersFromTripleEqualsSeparated() async throws {
         let input = """
-        Content-Type: application/json
-        Authorization: Bearer token123
-        """
-        let headers = try HTTPInputConverter.headers(from: input)
-
-        #expect(headers["Content-Type"] == "application/json")
-        #expect(headers["Authorization"] == "Bearer token123")
-    }
-
-    @Test("Headers from equals-separated format")
-    func testHeadersFromEqualsSeparated() async throws {
-        let input = """
-        Content-Type=application/json
-        Authorization=Bearer token123
-        """
-        let headers = try HTTPInputConverter.headers(from: input)
-
-        #expect(headers["Content-Type"] == "application/json")
-        #expect(headers["Authorization"] == "Bearer token123")
-    }
-
-    @Test("Headers from mixed separators")
-    func testHeadersFromMixedSeparators() async throws {
-        let input = """
-        Content-Type: application/json
-        Authorization=Bearer token123
+        Content-Type===application/json
+        Authorization===Bearer token123
         """
         let headers = try HTTPInputConverter.headers(from: input)
 
@@ -135,8 +118,8 @@ struct HTTPInputConverterTests {
     @Test("Headers with whitespace trimming")
     func testHeadersWithWhitespace() async throws {
         let input = """
-          Content-Type  :  application/json
-          Authorization  =  Bearer token123
+          Content-Type  ===  application/json
+          Authorization  ===  Bearer token123
         """
         let headers = try HTTPInputConverter.headers(from: input)
 
@@ -147,9 +130,9 @@ struct HTTPInputConverterTests {
     @Test("Headers skip empty lines")
     func testHeadersSkipEmptyLines() async throws {
         let input = """
-        Content-Type: application/json
+        Content-Type===application/json
 
-        Authorization: Bearer token123
+        Authorization===Bearer token123
 
         """
         let headers = try HTTPInputConverter.headers(from: input)
@@ -167,7 +150,7 @@ struct HTTPInputConverterTests {
 
     @Test("Headers empty key throws error")
     func testHeadersEmptyKey() async throws {
-        let input = ": value"
+        let input = "===value"
         #expect(throws: HTTPInputConverter.ConversionError.self) {
             try HTTPInputConverter.headers(from: input)
         }
