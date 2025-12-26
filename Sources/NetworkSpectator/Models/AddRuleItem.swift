@@ -43,7 +43,7 @@ struct AddRuleItem: Identifiable {
             case .endPath(let value):
                 self.text = value
                 self.rule = .endPath
-            case .pathComponent(let value):
+            case .subPath(let value):
                 self.text = value
                 self.rule = .pathComponent
             default:
@@ -70,7 +70,7 @@ struct AddRuleItem: Identifiable {
             case .endPath(let value):
                 self.text = value
                 self.rule = .endPath
-            case .pathComponent(let value):
+            case .subPath(let value):
                 self.text = value
                 self.rule = .pathComponent
             default:
