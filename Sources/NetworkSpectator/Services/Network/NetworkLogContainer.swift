@@ -75,13 +75,16 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
             }
         }
     }
-
-    /// Cancels ongoing observation of network log updates.
-    private func stop() {
+    
+    private func reset() {
         itemUpdateTask?.cancel()
         itemUpdateTask = nil
         items.removeAll()
+    }
 
+    /// Cancels ongoing observation of network log updates.
+    private func stop() {
+        reset()
         Task {
             await NetworkLogStore.shared.stop()
         }
@@ -89,9 +92,11 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     
     /// Clears current list of items. This does not stop the monitoring.
     func clear() {
-        items.removeAll()
+        reset()
         Task {
-            await NetworkLogStore.shared.clear()
+            await NetworkLogStore.shared.stop()
+            // Start observing after current items are removed completely.
+            startObservingUpdates()
         }
     }
 }
@@ -165,14 +170,13 @@ internal actor NetworkLogStore {
     }
 
     /// Disables the store and finishes all active streams.
-    func stop() {
+    fileprivate func stop() {
         continuation?.finish()
         continuation = nil
-        pending.removeAll()
-        cache.removeAll()
+        clear()
     }
     
-    func clear() {
+    fileprivate func clear() {
         cache.removeAll()
         pending.removeAll()
     }
