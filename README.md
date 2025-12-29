@@ -193,3 +193,6 @@ NetworkSpectator.start()
 - Swift 6+
 - iOS 16.0+ / macOS 13.0+
 - Xcode 16.0+
+
+## LICENSE
+MIT license. View LICENSE for more details.
