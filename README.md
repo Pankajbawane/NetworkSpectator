@@ -1,6 +1,6 @@
 # NetworkSpectator
 
-A lightweight Swift utility for observing and inspecting your app's network traffic during development and testing. NetworkSpectator captures requests and responses, provides a simple UI for browsing and mocking them, and allows you to export logs for sharing.
+A lightweight Swift utility for monitoring and inspecting your app's network traffic during development and testing. NetworkSpectator captures requests and responses, provides a simple UI for browsing and mocking them, and allows you to export logs for sharing.
 
 ## Features
 
