@@ -1,6 +1,6 @@
-# NetworkSpectator: Network Monitoring/Intercepting Tool for iOS and MacOS
+# NetworkSpectator: Monitor/Intercept HTTP Traffic on iOS and MacOS
 
-A lightweight Swift utility for monitoring and inspecting your app's HTTP traffic during development and testing. NetworkSpectator captures requests and responses, provides a clean UI for browsing and mocking them, and allows you to export logs for sharing.
+A Swift framework for monitoring and inspecting your app's HTTP traffic during development and testing. NetworkSpectator captures requests and responses, provides a clean UI for browsing and mocking them, and allows you to export logs for sharing.
 
 ## Features
 
