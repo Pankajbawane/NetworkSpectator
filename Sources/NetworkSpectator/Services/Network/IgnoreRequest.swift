@@ -40,7 +40,9 @@ final class SkipRequestForLoggingHandler: @unchecked Sendable {
         !skipRequests.isEmpty
     }
 
-    private init() { }
+    private init() {
+        
+    }
 
     func remove(id: UUID) {
         if let item = skipRequests.first { $0.id == id } {
@@ -60,6 +62,10 @@ final class SkipRequestForLoggingHandler: @unchecked Sendable {
     func register(rule: MatchRule) {
         let skipRequest = SkipRequestForLogging(rule: rule)
         skipRequests.insert(skipRequest)
+    }
+    
+    func register(request: SkipRequestForLogging) {
+        skipRequests.insert(request)
     }
 
     func shouldSkipLogging(_ urlRequest: URLRequest) -> Bool {
