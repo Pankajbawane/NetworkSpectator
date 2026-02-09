@@ -8,13 +8,16 @@
 import Foundation
 
 /// Manages registered mocks for network request interception.
-final class MockServer {
+final class MockServer: @unchecked Sendable {
     
     private(set) var mocks: Set<Mock> = []
     
-    nonisolated(unsafe) static let shared: MockServer = .init()
+    static let shared: MockServer = .init()
     
-    private init() { }
+    private init() {
+        let storage = RuleStorage<Mock>(key: .mockRules)
+        mocks = Set(storage.retrieve())
+    }
     
     /// Registers a mock to intercept matching network requests.
     /// - Parameter mock: The mock configuration to register.

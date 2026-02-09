@@ -69,6 +69,6 @@ public struct NetworkSpectator: Sendable {
     }
     
     public  static func debugLogsPrint(isEnabled: Bool) {
-        DebugPrint.shared = .init(enabled: isEnabled)
+        DebugPrint.shared.update(isEnabled)
     }
 }
