@@ -11,11 +11,12 @@ import Foundation
 final class MockServer: @unchecked Sendable {
 
     private(set) var mocks: Set<Mock> = []
-    private let storage = RuleStorage<Mock>(key: .mockRules)
+    private let storage: RuleStorage<Mock>
 
     static let shared: MockServer = .init()
 
-    private init() {
+    init(storage: RuleStorage<Mock> = RuleStorage<Mock>(key: .mockRules)) {
+        self.storage = storage
         mocks = Set(storage.retrieve())
     }
 
@@ -29,7 +30,6 @@ final class MockServer: @unchecked Sendable {
     }
 
     func responseIfMocked(_ urlRequest: URLRequest) -> Mock? {
-        guard let url = urlRequest.url else { return nil }
         return mocks.first { mock in
             mock.rules.allSatisfy { $0.matches(urlRequest) }
         }

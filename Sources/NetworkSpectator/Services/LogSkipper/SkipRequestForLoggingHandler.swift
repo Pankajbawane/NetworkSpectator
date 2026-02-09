@@ -12,13 +12,14 @@ final class SkipRequestForLoggingHandler: @unchecked Sendable {
     internal static let shared: SkipRequestForLoggingHandler = .init()
 
     var skipRequests: Set<SkipRequestForLogging> = []
-    private let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules)
+    private let storage: RuleStorage<SkipRequestForLogging>
 
     var isEnabled: Bool {
         !skipRequests.isEmpty
     }
 
-    private init() {
+    init(storage: RuleStorage<SkipRequestForLogging> = RuleStorage<SkipRequestForLogging>(key: .skipRules)) {
+        self.storage = storage
         skipRequests = Set(storage.retrieve())
     }
 

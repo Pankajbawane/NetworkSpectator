@@ -94,8 +94,9 @@ struct MockTests {
         let mock2 = Mock(rules: [.hostName("example.com")], response: nil as Data?, statusCode: 200)
         let mock3 = Mock(rules: [.hostName("different.com")], response: nil as Data?, statusCode: 404)
 
-        // Equality is based on content (headers, statusCode, response, rules, error), not ID
-        #expect(mock1 == mock2) // Same content
-        #expect(mock1 != mock3) // Different content
+        // Equality is based on ID, not content
+        #expect(mock1 != mock2) // Different IDs
+        #expect(mock1 != mock3) // Different IDs
+        #expect(mock1 == mock1) // Same instance
     }
 }

@@ -31,7 +31,11 @@ public struct SkipRequestForLogging: Identifiable, Hashable, Codable {
     }
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(rules)
+        hasher.combine(id)
+    }
+    
+    public static func == (lhs: SkipRequestForLogging, rhs: SkipRequestForLogging) -> Bool {
+        lhs.id == rhs.id
     }
 }
 
