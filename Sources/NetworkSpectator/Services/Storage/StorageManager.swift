@@ -12,20 +12,34 @@ enum StorageKey: String {
     case skipRules = "SKIP_RULES"
 }
 
+protocol Storeable {
+    func set(_ value: Any?, forKey defaultName: String)
+    func data(forKey defaultName: String) -> Data?
+    func removeObject(forKey defaultName: String)
+    @discardableResult func synchronize() -> Bool
+}
+
+extension UserDefaults: Storeable {
+    
+}
+
 /// Simple storage manager for persisting rules to UserDefaults
 struct RuleStorage<T: Codable> {
 
     private let key: StorageKey
+    private let store: Storeable
 
-    init(key: StorageKey) {
+    init(key: StorageKey, store: Storeable = UserDefaults.standard) {
         self.key = key
+        self.store = store
     }
 
     /// Saves an array of rules to UserDefaults
     func save(_ items: [T]) {
         do {
             let data = try JSONEncoder().encode(items)
-            UserDefaults.standard.set(data, forKey: key.rawValue)
+            store.set(data, forKey: key.rawValue)
+            store.synchronize()
         } catch {
             print("Failed to save \(key.rawValue): \(error)")
         }
@@ -33,7 +47,7 @@ struct RuleStorage<T: Codable> {
 
     /// Retrieves all rules from UserDefaults
     func retrieve() -> [T] {
-        guard let data = UserDefaults.standard.data(forKey: key.rawValue) else {
+        guard let data = store.data(forKey: key.rawValue) else {
             return []
         }
         do {
@@ -46,6 +60,7 @@ struct RuleStorage<T: Codable> {
 
     /// Clears all stored rules
     func clear() {
-        UserDefaults.standard.removeObject(forKey: key.rawValue)
+        store.removeObject(forKey: key.rawValue)
+        store.synchronize()
     }
 }
