@@ -259,12 +259,6 @@ struct AddRuleItemView: View {
                                 saveLocally: saveLocally)
                 MockServer.shared.register(mock)
                 
-                let storage = RuleStorage<Mock>(key: .mockRules)
-                if saveLocally {
-                    storage.save(rule: mock)
-                } else {
-                    storage.remove(rule: mock)
-                }
                 // Call onSave callback if provided
                 if let onSave = onSave {
                     onSave()
@@ -277,13 +271,6 @@ struct AddRuleItemView: View {
         } else {
             let skipRequest = SkipRequestForLogging(rule: matchRule, saveLocally: saveLocally)
             SkipRequestForLoggingHandler.shared.register(request: skipRequest)
-            
-            let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules)
-            if saveLocally {
-                storage.save(rule: skipRequest)
-            } else {
-                storage.remove(rule: skipRequest)
-            }
 
             // Call onSave callback if provided
             if let onSave = onSave {
