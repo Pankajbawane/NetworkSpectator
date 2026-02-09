@@ -5,12 +5,12 @@
 //  Created by Pankaj Bawane on 08/12/25.
 //
 
-struct DebugPrint {
+class DebugPrint: @unchecked Sendable {
     
-    private let enabled: Bool
-    nonisolated(unsafe) static var shared: DebugPrint = .init(enabled: true)
+    private var enabled: Bool = false
+    static let shared: DebugPrint = .init()
     
-    init(enabled: Bool) {
+    func update(_ enabled: Bool) {
         // DEBUG check to ensure logs are printed only while debugging.
         #if DEBUG
         self.enabled = enabled

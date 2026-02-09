@@ -30,9 +30,9 @@ public struct SkipRequestForLogging: Identifiable, Hashable {
     }
 }
 
-final class SkipRequestForLoggingHandler {
+final class SkipRequestForLoggingHandler: @unchecked Sendable {
 
-    internal nonisolated(unsafe) static let shared: SkipRequestForLoggingHandler = .init()
+    internal static let shared: SkipRequestForLoggingHandler = .init()
     
     var skipRequests: Set<SkipRequestForLogging> = []
 
