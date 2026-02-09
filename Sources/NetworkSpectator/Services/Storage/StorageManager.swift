@@ -41,7 +41,7 @@ struct RuleStorage<T: Codable> {
             store.set(data, forKey: key.rawValue)
             store.synchronize()
         } catch {
-            print("Failed to save \(key.rawValue): \(error)")
+            DebugPrint.log("Failed to save \(key.rawValue): \(error)")
         }
     }
 
@@ -53,7 +53,7 @@ struct RuleStorage<T: Codable> {
         do {
             return try JSONDecoder().decode([T].self, from: data)
         } catch {
-            print("Failed to retrieve \(key.rawValue): \(error)")
+            DebugPrint.log("Failed to retrieve \(key.rawValue): \(error)")
             return []
         }
     }
