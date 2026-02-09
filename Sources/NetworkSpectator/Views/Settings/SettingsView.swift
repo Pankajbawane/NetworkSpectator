@@ -73,12 +73,12 @@ struct SettingsView: View {
                 }
         }
         .sheet(item: $editingMockItem) { item in
-            AddRuleItemView(isMock: true, title: "Edit Mock", item: item) { _ in
+            AddRuleItemView(isMock: true, title: "Edit Mock", item: item) {
                 loadData()
             }
         }
         .sheet(item: $editingSkipItem) { item in
-            AddRuleItemView(isMock: false, title: "Edit Skip Rule", item: item) { _ in
+            AddRuleItemView(isMock: false, title: "Edit Skip Rule", item: item) {
                 loadData()
             }
         }
