@@ -24,7 +24,8 @@ struct AddRuleItemView: View {
     let isMock: Bool
     let title: String
     let item: AddRuleItem?
-    let onSave: ((AddRuleItem) -> Void)?
+    let onSave: (() -> Void)?
+    @State private var saveLocally: Bool = false
 
     @Environment(\.dismiss) private var dismiss
     @State private var text: String = ""
@@ -35,7 +36,7 @@ struct AddRuleItemView: View {
     @State private var showErrorAlert: Bool = false
     @State private var errorMessage: String = ""
 
-    init(isMock: Bool, title: String, item: AddRuleItem? = nil, onSave: ((AddRuleItem) -> Void)? = nil) {
+    init(isMock: Bool, title: String, item: AddRuleItem? = nil, onSave: (() -> Void)? = nil) {
         self.isMock = isMock
         self.title = title
         self.item = item
@@ -47,6 +48,7 @@ struct AddRuleItemView: View {
             _statusCode = State(initialValue: item.statusCode)
             _headers = State(initialValue: item.headers)
             _rule = State(initialValue: item.rule)
+            _saveLocally = State(initialValue: item.saveLocally)
         }
     }
 
@@ -174,6 +176,15 @@ struct AddRuleItemView: View {
                             .font(.caption)
                     }
                 }
+                
+                Section {
+                    Toggle("Save locally", isOn: $saveLocally)
+                        .toggleStyle(SwitchToggleStyle())
+                } footer: {
+                    Text("Saved rules are applied automatically on app launch")
+                        .font(Font.caption)
+                }
+                    
             }
             #if os(macOS)
             .formStyle(.grouped)
@@ -244,21 +255,19 @@ struct AddRuleItemView: View {
                 let mock = Mock(rules: [matchRule],
                                response: responseData,
                                headers: headersData,
-                               statusCode: statuscode)
+                               statusCode: statuscode,
+                                saveLocally: saveLocally)
                 MockServer.shared.register(mock)
-
+                
+                let storage = RuleStorage<Mock>(key: .mockRules)
+                if saveLocally {
+                    storage.save(rule: mock)
+                } else {
+                    storage.remove(rule: mock)
+                }
                 // Call onSave callback if provided
                 if let onSave = onSave {
-                    let updatedItem = AddRuleItem(
-                        id: mock.id,
-                        text: text,
-                        response: response,
-                        statusCode: statusCode,
-                        headers: headers,
-                        rule: rule,
-                        isMock: isMock
-                    )
-                    onSave(updatedItem)
+                    onSave()
                 }
             } catch {
                 self.errorMessage = error.localizedDescription
@@ -266,20 +275,19 @@ struct AddRuleItemView: View {
                 return
             }
         } else {
-            SkipRequestForLoggingHandler.shared.register(rule: matchRule)
+            let skipRequest = SkipRequestForLogging(rule: matchRule, saveLocally: saveLocally)
+            SkipRequestForLoggingHandler.shared.register(request: skipRequest)
+            
+            let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules)
+            if saveLocally {
+                storage.save(rule: skipRequest)
+            } else {
+                storage.remove(rule: skipRequest)
+            }
 
             // Call onSave callback if provided
             if let onSave = onSave {
-                let updatedItem = AddRuleItem(
-                    id: UUID(),
-                    text: text,
-                    response: "",
-                    statusCode: "",
-                    headers: "",
-                    rule: rule,
-                    isMock: isMock
-                )
-                onSave(updatedItem)
+                onSave()
             }
         }
 

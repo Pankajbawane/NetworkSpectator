@@ -1,34 +1,11 @@
 //
-//  IgnoreRequest.swift
+//  SkipRequestForLoggingHandler.swift
 //  NetworkSpectator
 //
-//  Created by Pankaj Bawane on 15/12/25.
+//  Created by Pankaj Bawane on 09/02/26.
 //
 
 import Foundation
-
-public struct SkipRequestForLogging: Identifiable, Hashable {
-
-    public let id: UUID = UUID()
-    let rules: [MatchRule]
-
-    public init(rules: [MatchRule]) {
-        self.rules = rules
-    }
-
-    public init(rule: MatchRule) {
-        self.rules = [rule]
-    }
-
-    func shouldIgnore(_ urlRequest: URLRequest) -> Bool {
-        guard !rules.isEmpty else { return false }
-        return rules.allSatisfy { $0.matches(urlRequest) }
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(rules)
-    }
-}
 
 final class SkipRequestForLoggingHandler: @unchecked Sendable {
 
@@ -41,7 +18,8 @@ final class SkipRequestForLoggingHandler: @unchecked Sendable {
     }
 
     private init() {
-        
+        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules)
+        skipRequests = Set(storage.retrieve())
     }
 
     func remove(id: UUID) {
