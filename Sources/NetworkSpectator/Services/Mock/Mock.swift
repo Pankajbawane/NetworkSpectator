@@ -10,23 +10,27 @@ import Foundation
 
 /// Represents a mock HTTP response for network request interception.
 public struct Mock: Identifiable {
-    public let id: UUID = UUID()
+    public let id: UUID
     let headers: [String: String]
     let statusCode: Int
     let response: Data?
     let error: Error?
     let rules: [MatchRule]
+    let saveLocally: Bool
 
     private init(response: Data?,
                  headers: [String: String],
                  statusCode: Int,
                  error: Error?,
-                 rules: [MatchRule]) {
+                 rules: [MatchRule],
+                 saveLocally: Bool) {
+        self.id = UUID()
         self.headers = headers
         self.statusCode = statusCode
         self.response = response
         self.error = error
         self.rules = rules
+        self.saveLocally = saveLocally
     }
 
     internal func urlResponse(_ request: URLRequest) -> HTTPURLResponse? {
@@ -46,9 +50,10 @@ public struct Mock: Identifiable {
                 response: [AnyHashable: Any]?,
                 headers: [String: String] = [:],
                 statusCode: Int = 200,
-                error: Error? = nil) throws {
+                error: Error? = nil,
+                saveLocally: Bool = false) throws {
         let responseData = try response.map { try JSONSerialization.data(withJSONObject: $0, options: []) }
-        self.init(response: responseData, headers: headers, statusCode: statusCode, error: error, rules: rules)
+        self.init(response: responseData, headers: headers, statusCode: statusCode, error: error, rules: rules, saveLocally: saveLocally)
     }
 
     /// Creates a mock with rule-based matching and raw data response.
@@ -62,27 +67,47 @@ public struct Mock: Identifiable {
                 response: Data?,
                 headers: [String: String] = [:],
                 statusCode: Int = 200,
-                error: Error? = nil) {
-        self.init(response: response, headers: headers, statusCode: statusCode, error: error, rules: rules)
+                error: Error? = nil,
+                saveLocally: Bool = false) {
+        self.init(response: response, headers: headers, statusCode: statusCode, error: error, rules: rules, saveLocally: saveLocally)
     }
 }
 
 extension Mock: Equatable {
     public static func == (lhs: Mock, rhs: Mock) -> Bool {
-        lhs.headers == rhs.headers &&
-        lhs.statusCode == rhs.statusCode &&
-        lhs.response == rhs.response &&
-        lhs.rules == rhs.rules &&
-        lhs.error?.localizedDescription == rhs.error?.localizedDescription
+        lhs.id == rhs.id
     }
 }
 
 extension Mock: Hashable {
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(headers)
-        hasher.combine(statusCode)
-        hasher.combine(response)
-        hasher.combine(rules)
-        hasher.combine(error?.localizedDescription)
+        hasher.combine(id)
+    }
+}
+
+extension Mock: Codable {
+    enum CodingKeys: String, CodingKey {
+        case id, headers, statusCode, response, saveLocally, rules
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        headers = try container.decode([String: String].self, forKey: .headers)
+        statusCode = try container.decode(Int.self, forKey: .statusCode)
+        response = try container.decodeIfPresent(Data.self, forKey: .response)
+        saveLocally = try container.decode(Bool.self, forKey: .saveLocally)
+        rules = try container.decode([MatchRule].self, forKey: .rules)
+        self.error = nil
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(headers, forKey: .headers)
+        try container.encode(statusCode, forKey: .statusCode)
+        try container.encode(response, forKey: .response)
+        try container.encode(rules, forKey: .rules)
+        try container.encode(saveLocally, forKey: .saveLocally)
     }
 }

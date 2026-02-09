@@ -99,3 +99,85 @@ public enum MatchRule: Equatable, Hashable {
         return regex.firstMatch(in: compareValue, options: [], range: range) != nil
     }
 }
+
+extension MatchRule: Codable {
+    enum CodingKeys: String, CodingKey {
+        case type
+        case value
+        case key
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(String.self, forKey: .type)
+        
+        if type == "urlRequest" {
+            // URLRequest doesn't conform to Codable, so we can't decode it
+            throw DecodingError.dataCorruptedError(
+                forKey: .type,
+                in: container,
+                debugDescription: "URLRequest cannot be decoded"
+            )
+        }
+        
+        let value = try container.decode(String.self, forKey: .value)
+        
+        switch type {
+        case "hostName":
+            self = .hostName(value)
+        case "url":
+            self = .url(value)
+        case "path":
+            self = .path(value)
+        case "endPath":
+            self = .endPath(value)
+        case "subPath":
+            self = .subPath(value)
+        case "regex":
+            self = .regex(value)
+        case "queryParameter":
+            let key = try container.decode(String.self, forKey: .key)
+            self = .queryParameter(key: key, value: value)
+        
+        default:
+            throw DecodingError.dataCorruptedError(
+                forKey: .type,
+                in: container,
+                debugDescription: "Unknown MatchRule type: \(type)"
+            )
+        }
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        switch self {
+        case .hostName(let value):
+            try container.encode("hostName", forKey: .type)
+            try container.encode(value, forKey: .value)
+        case .url(let value):
+            try container.encode("url", forKey: .type)
+            try container.encode(value, forKey: .value)
+        case .path(let value):
+            try container.encode("path", forKey: .type)
+            try container.encode(value, forKey: .value)
+        case .endPath(let value):
+            try container.encode("endPath", forKey: .type)
+            try container.encode(value, forKey: .value)
+        case .subPath(let value):
+            try container.encode("subPath", forKey: .type)
+            try container.encode(value, forKey: .value)
+        case .regex(let value):
+            try container.encode("regex", forKey: .type)
+            try container.encode(value, forKey: .value)
+        case .queryParameter(let key, let value):
+            try container.encode("queryParameter", forKey: .type)
+            try container.encode(key, forKey: .key)
+            try container.encodeIfPresent(value, forKey: .value)
+        case .urlRequest:
+            // URLRequest doesn't conform to Codable, so we skip encoding
+            // This will result in an incomplete encoding, but as requested
+            try container.encode("urlRequest", forKey: .type)
+        }
+    }
+}
