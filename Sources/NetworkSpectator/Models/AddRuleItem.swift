@@ -18,8 +18,16 @@ struct AddRuleItem: Identifiable {
         let headers: String
         let rule: Rule
         let isMock: Bool
+        let saveLocally: Bool
 
-        init(id: UUID, text: String, response: String = "", statusCode: String = "", headers: String = "", rule: Rule, isMock: Bool) {
+        init(id: UUID,
+             text: String,
+             response: String = "",
+             statusCode: String = "",
+             headers: String = "",
+             rule: Rule,
+             isMock: Bool,
+             saveLocally: Bool = false) {
             self.id = id
             self.text = text
             self.response = response
@@ -27,6 +35,7 @@ struct AddRuleItem: Identifiable {
             self.headers = headers
             self.rule = rule
             self.isMock = isMock
+            self.saveLocally = saveLocally
         }
 
         init?(mock: Mock) {
@@ -54,6 +63,7 @@ struct AddRuleItem: Identifiable {
             self.statusCode = String(mock.statusCode)
             self.headers = mock.headers.map { "\($0.key)===\($0.value)" }.joined(separator: "\n")
             self.isMock = true
+            self.saveLocally = mock.saveLocally
         }
 
         init?(skipRequest: SkipRequestForLogging) {
@@ -81,5 +91,6 @@ struct AddRuleItem: Identifiable {
             self.statusCode = ""
             self.headers = ""
             self.isMock = false
+            self.saveLocally = skipRequest.saveLocally
         }
     }

@@ -15,7 +15,8 @@ final class MockServer: @unchecked Sendable {
     static let shared: MockServer = .init()
     
     private init() {
-        
+        let storage = RuleStorage<Mock>(key: .mockRules)
+        mocks = Set(storage.retrieve())
     }
     
     /// Registers a mock to intercept matching network requests.
