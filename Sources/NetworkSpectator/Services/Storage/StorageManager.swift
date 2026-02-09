@@ -12,53 +12,40 @@ enum StorageKey: String {
     case skipRules = "SKIP_RULES"
 }
 
-protocol RuleStorable {
-    associatedtype T
-    var key: StorageKey { get }
-    func save(rule: T)
-    func remove(rule: T)
-    func retrieve() -> [T]
-}
+/// Simple storage manager for persisting rules to UserDefaults
+struct RuleStorage<T: Codable> {
 
-struct RuleStorage<T: Codable & Equatable>: RuleStorable {
-    
-    let key: StorageKey
-    
+    private let key: StorageKey
+
     init(key: StorageKey) {
         self.key = key
     }
-    
-    func save(rule: T) {
-        var previous = retrieve()
-        previous.append(rule)
-        store(previous)
-    }
-    
-    func remove(rule: T) {
-        var previous = retrieve()
-        previous.removeAll { $0 == rule }
-        store(previous)
-    }
-    
-    private func store(_ value: Codable) {
+
+    /// Saves an array of rules to UserDefaults
+    func save(_ items: [T]) {
         do {
-            let data = try JSONEncoder().encode(value)
-            UserDefaults.standard.setValue(data, forKey: key.rawValue)
+            let data = try JSONEncoder().encode(items)
+            UserDefaults.standard.set(data, forKey: key.rawValue)
         } catch {
-            print(error)
+            print("Failed to save \(key.rawValue): \(error)")
         }
     }
-    
+
+    /// Retrieves all rules from UserDefaults
     func retrieve() -> [T] {
-        guard let data = UserDefaults.standard.value(forKey: key.rawValue) as? Data else {
+        guard let data = UserDefaults.standard.data(forKey: key.rawValue) else {
             return []
         }
         do {
-            let items = try JSONDecoder().decode([T].self, from: data)
-            return items
+            return try JSONDecoder().decode([T].self, from: data)
         } catch {
-            print(error)
+            print("Failed to retrieve \(key.rawValue): \(error)")
             return []
         }
+    }
+
+    /// Clears all stored rules
+    func clear() {
+        UserDefaults.standard.removeObject(forKey: key.rawValue)
     }
 }
