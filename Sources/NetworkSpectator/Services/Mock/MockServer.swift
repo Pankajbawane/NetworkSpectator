@@ -31,7 +31,7 @@ final class MockServer: @unchecked Sendable {
 
     func responseIfMocked(_ urlRequest: URLRequest) -> Mock? {
         return mocks.first { mock in
-            mock.rules.allSatisfy { $0.matches(urlRequest) }
+            mock.rule.matches(urlRequest)
         }
     }
 

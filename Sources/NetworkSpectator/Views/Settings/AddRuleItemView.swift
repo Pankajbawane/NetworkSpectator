@@ -35,6 +35,7 @@ struct AddRuleItemView: View {
     @State private var rule: Rule = .url
     @State private var showErrorAlert: Bool = false
     @State private var errorMessage: String = ""
+    @State private var delay: String = ""
 
     init(isMock: Bool, title: String, item: AddRuleItem? = nil, onSave: (() -> Void)? = nil) {
         self.isMock = isMock
@@ -167,6 +168,24 @@ struct AddRuleItemView: View {
                                             .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
                                     )
                             }
+                            
+                            Divider()
+                            
+                            HStack(alignment: .center, spacing: 6) {
+                                Label("Delay in seconds", systemImage: "clock")
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(.primary)
+
+                                #if os(iOS)
+                                TextField("0", text: $delay)
+                                    .keyboardType(.numberPad)
+                                    .textFieldStyle(.roundedBorder)
+                                #else
+                                TextField("0", text: $delay)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(maxWidth: 150)
+                                #endif
+                            }
                         }
                         .padding(.vertical, 8)
                     } header: {
@@ -252,11 +271,12 @@ struct AddRuleItemView: View {
                 let responseData = try HTTPInputConverter.jsonData(from: response)
                 let statuscode = try HTTPInputConverter.statusCode(from: statusCode)
                 let headersData = try HTTPInputConverter.headers(from: headers)
-                let mock = Mock(rules: [matchRule],
-                               response: responseData,
-                               headers: headersData,
-                               statusCode: statuscode,
-                                saveLocally: saveLocally)
+                let mock = Mock(rule: matchRule,
+                                response: responseData,
+                                headers: headersData,
+                                statusCode: statuscode,
+                                saveLocally: saveLocally,
+                                delay: Double(delay) ?? 0)
                 MockServer.shared.register(mock)
                 
                 // Call onSave callback if provided

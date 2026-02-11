@@ -37,14 +37,6 @@ final class SkipRequestForLoggingHandler: @unchecked Sendable {
         persist()
     }
 
-    func register(rules: [MatchRule], saveLocally: Bool = false) {
-        let skipRequest = SkipRequestForLogging(rules: rules, saveLocally: saveLocally)
-        skipRequests.insert(skipRequest)
-        if saveLocally {
-            persist()
-        }
-    }
-
     func register(rule: MatchRule, saveLocally: Bool = false) {
         let skipRequest = SkipRequestForLogging(rule: rule, saveLocally: saveLocally)
         skipRequests.insert(skipRequest)
