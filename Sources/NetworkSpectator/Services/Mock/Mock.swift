@@ -15,22 +15,25 @@ public struct Mock: Identifiable {
     let statusCode: Int
     let response: Data?
     let error: Error?
-    let rules: [MatchRule]
+    let rule: MatchRule
     let saveLocally: Bool
+    let delay: Double
 
     private init(response: Data?,
                  headers: [String: String],
                  statusCode: Int,
                  error: Error?,
-                 rules: [MatchRule],
-                 saveLocally: Bool) {
+                 rule: MatchRule,
+                 saveLocally: Bool,
+                 delay: Double = 0) {
         self.id = UUID()
         self.headers = headers
         self.statusCode = statusCode
         self.response = response
         self.error = error
-        self.rules = rules
+        self.rule = rule
         self.saveLocally = saveLocally
+        self.delay = delay
     }
 
     internal func urlResponse(_ request: URLRequest) -> HTTPURLResponse? {
@@ -41,35 +44,53 @@ public struct Mock: Identifiable {
 
     /// Creates a mock with rule-based matching and JSON response.
     /// - Parameters:
-    ///   - rules: Array of rules to match against the request URL.
+    ///   - rule: Rule to match against the request URL.
     ///   - response: JSON object to be serialized as the response body.
     ///   - headers: HTTP headers to include in the response.
     ///   - statusCode: HTTP status code for the response.
     ///   - error: Optional error to return instead of a successful response.
-    public init(rules: [MatchRule],
+    ///   - saveLocally: Store mock on device.
+    ///   - delay: delay in response.
+    public init(rule: MatchRule,
                 response: [AnyHashable: Any]?,
                 headers: [String: String] = [:],
                 statusCode: Int = 200,
                 error: Error? = nil,
-                saveLocally: Bool = false) throws {
+                saveLocally: Bool = false,
+                delay: Double = 0) throws {
         let responseData = try response.map { try JSONSerialization.data(withJSONObject: $0, options: []) }
-        self.init(response: responseData, headers: headers, statusCode: statusCode, error: error, rules: rules, saveLocally: saveLocally)
+        self.init(response: responseData,
+                  headers: headers,
+                  statusCode: statusCode,
+                  error: error,
+                  rule: rule,
+                  saveLocally: saveLocally,
+                  delay: delay)
     }
 
     /// Creates a mock with rule-based matching and raw data response.
     /// - Parameters:
-    ///   - rules: Array of rules to match against the request URL.
+    ///   - rule: Rule to match against the request URL.
     ///   - response: Raw data to return as the response body.
     ///   - headers: HTTP headers to include in the response.
     ///   - statusCode: HTTP status code for the response.
     ///   - error: Optional error to return instead of a successful response.
-    public init(rules: [MatchRule],
+    ///   - saveLocally: Store mock on device.
+    ///   - delay: delay in response.
+    public init(rule: MatchRule,
                 response: Data?,
                 headers: [String: String] = [:],
                 statusCode: Int = 200,
                 error: Error? = nil,
-                saveLocally: Bool = false) {
-        self.init(response: response, headers: headers, statusCode: statusCode, error: error, rules: rules, saveLocally: saveLocally)
+                saveLocally: Bool = false,
+                delay: Double = 0) {
+        self.init(response: response,
+                  headers: headers,
+                  statusCode: statusCode,
+                  error: error,
+                  rule: rule,
+                  saveLocally: saveLocally,
+                  delay: delay)
     }
 }
 
@@ -87,7 +108,7 @@ extension Mock: Hashable {
 
 extension Mock: Codable {
     enum CodingKeys: String, CodingKey {
-        case id, headers, statusCode, response, saveLocally, rules
+        case id, headers, statusCode, response, saveLocally, rule, delay
     }
 
     public init(from decoder: any Decoder) throws {
@@ -97,7 +118,8 @@ extension Mock: Codable {
         statusCode = try container.decode(Int.self, forKey: .statusCode)
         response = try container.decodeIfPresent(Data.self, forKey: .response)
         saveLocally = try container.decode(Bool.self, forKey: .saveLocally)
-        rules = try container.decode([MatchRule].self, forKey: .rules)
+        rule = try container.decode(MatchRule.self, forKey: .rule)
+        delay = try container.decode(Double.self, forKey: .delay)
         self.error = nil
     }
 
@@ -107,7 +129,8 @@ extension Mock: Codable {
         try container.encode(headers, forKey: .headers)
         try container.encode(statusCode, forKey: .statusCode)
         try container.encode(response, forKey: .response)
-        try container.encode(rules, forKey: .rules)
+        try container.encode(rule, forKey: .rule)
         try container.encode(saveLocally, forKey: .saveLocally)
+        try container.encode(delay, forKey: .delay)
     }
 }

@@ -39,10 +39,9 @@ struct AddRuleItem: Identifiable {
         }
 
         init?(mock: Mock) {
-            guard let matchRule = mock.rules.first else { return nil }
             self.id = mock.id
 
-            switch matchRule {
+            switch mock.rule {
             case .url(let value):
                 self.text = value
                 self.rule = .url
@@ -67,10 +66,9 @@ struct AddRuleItem: Identifiable {
         }
 
         init?(skipRequest: SkipRequestForLogging) {
-            guard let matchRule = skipRequest.rules.first else { return nil }
             self.id = skipRequest.id
 
-            switch matchRule {
+            switch skipRequest.rule {
             case .url(let value):
                 self.text = value
                 self.rule = .url

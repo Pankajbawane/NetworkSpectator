@@ -60,10 +60,6 @@ public struct NetworkSpectator: Sendable {
         SkipRequestForLoggingHandler.shared.register(rule: rule)
     }
     
-    public static func ignoreLogging(for rules: [MatchRule]) {
-        SkipRequestForLoggingHandler.shared.register(rules: rules)
-    }
-    
     public static func stopIgnoringLog() {
         SkipRequestForLoggingHandler.shared.clear()
     }

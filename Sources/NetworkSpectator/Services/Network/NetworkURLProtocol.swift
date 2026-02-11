@@ -78,7 +78,9 @@ final internal class NetworkURLProtocol: URLProtocol {
         
         // If the request is mocked using match rules, return mocked response.
         if let mock = MockServer.shared.responseIfMocked(thisRequest as URLRequest) {
-            completion(mock.response, mock.urlResponse(thisRequest as URLRequest), mock.error)
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + mock.delay) {
+                completion(mock.response, mock.urlResponse(thisRequest as URLRequest), mock.error)
+            }
             return
         }
         
