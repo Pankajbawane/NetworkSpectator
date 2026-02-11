@@ -13,14 +13,12 @@ A Swift framework for monitoring and inspecting your app's HTTP traffic during d
 - **Monitor network requests and responses in real time**
   - URL, method, status code, response time, request/response headers, request body and response body
   - Simple list and detail views for quick inspection
-  - Analytics dashboard with charts for HTTP methods, status codes, and host distribution
  
 - **Filters and Search**
   - Filter requests by status codes and HTTP methods
   - Find specific requests by URL using search
 
 - **Export logs in multiple formats**
-
   NetworkSpectator supports multiple export formats:
   - **CSV** - For importing into spreadsheet applications or data analysis tools
   - **Plain text** - Simple format for quick sharing or viewing in text editors
@@ -32,7 +30,9 @@ A Swift framework for monitoring and inspecting your app's HTTP traffic during d
   - **Programmatic mocking** - Add mocks via code without complex stubbing setups
   - **UI-based mocking** - Enable QA testers to validate business logic in test builds independently, without developer intervention or running app with Xcode
   - Helps to speed up development using mock response
+  - Write unit tests without making actual network request
   - Edit and update mock rules on the fly from UI
+  - Add delay in mock response
 
 - **Skip a request from logging**
   - Exclude specific or sensitive requests from logging using matching rules
@@ -42,9 +42,13 @@ A Swift framework for monitoring and inspecting your app's HTTP traffic during d
 
 - **Lightweight and easy to integrate**
   - One line setup to start monitoring and logging
+  - No XIB/Storyboards
   - No external dependencies
   - Works with SwiftUI and UIKit/AppKit
   - Manage log prints on Xcode debug console
+ 
+- **Insights Dashboard**
+  - Visualise network requests in the form of charts for HTTP methods, status codes, and host distribution 
 
 - **Cross-platform support**
   - iOS 16.0+
