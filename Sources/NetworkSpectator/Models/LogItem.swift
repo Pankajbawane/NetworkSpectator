@@ -17,13 +17,13 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
 
     // Request
     let method: String
-    let headers: String
+    let headers: [String: String]
     let requestBody: String
 
     // Response
     let statusCode: Int
     let responseBody: String
-    let responseHeaders: String
+    let responseHeaders: [String: String]
     let mimetype: String?
     let textEncodingName: String?
 
@@ -48,6 +48,14 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
 
     var scheme: String? {
         URLComponents(string: url)?.scheme
+    }
+    
+    var requestHeadersPrettyPrinted: String {
+        Self.prettyPrintedHeaders(headers)
+    }
+    
+    var responseHeadersPrettyPrinted: String {
+        Self.prettyPrintedHeaders(responseHeaders)
     }
 
     var statusCategory: String {
@@ -80,11 +88,11 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         startTime: Date = Date(),
         url: String,
         method: String = "",
-        headers: String = "",
+        headers: [String: String] = [:],
         requestBody: String = "",
         statusCode: Int = 0,
         responseBody: String = "",
-        responseHeaders: String = "",
+        responseHeaders: [String: String] = [:],
         mimetype: String? = nil,
         textEncodingName: String? = nil,
         errorDescription: String? = nil,
@@ -120,7 +128,7 @@ extension LogItem {
     static func fromRequest(_ request: URLRequest, _ isMocked: Bool = false) -> LogItem {
         let urlString = request.url?.absoluteString ?? ""
         let method = request.httpMethod ?? ""
-        let headers = request.allHTTPHeaderFields.flatMap { prettyPrintedHeaders($0) } ?? ""
+        let headers = request.allHTTPHeaderFields ?? [:]
         let body = prettyPrintedBody(request.httpBody)
         return LogItem(url: urlString, method: method, headers: headers, requestBody: body, isMocked: isMocked)
     }
@@ -129,13 +137,17 @@ extension LogItem {
     func withResponse(response: URLResponse?, data: Data?, error: Error?) -> LogItem {
         let finish = Date()
         var statusCode = 0
-        var responseHeaders = ""
+        var responseHeaders = [String: String]()
         var mimetype: String?
         var textEncodingName: String?
 
         if let http = response as? HTTPURLResponse {
             statusCode = http.statusCode
-            responseHeaders = Self.prettyPrintedHeaders(http.allHeaderFields)
+            responseHeaders = http.allHeaderFields.reduce(into: [String: String]()) { partial, pair in
+                let key = String(describing: pair.key)
+                let value = String(describing: pair.value)
+                partial[key] = value
+            }
             mimetype = http.mimeType
             textEncodingName = http.textEncodingName
         }
@@ -168,15 +180,13 @@ extension LogItem {
 // MARK: - Pretty Printing Helpers
 private extension LogItem {
     static func prettyPrintedHeaders(_ headers: [AnyHashable: Any]) -> String {
-        // Convert header values to strings and sort keys for stable output
-        let mapped = headers.reduce(into: [String: String]()) { partial, pair in
+        // Convert header values to strings
+        let mapped = headers.reduce(into: "") { partial, pair in
             let key = String(describing: pair.key)
             let value = String(describing: pair.value)
-            partial[key] = value
+            partial += "\(key):\(value)\n"
         }
-        let sorted = mapped.keys.sorted()
-        let lines = sorted.map { "\($0):\(mapped[$0] ?? "")" }
-        return lines.joined(separator: "\n")
+        return mapped
     }
 
     static func prettyPrintedBody(_ data: Data?) -> String {

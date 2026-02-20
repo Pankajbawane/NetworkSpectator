@@ -69,7 +69,7 @@ struct LogDetailsContainerView: View {
             ScrollView {
                 detailsView(for: selected)
                     .padding(.top, 12)
-                    .animation(.easeInOut(duration: 0.2), value: selected)
+                    .transition(.opacity)
             }
             .background(Color(.systemGray).opacity(0.2))
         }
@@ -80,12 +80,10 @@ struct LogDetailsContainerView: View {
         .sheet(isPresented: $showAddMockSheet) {
             let rule = AddRuleItem(id: item.id,
                                    text: item.url,
-                                   response: item.responseBody,
                                    statusCode: "\(item.statusCode)",
-                                   headers: item.responseHeaders,
                                    rule: .url,
                                    isMock: true)
-            AddRuleItemView(isMock: true, title: item.isMocked ? "Update Mock" : "Add Mock", item: rule)
+            return AddRuleItemView(isMock: true, title: item.isMocked ? "Update Mock" : "Add Mock", item: rule)
         }
         .sheet(isPresented: $showAddSkipSheet) {
             let rule = AddRuleItem(id: item.id,
