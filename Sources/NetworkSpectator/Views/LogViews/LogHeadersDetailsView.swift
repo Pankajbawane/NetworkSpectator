@@ -15,13 +15,13 @@ struct LogHeadersDetailsView: View {
             headerSection(
                 title: "Request Headers",
                 icon: "arrow.up.doc",
-                headers: item.headers,
+                headers: item.requestHeadersPrettyPrinted,
                 accentColor: .blue
             )
             headerSection(
                 title: "Response Headers",
                 icon: "arrow.down.doc",
-                headers: item.responseHeaders,
+                headers: item.responseHeadersPrettyPrinted,
                 accentColor: .green
             )
             Spacer()
