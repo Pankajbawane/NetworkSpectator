@@ -24,6 +24,8 @@ struct LogDetailsContainerView: View {
     @State private var exportItem: ShareExportedItem?
     @State private var isExporting: Bool = false
     @State private var showExportFormatPicker = false
+    @State private var showAddMockSheet = false
+    @State private var showAddSkipSheet = false
 
     enum ExportFormat: String, CaseIterable, Identifiable {
         case text = "Text"
@@ -44,6 +46,16 @@ struct LogDetailsContainerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // For mocked response, show the info.
+            if item.isMocked {
+                HStack {
+                    Image(systemName: "info.circle")
+                    Text("Mocked response. Use the Mock button to update or disable.")
+                        .font(.caption)
+                    Spacer()
+                }
+                .padding(.horizontal)
+            }
             Picker("", selection: $selected) {
                 ForEach(availableTabs) { tab in
                     Text(tab.rawValue).tag(tab)
@@ -61,12 +73,43 @@ struct LogDetailsContainerView: View {
             }
             .background(Color(.systemGray).opacity(0.2))
         }
-        .navigationTitle("Request Details")
+        .navigationTitle("Details")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .sheet(isPresented: $showAddMockSheet) {
+            let rule = AddRuleItem(id: item.id,
+                                   text: item.url,
+                                   response: item.responseBody,
+                                   statusCode: "\(item.statusCode)",
+                                   headers: item.responseHeaders,
+                                   rule: .url,
+                                   isMock: true)
+            AddRuleItemView(isMock: true, title: item.isMocked ? "Update Mock" : "Add Mock", item: rule)
+        }
+        .sheet(isPresented: $showAddSkipSheet) {
+            let rule = AddRuleItem(id: item.id,
+                                   text: item.url,
+                                   rule: .url,
+                                   isMock: false)
+            AddRuleItemView(isMock: false, title: "Skip Logging", item: rule)
+        }
         .toolbar {
-            ToolbarItem(placement: .automatic) {
+            
+            ToolbarItemGroup(placement: .automatic) {
+                // CTA to register mock.
+                Button(action: { showAddMockSheet = true }) {
+                    Label("Mock", systemImage: "globe.badge.clock")
+                        .foregroundStyle(item.isMocked ? Color.yellow : Color.primary)
+                }
+                .accessibilityLabel("Mock")
+                
+                // CTA to ignore requests from logging.
+                Button(action: { showAddSkipSheet = true }) {
+                    Label("Skip Logging", systemImage: "eye.slash.fill")
+                }
+                .accessibilityLabel("Skip Logging")
+                
                 Button(action: { showExportFormatPicker = true }) {
                     Label("Export", systemImage: "square.and.arrow.up")
                 }

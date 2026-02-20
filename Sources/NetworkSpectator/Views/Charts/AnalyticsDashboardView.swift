@@ -76,6 +76,7 @@ struct AnalyticsDashboardView: View {
                 }
                 .padding()
             }
+            .navigationTitle("Insights")
         }
     }
 
