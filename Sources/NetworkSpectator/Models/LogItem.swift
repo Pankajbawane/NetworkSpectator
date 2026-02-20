@@ -33,6 +33,9 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
     let finishTime: Date?
     let responseTime: TimeInterval
     let isLoading: Bool
+    
+    // If request is mocked
+    let isMocked: Bool
 
     // MARK: - Derived
     var host: String {
@@ -88,7 +91,8 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         errorLocalizedDescription: String? = nil,
         finishTime: Date? = nil,
         responseTime: TimeInterval = 0,
-        isLoading: Bool = true
+        isLoading: Bool = true,
+        isMocked: Bool = false
     ) {
         self.id = id
         self.startTime = startTime
@@ -106,18 +110,19 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         self.finishTime = finishTime
         self.responseTime = responseTime
         self.isLoading = isLoading
+        self.isMocked = isMocked
     }
 }
 
 // MARK: - Convinience Object Factory Methods.
 extension LogItem {
     /// Create a LogItem initialized with request information.
-    static func fromRequest(_ request: URLRequest) -> LogItem {
+    static func fromRequest(_ request: URLRequest, _ isMocked: Bool = false) -> LogItem {
         let urlString = request.url?.absoluteString ?? ""
         let method = request.httpMethod ?? ""
         let headers = request.allHTTPHeaderFields.flatMap { prettyPrintedHeaders($0) } ?? ""
         let body = prettyPrintedBody(request.httpBody)
-        return LogItem(url: urlString, method: method, headers: headers, requestBody: body)
+        return LogItem(url: urlString, method: method, headers: headers, requestBody: body, isMocked: isMocked)
     }
 
     /// Returns a new LogItem by attaching response information to an existing request LogItem.
@@ -154,7 +159,8 @@ extension LogItem {
             errorLocalizedDescription: (error as? NSError).flatMap { $0.localizedDescription },
             finishTime: finish,
             responseTime: elapsed,
-            isLoading: false
+            isLoading: false,
+            isMocked: isMocked
         )
     }
 }

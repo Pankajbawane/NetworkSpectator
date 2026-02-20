@@ -47,9 +47,13 @@ final internal class NetworkURLProtocol: URLProtocol {
 
         // Capture the HTTP body if it's provided as a stream so our logger can see it
         captureHTTPBodyIfNeeded(on: thisRequest)
+        
+        // If the request is mocked.
+        let mock = MockServer.shared.responseIfMocked(thisRequest as URLRequest)
+        let isMocked = mock != nil
 
         // Log the request including headers and body (if any)
-        let log = LogItem.fromRequest(thisRequest as URLRequest)
+        let log = LogItem.fromRequest(thisRequest as URLRequest, isMocked)
         DebugPrint.log(log)
         Task {
             DebugPrint.log(log)
@@ -77,7 +81,7 @@ final internal class NetworkURLProtocol: URLProtocol {
         }
         
         // If the request is mocked using match rules, return mocked response.
-        if let mock = MockServer.shared.responseIfMocked(thisRequest as URLRequest) {
+        if let mock {
             DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + mock.delay) {
                 completion(mock.response, mock.urlResponse(thisRequest as URLRequest), mock.error)
             }
