@@ -66,11 +66,11 @@ struct LogDetailsContainerView: View {
             .padding(.vertical, 12)
             .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 2)
 
-            ScrollView {
+            //ScrollView {
                 detailsView(for: selected)
                     .padding(.top, 12)
                     .transition(.opacity)
-            }
+            //}
             .background(Color(.systemGray).opacity(0.2))
         }
         .navigationTitle("Details")
@@ -97,14 +97,21 @@ struct LogDetailsContainerView: View {
             ToolbarItemGroup(placement: .automatic) {
                 // CTA to register mock.
                 Button(action: { showAddMockSheet = true }) {
-                    Label("Mock", systemImage: "globe.badge.clock")
-                        .foregroundStyle(item.isMocked ? Color.yellow : Color.primary)
+                    Text("Mock")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .padding(7)
+                        .overlay(Capsule().foregroundStyle(.gray.opacity(0.3)))
                 }
                 .accessibilityLabel("Mock")
                 
                 // CTA to ignore requests from logging.
                 Button(action: { showAddSkipSheet = true }) {
-                    Label("Skip Logging", systemImage: "eye.slash.fill")
+                    Text("Skip Log")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .padding(7)
+                        .overlay(Capsule().foregroundStyle(.gray.opacity(0.3)))
                 }
                 .accessibilityLabel("Skip Logging")
                 
