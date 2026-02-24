@@ -11,22 +11,24 @@ struct LogHeadersDetailsView: View {
     @Binding var item: LogItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            headerSection(
-                title: "Request Headers",
-                icon: "arrow.up.doc",
-                headers: item.requestHeadersPrettyPrinted,
-                accentColor: .blue
-            )
-            headerSection(
-                title: "Response Headers",
-                icon: "arrow.down.doc",
-                headers: item.responseHeadersPrettyPrinted,
-                accentColor: .green
-            )
-            Spacer()
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 20) {
+                headerSection(
+                    title: "Request Headers",
+                    icon: "arrow.up.doc",
+                    headers: item.requestHeadersPrettyPrinted,
+                    accentColor: .blue
+                )
+                headerSection(
+                    title: "Response Headers",
+                    icon: "arrow.down.doc",
+                    headers: item.responseHeadersPrettyPrinted,
+                    accentColor: .green
+                )
+                Spacer()
+            }
+            .padding(.horizontal)
         }
-        .padding(.horizontal)
     }
 
     @ViewBuilder
