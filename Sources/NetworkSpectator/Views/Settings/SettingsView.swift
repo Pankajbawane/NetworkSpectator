@@ -49,7 +49,7 @@ struct SettingsView: View {
         .onAppear {
             loadData()
         }
-        .navigationTitle("Settings")
+        .navigationTitle("Tools")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
