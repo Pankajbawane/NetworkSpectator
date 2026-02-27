@@ -143,15 +143,6 @@ struct RootView: View {
                     .accessibilityLabel("Filter requests")
                     .disabled(store.items.isEmpty)
 
-                    // Analytics button
-                    Button {
-                        navigationPath.append(NavigationItem.analytics)
-                    } label: {
-                        Image(systemName: "chart.bar.xaxis.ascending")
-                    }
-                    .accessibilityLabel("View analytics")
-                    .disabled(store.items.isEmpty)
-
                     // Export button
                     Button {
                         isExporting = true
