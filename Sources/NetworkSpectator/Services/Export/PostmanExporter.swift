@@ -43,7 +43,7 @@ struct PostmanExporter: FileExportable {
         ]
 
         // 2. Parse headers from "key:value" format into Postman format
-        let requestHeaders = parseHeaders(from: item.headers)
+        let requestHeaders = parseHeaders(from: item.requestHeadersPrettyPrinted)
 
         // 3. Build request dictionary
         var requestDict: [String: Any] = [
@@ -54,7 +54,7 @@ struct PostmanExporter: FileExportable {
 
         // 4. Add body if applicable
         if !item.requestBody.isEmpty {
-            let bodyMode = detectBodyMode(from: item.requestBody, headers: item.headers)
+            let bodyMode = detectBodyMode(from: item.requestBody, headers: item.requestHeadersPrettyPrinted)
             requestDict["body"] = createBodyDict(content: item.requestBody, mode: bodyMode)
         }
 
@@ -139,7 +139,7 @@ struct PostmanExporter: FileExportable {
     private func createResponseExample() -> [String: Any]? {
         guard item.statusCode > 0 else { return nil }
 
-        let responseHeaders = parseHeaders(from: item.responseHeaders)
+        let responseHeaders = parseHeaders(from: item.responseHeadersPrettyPrinted)
 
         var responseDict: [String: Any] = [
             "name": "Example Response",

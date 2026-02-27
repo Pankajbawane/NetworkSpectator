@@ -22,9 +22,9 @@ struct TextExporter: FileExportable {
             "Start Time\n\(item.startTime)",
             "Finish Time\n\(item.finishTime ?? Date())",
             "Response Time\n\(item.responseTime) s",
-            "Headers\n" + item.headers,
+            "Headers\n" + item.requestHeadersPrettyPrinted,
             "Response\n" + item.responseBody,
-            "Response Headers\n" + item.responseHeaders
+            "Response Headers\n" + item.responseHeadersPrettyPrinted
         ]
         
         let text = details.joined(separator: "\n\n")

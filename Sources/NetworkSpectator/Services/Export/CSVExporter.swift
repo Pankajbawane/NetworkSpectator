@@ -41,8 +41,8 @@ struct CSVExporter: FileExportable {
             let method = escapeCSV(request.method)
             let statusCode = request.statusCode == 0 ? "" : "\(request.statusCode)"
             let url = escapeCSV(request.url)
-            let requestHeaders = escapeCSV(request.headers)
-            let responseHeaders = escapeCSV(request.responseHeaders)
+            let requestHeaders = escapeCSV(request.requestHeadersPrettyPrinted)
+            let responseHeaders = escapeCSV(request.responseHeadersPrettyPrinted)
             let requestPayload = escapeCSV(request.requestBody)
             let startTime = escapeCSV(request.startTime.formatted(date: .abbreviated, time: .complete))
             let endTime = escapeCSV(request.finishTime?.formatted(date: .abbreviated, time: .complete) ?? "")

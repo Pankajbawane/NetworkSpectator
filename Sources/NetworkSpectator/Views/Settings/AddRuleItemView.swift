@@ -89,7 +89,7 @@ struct AddRuleItemView: View {
                             .keyboardType(.asciiCapable)
                             .frame(minHeight: 80)
                         #else
-                            .frame(minHeight: 60)
+                            .frame(minHeight: 60, maxHeight: 100)
                         #endif
                             .overlay(
                                 RoundedRectangle(cornerRadius: 6)
@@ -159,9 +159,9 @@ struct AddRuleItemView: View {
                                 #if os(iOS)
                                     .textInputAutocapitalization(.never)
                                     .keyboardType(.asciiCapable)
-                                    .frame(minHeight: 80)
+                                    .frame(minHeight: 80, maxHeight: 500)
                                 #else
-                                    .frame(minHeight: 70)
+                                    .frame(minHeight: 70, maxHeight: 200)
                                 #endif
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 6)

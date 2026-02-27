@@ -28,22 +28,18 @@ struct LogResponseDetailsView: View {
             } else if item.responseBody.isEmpty {
                 emptyStateView()
             } else {
-                ScrollView(.vertical) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        responseMetadata()
-                        responseBodyView()
-                    }
-                    .padding(.horizontal)
+                VStack(alignment: .leading, spacing: 12) {
+                    responseMetadata()
+                    responseBodyView()
                 }
+                .padding(.horizontal)
             }
         }
     }
 
     @ViewBuilder
     private func responseBodyView() -> some View {
-        TextEditor(text: .constant(item.responseBody))
-            .font(.system(.caption, design: .monospaced))
-            .scrollContentBackground(.hidden)
+        ResponseBodyLineView(responseBody: item.responseBody)
             .frame(minHeight: 200)
             .padding(12)
             .background(Color.secondary.opacity(0.2))
