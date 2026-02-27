@@ -80,17 +80,19 @@ struct LogBasicDetailsView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if item.finishTime == nil {
-                loadingView()
-            } else {
-                ForEach(details) { row in
-                    rowItem(row)
-                        .padding(.vertical, 4)
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 12) {
+                if item.finishTime == nil {
+                    loadingView()
+                } else {
+                    ForEach(details) { row in
+                        rowItem(row)
+                            .padding(.vertical, 4)
+                    }
                 }
             }
+            .padding(.horizontal)
         }
-        .padding(.horizontal)
     }
 
     private func rowItem(_ row: DetailRow) -> some View {
