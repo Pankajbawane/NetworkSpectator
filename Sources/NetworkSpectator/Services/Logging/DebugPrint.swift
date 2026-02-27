@@ -28,8 +28,8 @@ class DebugPrint: @unchecked Sendable {
         if !logItem.requestBody.isEmpty {
             log(.request, logItem.requestBody)
         }
-        if !logItem.headers.isEmpty {
-            log(.headers, logItem.headers)
+        if !logItem.requestHeadersPrettyPrinted.isEmpty {
+            log(.headers, logItem.requestHeadersPrettyPrinted)
         }
         if !logItem.isLoading {
             log(.response, logItem.responseBody)
