@@ -44,17 +44,6 @@ struct LogResponseDetailsView: View {
             .padding(12)
             .background(Color.secondary.opacity(0.2))
             .cornerRadius(8)
-            .contextMenu {
-                Button(action: {
-            #if canImport(UIKit)
-                    UIPasteboard.general.string = item.responseBody
-            #elseif canImport(AppKit)
-                    NSPasteboard.general.setString(item.responseBody, forType: .string)
-            #endif
-                }) {
-                    Label("Copy Full Response", systemImage: "doc.on.doc")
-                }
-            }
     }
 
     @ViewBuilder
@@ -85,6 +74,8 @@ struct LogResponseDetailsView: View {
             Text("\(byteCountFormatted)")
                 .font(.caption2)
                 .foregroundColor(.secondary)
+            
+            copyable(value: item.responseBody)
         }
     }
 
