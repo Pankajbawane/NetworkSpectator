@@ -25,8 +25,8 @@ struct AddRuleItemView: View {
     let title: String
     let item: AddRuleItem?
     let onSave: (() -> Void)?
+    
     @State private var saveLocally: Bool = false
-
     @Environment(\.dismiss) private var dismiss
     @State private var text: String = ""
     @State private var response: String = ""
@@ -36,6 +36,7 @@ struct AddRuleItemView: View {
     @State private var showErrorAlert: Bool = false
     @State private var errorMessage: String = ""
     @State private var delay: String = ""
+    @State private var showDeleteAlert: Bool = false
 
     init(isMock: Bool, title: String, item: AddRuleItem? = nil, onSave: (() -> Void)? = nil) {
         self.isMock = isMock
@@ -202,6 +203,32 @@ struct AddRuleItemView: View {
                 } footer: {
                     Text("Saved rules are applied automatically on app launch")
                         .font(Font.caption)
+                }
+                
+                if let editingItem = item {
+                    Section {
+                        Button(role: .destructive) {
+                            showDeleteAlert = true
+                        } label: {
+                            Text("Delete")
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 4)
+                        }
+                        .alert("Delete Rule", isPresented: $showDeleteAlert) {
+                            Button("Cancel", role: .cancel) { }
+                            Button("Delete", role: .destructive) {
+                                if editingItem.isMock {
+                                    MockServer.shared.remove(id: editingItem.id)
+                                } else {
+                                    SkipRequestForLoggingHandler.shared.remove(id: editingItem.id)
+                                }
+                                dismiss()
+                            }
+                        } message: {
+                            Text("Are you sure you want to delete this rule? This action cannot be undone.")
+                        }
+                    }
                 }
                     
             }
