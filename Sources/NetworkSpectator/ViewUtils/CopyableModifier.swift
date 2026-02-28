@@ -28,7 +28,7 @@ struct CopyableModifier: ViewModifier {
     func body(content: Content) -> some View {
         Button {
             copyToClipboard(value)
-            withAnimation {
+            withAnimation(.easeOut) {
                 showCopied = true
             }
             Task {
@@ -40,7 +40,7 @@ struct CopyableModifier: ViewModifier {
         } label: {
             Image(systemName: showCopied ? "checkmark" : "list.clipboard.fill")
                 .font(size)
-                .foregroundColor(showCopied ? .green : .secondary)
+                .foregroundColor(showCopied ? .green : .secondary).opacity(0.6)
         }
         .buttonStyle(.plain)
         .frame(height: 20)
