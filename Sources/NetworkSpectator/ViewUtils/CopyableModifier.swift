@@ -17,7 +17,13 @@ import AppKit
 /// and briefly shows a checkmark as confirmation.
 struct CopyableModifier: ViewModifier {
     let value: String
+    let size: Font
     @State private var showCopied = false
+    
+    init(value: String, size: Font = .callout) {
+        self.value = value
+        self.size = size
+    }
 
     func body(content: Content) -> some View {
         Button {
@@ -26,14 +32,14 @@ struct CopyableModifier: ViewModifier {
                 showCopied = true
             }
             Task {
-                await Task.sleep(1000_000_000)
+                try? await Task.sleep(nanoseconds: 1000_000_000)
                 withAnimation {
                     showCopied = false
                 }
             }
         } label: {
             Image(systemName: showCopied ? "checkmark" : "list.clipboard.fill")
-                .font(.callout)
+                .font(size)
                 .foregroundColor(showCopied ? .green : .secondary)
         }
         .buttonStyle(.plain)
@@ -54,7 +60,7 @@ extension View {
     /// Adds a clipboard copy button to the top-right corner of the view.
     /// - Parameter value: The string to copy to the pasteboard when tapped.
     /// - Returns: A view with the copy button overlay applied.
-    func copyable(value: String) -> some View {
-        modifier(CopyableModifier(value: value))
+    func copyable(value: String, size: Font = .callout) -> some View {
+        modifier(CopyableModifier(value: value, size: size))
     }
 }
