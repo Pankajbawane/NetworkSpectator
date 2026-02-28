@@ -25,6 +25,12 @@ struct LogResponseDetailsView: View {
                 loadingView()
             } else if hasError {
                 errorView()
+            } else if isResponseImage {
+                VStack(alignment: .leading, spacing: 12) {
+                    responseMetadata()
+                    ResponseImageView(data: item.responseRaw)
+                }
+                .padding(.horizontal)
             } else if item.responseBody.isEmpty {
                 emptyStateView()
             } else {
@@ -35,6 +41,10 @@ struct LogResponseDetailsView: View {
                 .padding(.horizontal)
             }
         }
+    }
+    
+    var isResponseImage: Bool {
+        item.mimetype?.contains("image") ?? false
     }
 
     @ViewBuilder
@@ -74,8 +84,10 @@ struct LogResponseDetailsView: View {
             Text("\(byteCountFormatted)")
                 .font(.caption2)
                 .foregroundColor(.secondary)
-            
-            copyable(value: item.responseBody)
+
+            if !isResponseImage {
+                copyable(value: item.responseBody)
+            }
         }
     }
 
@@ -91,7 +103,12 @@ struct LogResponseDetailsView: View {
     }
 
     private var byteCountFormatted: String {
-        let bytes = item.responseBody.utf8.count
+        let bytes: Int
+        if isResponseImage, let data = item.responseRaw {
+            bytes = data.count
+        } else {
+            bytes = item.responseBody.utf8.count
+        }
         let formatter = ByteCountFormatter()
         formatter.allowedUnits = [.useBytes, .useKB, .useMB]
         formatter.countStyle = .binary

@@ -27,6 +27,9 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
     let mimetype: String?
     let textEncodingName: String?
 
+    // Raw response data (for binary content like images)
+    let responseRaw: Data?
+
     // Error & state
     let errorDescription: String?
     let errorLocalizedDescription: String?
@@ -95,6 +98,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         responseHeaders: [String: String] = [:],
         mimetype: String? = nil,
         textEncodingName: String? = nil,
+        responseRaw: Data? = nil,
         errorDescription: String? = nil,
         errorLocalizedDescription: String? = nil,
         finishTime: Date? = nil,
@@ -113,6 +117,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         self.responseHeaders = responseHeaders
         self.mimetype = mimetype
         self.textEncodingName = textEncodingName
+        self.responseRaw = responseRaw
         self.errorDescription = errorDescription
         self.errorLocalizedDescription = errorLocalizedDescription
         self.finishTime = finishTime
@@ -167,6 +172,7 @@ extension LogItem {
             responseHeaders: responseHeaders,
             mimetype: mimetype,
             textEncodingName: textEncodingName,
+            responseRaw: data,
             errorDescription: error.map { String(describing: $0) },
             errorLocalizedDescription: (error as? NSError).flatMap { $0.localizedDescription },
             finishTime: finish,
