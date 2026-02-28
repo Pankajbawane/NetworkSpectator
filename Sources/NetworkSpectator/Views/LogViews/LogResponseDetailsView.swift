@@ -29,6 +29,7 @@ struct LogResponseDetailsView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     responseMetadata()
                     ResponseImageView(data: item.responseRaw)
+                    Spacer()
                 }
                 .padding(.horizontal)
             } else if item.responseBody.isEmpty {
