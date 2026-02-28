@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MockManagementView: View {
 
-    @State private var mocks: [ManageRuleItem] = []
+    @State private var mocks: [Mock] = []
     @State private var showAddMockSheet = false
     @State private var editingMockItem: AddRuleItem?
 
@@ -71,14 +71,14 @@ struct MockManagementView: View {
         }
     }
 
-    private func mockItemRow(_ item: ManageRuleItem) -> some View {
+    private func mockItemRow(_ item: Mock) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.title3)
                 .foregroundStyle(.green)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(item.text)
+                Text(item.rule.ruleName)
                     .font(.body)
                     .lineLimit(2)
 
@@ -114,7 +114,7 @@ struct MockManagementView: View {
 
     private func loadData() {
         withAnimation {
-            mocks = MockServer.shared.mocks.map { ManageRuleItem(mock: $0) }
+            mocks = MockServer.shared.mocks.map { $0 }
         }
     }
 

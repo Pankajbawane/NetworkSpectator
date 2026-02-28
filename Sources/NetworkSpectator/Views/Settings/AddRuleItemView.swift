@@ -10,6 +10,7 @@ import SwiftUI
 struct AddRuleItemView: View {
     enum Rule: String, CaseIterable, Identifiable {
         case url = "URL"
+        case host = "Host"
         case path = "Path"
         case endPath = "EndPath"
         case pathComponent = "Path Component"
@@ -205,7 +206,7 @@ struct AddRuleItemView: View {
                         .font(Font.caption)
                 }
                 
-                if let editingItem = item {
+                if let editingItem = item, editingItem.showDelete {
                     Section {
                         Button(role: .destructive) {
                             showDeleteAlert = true
@@ -262,12 +263,14 @@ struct AddRuleItemView: View {
         switch rule {
         case .url:
             return "Match the complete URL"
+        case .host:
+            return "Match the host name"
         case .path:
-            return "Match the URL path"
+            return "Match the complete path excluding the host name"
         case .endPath:
-            return "Match URLs ending with this path"
+            return "Match the ending path from the URL"
         case .pathComponent:
-            return "Match any path component"
+            return "Match any path component from the URL"
         }
     }
 
@@ -276,6 +279,8 @@ struct AddRuleItemView: View {
         switch rule {
         case .url:
             matchRule = .url(text)
+        case .host:
+            matchRule = .hostName(text)
         case .endPath:
             matchRule = .endPath(text)
         case .path:

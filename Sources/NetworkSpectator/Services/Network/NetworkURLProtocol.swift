@@ -49,10 +49,9 @@ final internal class NetworkURLProtocol: URLProtocol {
         
         // If the request is mocked.
         let mock = MockServer.shared.responseIfMocked(thisRequest as URLRequest)
-        let isMocked = mock != nil
 
         // Log the request including headers and body (if any)
-        let log = LogItem.fromRequest(thisRequest as URLRequest, isMocked)
+        let log = LogItem.fromRequest(thisRequest as URLRequest, mock?.id)
         DebugPrint.log(log)
         Task {
             DebugPrint.log(log)

@@ -38,7 +38,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
     let isLoading: Bool
     
     // If request is mocked
-    let isMocked: Bool
+    let mockId: UUID?
 
     // MARK: - Derived
     var host: String {
@@ -60,6 +60,8 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
     var responseHeadersPrettyPrinted: String {
         Self.prettyPrintedHeaders(responseHeaders)
     }
+    
+    var isMocked: Bool { mockId != nil }
 
     var statusCategory: String {
         switch statusCode {
@@ -104,7 +106,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         finishTime: Date? = nil,
         responseTime: TimeInterval = 0,
         isLoading: Bool = true,
-        isMocked: Bool = false
+        mockId: UUID? = nil
     ) {
         self.id = id
         self.startTime = startTime
@@ -123,19 +125,19 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         self.finishTime = finishTime
         self.responseTime = responseTime
         self.isLoading = isLoading
-        self.isMocked = isMocked
+        self.mockId = mockId
     }
 }
 
 // MARK: - Convinience Object Factory Methods.
 extension LogItem {
     /// Create a LogItem initialized with request information.
-    static func fromRequest(_ request: URLRequest, _ isMocked: Bool = false) -> LogItem {
+    static func fromRequest(_ request: URLRequest, _ mockId: UUID? = nil) -> LogItem {
         let urlString = request.url?.absoluteString ?? ""
         let method = request.httpMethod ?? ""
         let headers = request.allHTTPHeaderFields ?? [:]
         let body = prettyPrintedBody(request.httpBody)
-        return LogItem(url: urlString, method: method, headers: headers, requestBody: body, isMocked: isMocked)
+        return LogItem(url: urlString, method: method, headers: headers, requestBody: body, mockId: mockId)
     }
 
     /// Returns a new LogItem by attaching response information to an existing request LogItem.
@@ -178,7 +180,7 @@ extension LogItem {
             finishTime: finish,
             responseTime: elapsed,
             isLoading: false,
-            isMocked: isMocked
+            mockId: mockId
         )
     }
 }

@@ -43,7 +43,7 @@ struct LogBasicDetailsView: View {
             if item.statusCode != 0 {
                 rows.append(.init(title: "Status code", value: "\(item.statusCode)", icon: "number"))
             }
-            if let errorDesc = item.errorDescription {
+            if let errorDesc = item.errorLocalizedDescription {
                 rows.append(.init(title: "Error occurred", value: errorDesc, icon: "exclamationmark.triangle.fill", valueColor: .red))
             }
         }
