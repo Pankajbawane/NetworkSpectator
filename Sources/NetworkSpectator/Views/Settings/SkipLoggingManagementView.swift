@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SkipLoggingManagementView: View {
 
-    @State private var skipLogging: [ManageRuleItem] = []
+    @State private var skipLogging: [SkipRequestForLogging] = []
     @State private var showAddSkipSheet = false
     @State private var editingSkipItem: AddRuleItem?
 
@@ -71,14 +71,14 @@ struct SkipLoggingManagementView: View {
         }
     }
 
-    private func skipLoggingItemRow(_ item: ManageRuleItem) -> some View {
+    private func skipLoggingItemRow(_ item: SkipRequestForLogging) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "minus.circle.fill")
                 .font(.title3)
                 .foregroundStyle(.orange)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(item.text)
+                Text(item.rule.ruleName)
                     .font(.body)
                     .lineLimit(2)
 
@@ -114,7 +114,7 @@ struct SkipLoggingManagementView: View {
 
     private func loadData() {
         withAnimation {
-            skipLogging = SkipRequestForLoggingHandler.shared.skipRequests.map(ManageRuleItem.init(skipRequest:))
+            skipLogging = SkipRequestForLoggingHandler.shared.skipRequests.map { $0 }
         }
     }
 
