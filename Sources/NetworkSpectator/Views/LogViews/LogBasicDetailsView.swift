@@ -109,7 +109,7 @@ struct LogBasicDetailsView: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
                 Spacer()
-                copyable(value: row.value)
+                copyable(value: row.value, size: .caption)
             }
 
             Text(row.value)
