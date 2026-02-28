@@ -16,13 +16,15 @@ struct LogHeadersDetailsView: View {
                 headerSection(
                     title: "Request Headers",
                     icon: "arrow.up.doc",
-                    headers: item.requestHeadersPrettyPrinted,
+                    headers: item.headers,
+                    headersInString: item.requestHeadersPrettyPrinted,
                     accentColor: .blue
                 )
                 headerSection(
                     title: "Response Headers",
                     icon: "arrow.down.doc",
-                    headers: item.responseHeadersPrettyPrinted,
+                    headers: item.responseHeaders,
+                    headersInString: item.responseHeadersPrettyPrinted,
                     accentColor: .green
                 )
                 Spacer()
@@ -32,7 +34,11 @@ struct LogHeadersDetailsView: View {
     }
 
     @ViewBuilder
-    private func headerSection(title: String, icon: String, headers: String?, accentColor: Color) -> some View {
+    private func headerSection(title: String,
+                               icon: String,
+                               headers: [String: String],
+                               headersInString: String,
+                               accentColor: Color) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
@@ -42,38 +48,33 @@ struct LogHeadersDetailsView: View {
                     .font(.subheadline)
                     .fontWeight(.semibold)
                 Spacer()
-                if let headers = headers, !headers.isEmpty {
-                    Text("\(headerCount(headers)) headers")
+                if !headers.isEmpty {
+                    Text("\(headers.count) headers")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color.secondary.opacity(0.2))
                         .cornerRadius(8)
+                    
+                    copyable(value: headersInString)
                 }
             }
 
-            if let headers = headers, !headers.isEmpty {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(headers)
-                        .font(.system(.caption, design: .monospaced))
-                        .textSelection(.enabled)
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .background(Color.secondary.opacity(0.2))
-                .cornerRadius(8)
-                .contextMenu {
-                    Button(action: {
-                        #if canImport(UIKit)
-                        UIPasteboard.general.string = headers
-                        #elseif canImport(AppKit)
-                        NSPasteboard.general.setString(headers, forType: .string)
-                        #endif
-                    }) {
-                        Label("Copy", systemImage: "doc.on.doc")
+            if !headers.isEmpty {
+                headersTable(headers: headers)
+                    .contextMenu {
+                        Button(action: {
+                            let text = headers.map { "\($0.key): \($0.value)" }.joined(separator: "\n")
+                            #if canImport(UIKit)
+                            UIPasteboard.general.string = text
+                            #elseif canImport(AppKit)
+                            NSPasteboard.general.setString(text, forType: .string)
+                            #endif
+                        }) {
+                            Label("Copy All", systemImage: "doc.on.doc")
+                        }
                     }
-                }
             } else {
                 HStack {
                     Image(systemName: "tray")
@@ -91,7 +92,73 @@ struct LogHeadersDetailsView: View {
         }
     }
 
-    private func headerCount(_ headers: String) -> Int {
-        headers.components(separatedBy: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count
+    @ViewBuilder
+    private func headersTable(headers: [String: String]) -> some View {
+        let sortedHeaders = headers.sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
+
+        VStack(spacing: 0) {
+            tableHeaderRow
+            Divider()
+            ForEach(Array(sortedHeaders.enumerated()), id: \.offset) { index, header in
+                headerRow(key: header.key, value: header.value, isAlternate: index % 2 != 0)
+                if index < sortedHeaders.count - 1 {
+                    Divider()
+                }
+            }
+        }
+        .background(Color.secondary.opacity(0.1))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+        )
+    }
+
+    private var tableHeaderRow: some View {
+        HStack(spacing: 0) {
+            Text("Key")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+
+            Divider()
+
+            Text("Value")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+        }
+        .background(Color.secondary.opacity(0.15))
+    }
+
+    @ViewBuilder
+    private func headerRow(key: String, value: String, isAlternate: Bool) -> some View {
+        HStack(alignment: .top, spacing: 0) {
+            Text(key)
+                .font(.system(.caption, design: .monospaced))
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .textSelection(.enabled)
+
+            Divider()
+
+            Text(value)
+                .font(.system(.caption, design: .monospaced))
+                .foregroundColor(.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .textSelection(.enabled)
+        }
+        .background(isAlternate ? Color.secondary.opacity(0.05) : Color.clear)
     }
 }
