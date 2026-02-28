@@ -12,20 +12,20 @@ struct EmptyStateView: View {
     let searchText: String
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             Image(systemName: iconName)
-                .font(.system(size: 60))
-                .foregroundStyle(.secondary.opacity(0.5))
+                .font(.system(size: 50))
+                .foregroundStyle(.tertiary)
 
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Text(title)
                     .font(.title3)
                     .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.secondary)
 
                 Text(message)
-                    .font(.body)
-                    .foregroundStyle(.secondary)
+                    .font(.subheadline)
+                    .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
             }

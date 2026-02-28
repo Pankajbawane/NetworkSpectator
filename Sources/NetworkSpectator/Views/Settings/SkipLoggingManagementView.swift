@@ -16,11 +16,11 @@ struct SkipLoggingManagementView: View {
     var body: some View {
         List {
             if skipLogging.isEmpty {
-                emptyStateView(
-                    icon: "eye.slash",
-                    title: "No Skip Rules",
-                    message: "Add rules to exclude certain requests from being logged"
-                )
+                    emptyState(
+                        icon: "eye.slash",
+                        title: "No Skip Rules",
+                        message: "Add rules to exclude certain requests from being logged"
+                    )
             } else {
                 ForEach(skipLogging) { item in
                     skipLoggingItemRow(item)
@@ -110,27 +110,6 @@ struct SkipLoggingManagementView: View {
                 Label("Delete", systemImage: "trash")
             }
         }
-    }
-
-    private func emptyStateView(icon: String, title: String, message: String) -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 40))
-                .foregroundStyle(.tertiary)
-
-            VStack(spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-
-                Text(message)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 32)
     }
 
     private func loadData() {

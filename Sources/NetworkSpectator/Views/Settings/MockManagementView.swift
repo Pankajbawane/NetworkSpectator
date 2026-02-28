@@ -16,11 +16,11 @@ struct MockManagementView: View {
     var body: some View {
         List {
             if mocks.isEmpty {
-                emptyStateView(
-                    icon: "doc.text.image",
-                    title: "No Mocks",
-                    message: "Add a mock to intercept network requests and return custom responses"
-                )
+                    emptyState(
+                        icon: "doc.text.image",
+                        title: "No Mocks",
+                        message: "Add a mock to intercept network requests and return custom responses"
+                    )
             } else {
                 ForEach(mocks) { item in
                     mockItemRow(item)
@@ -110,27 +110,6 @@ struct MockManagementView: View {
                 Label("Delete", systemImage: "trash")
             }
         }
-    }
-
-    private func emptyStateView(icon: String, title: String, message: String) -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 40))
-                .foregroundStyle(.tertiary)
-
-            VStack(spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-
-                Text(message)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 32)
     }
 
     private func loadData() {
