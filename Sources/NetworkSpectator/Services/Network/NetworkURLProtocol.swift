@@ -20,7 +20,6 @@ final internal class NetworkURLProtocol: URLProtocol {
 
         // If the request is ignored for logging using match rules, don't intercept
         if SkipRequestForLoggingHandler.shared.isEnabled,
-           let url = request.url,
            SkipRequestForLoggingHandler.shared.shouldSkipLogging(request) {
             return false
         }
