@@ -9,7 +9,7 @@
 import Foundation
 
 /// Represents a mock HTTP response for network request interception.
-public struct Mock: Identifiable {
+public struct Mock: Identifiable, Sendable {
     public let id: UUID
     let headers: [String: String]
     let statusCode: Int

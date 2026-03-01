@@ -18,7 +18,7 @@ struct PostmanExporterTests {
         let item = LogItem(
             url: "https://api.example.com/v1/users?page=1",
             method: "GET",
-            headers: #"{"Content-Type": "application/json"}"#,
+            headers: ["Content-Type": "application/json"],
             statusCode: 200
         )
         let exporter = PostmanExporter(item: item)

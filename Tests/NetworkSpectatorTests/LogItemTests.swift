@@ -149,7 +149,7 @@ struct LogItemTests {
 
         #expect(item.url == "https://example.com/api/users")
         #expect(item.method == "POST")
-        #expect(item.headers.contains("Content-Type"))
+        #expect(item.headers["Content-Type"] != nil)
         #expect(item.requestBody.contains("name"))
     }
 
@@ -180,6 +180,37 @@ struct LogItemTests {
         #expect(finishedItem.errorDescription != nil)
         #expect(finishedItem.errorLocalizedDescription == "Connection failed")
         #expect(finishedItem.isLoading == false)
+    }
+
+    @Test("LogItem isMocked is true when mockId is set")
+    func testIsMockedWithMockId() async throws {
+        let mockId = UUID()
+        let item = LogItem(url: "https://example.com", mockId: mockId)
+        #expect(item.isMocked == true)
+        #expect(item.mockId == mockId)
+    }
+
+    @Test("LogItem isMocked is false when mockId is nil")
+    func testIsMockedWithoutMockId() async throws {
+        let item = LogItem(url: "https://example.com")
+        #expect(item.isMocked == false)
+        #expect(item.mockId == nil)
+    }
+
+    @Test("LogItem withResponse preserves mockId and sets responseRaw")
+    func testWithResponsePreservesMockIdAndSetsResponseRaw() async throws {
+        let mockId = UUID()
+        let startItem = LogItem(url: "https://example.com", mockId: mockId)
+
+        let url = URL(string: "https://example.com")!
+        let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)
+        let data = "response body".data(using: .utf8)
+
+        let finishedItem = startItem.withResponse(response: response, data: data, error: nil)
+
+        #expect(finishedItem.mockId == mockId)
+        #expect(finishedItem.isMocked == true)
+        #expect(finishedItem.responseRaw == data)
     }
 
     @Test("LogItem codable encoding and decoding")
