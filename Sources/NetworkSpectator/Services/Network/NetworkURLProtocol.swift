@@ -7,9 +7,10 @@
 
 import Foundation
 
-final internal class NetworkURLProtocol: URLProtocol {
+final internal class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     
     private var sessionTask: URLSessionDataTask?
+    private var mockTask: Task<Void, Never>?
     private static let taskCacheKey = "TRACK_CACHED_TASK_KEY"
 
     override class func canInit(with request: URLRequest) -> Bool {
@@ -20,7 +21,6 @@ final internal class NetworkURLProtocol: URLProtocol {
 
         // If the request is ignored for logging using match rules, don't intercept
         if SkipRequestForLoggingHandler.shared.isEnabled,
-           let url = request.url,
            SkipRequestForLoggingHandler.shared.shouldSkipLogging(request) {
             return false
         }
@@ -50,22 +50,15 @@ final internal class NetworkURLProtocol: URLProtocol {
         
         // If the request is mocked.
         let mock = MockServer.shared.responseIfMocked(thisRequest as URLRequest)
-        let isMocked = mock != nil
 
         // Log the request including headers and body (if any)
-        let log = LogItem.fromRequest(thisRequest as URLRequest, isMocked)
-        DebugPrint.log(log)
-        Task {
-            DebugPrint.log(log)
-            await NetworkLogStore.shared.add(log)
-        }
+        let log = LogItem.fromRequest(thisRequest as URLRequest, mock?.id)
+        logging(log)
         
-        let completion: (Data?, URLResponse?, Error?) -> Void = { data, response, error in
+        let completion: @Sendable (Data?, URLResponse?, Error?) -> Void = { [weak self] data, response, error in
+            guard let self else { return }
             let finalUpdatedLog = log.withResponse(response: response, data: data, error: error)
-            Task {
-                DebugPrint.log(finalUpdatedLog)
-                await NetworkLogStore.shared.add(finalUpdatedLog)
-            }
+            self.logging(finalUpdatedLog)
 
             if let error = error {
                 self.client?.urlProtocol(self, didFailWithError: error)
@@ -82,8 +75,14 @@ final internal class NetworkURLProtocol: URLProtocol {
         
         // If the request is mocked using match rules, return mocked response.
         if let mock {
-            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + mock.delay) {
-                completion(mock.response, mock.urlResponse(thisRequest as URLRequest), mock.error)
+            let urlRequest = thisRequest as URLRequest
+            mockTask = Task {
+                do {
+                    try await Task.sleep(for: .seconds(mock.delay))
+                    completion(mock.response, mock.urlResponse(urlRequest), mock.error)
+                } catch {
+                    // Handle in stopLoading()
+                }
             }
             return
         }
@@ -139,5 +138,14 @@ final internal class NetworkURLProtocol: URLProtocol {
     override func stopLoading() {
         sessionTask?.cancel()
         sessionTask = nil
+        mockTask?.cancel()
+        mockTask = nil
+    }
+    
+    private func logging(_ item: LogItem) {
+        DebugPrint.log(item)
+        Task {
+            await NetworkLogStore.shared.add(item)
+        }
     }
 }

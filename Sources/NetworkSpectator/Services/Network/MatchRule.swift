@@ -7,14 +7,14 @@
 
 import Foundation
 
-public enum MatchRule: Equatable, Hashable {
+public enum MatchRule: Equatable, Hashable, Sendable {
     case hostName(String)
     case url(String)
     case path(String)
     case endPath(String)
     case subPath(String)
     case regex(String)
-    case queryParameter(key: String, value: String? = nil)
+    case queryParameter(key: String, value: String)
     case urlRequest(URLRequest)
     
     var ruleName: String {
@@ -65,12 +65,7 @@ public enum MatchRule: Equatable, Hashable {
                   let queryItems = components.queryItems else {
                 return false
             }
-
-            if let expectedValue = expectedValue {
-                return queryItems.contains { $0.name == key && $0.value == expectedValue }
-            } else {
-                return queryItems.contains { $0.name == key }
-            }
+            return queryItems.contains { $0.name == key && $0.value == expectedValue }
         case .urlRequest(let thisRequest): return urlRequest == thisRequest
         }
     }
@@ -175,8 +170,7 @@ extension MatchRule: Codable {
             try container.encode(key, forKey: .key)
             try container.encodeIfPresent(value, forKey: .value)
         case .urlRequest:
-            // URLRequest doesn't conform to Codable, so we skip encoding
-            // This will result in an incomplete encoding, but as requested
+            // URLRequest doesn't conform to Codable, so we skip encoding the value.
             try container.encode("urlRequest", forKey: .type)
         }
     }

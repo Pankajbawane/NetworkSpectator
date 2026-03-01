@@ -59,7 +59,7 @@ struct PostmanExporter: FileExportable {
         }
 
         // 5. Create item (one API request) with response data
-        var collectionItemDict: [String: Any] = [
+        let collectionItemDict: [String: Any] = [
             "name": generateItemName(method: item.method, path: urlComponents.path),
             "request": requestDict
         ]

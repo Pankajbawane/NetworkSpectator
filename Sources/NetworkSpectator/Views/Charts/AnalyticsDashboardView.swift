@@ -27,7 +27,12 @@ struct AnalyticsDashboardView: View {
 
     var body: some View {
         if data.isEmpty {
-            emptyStateView
+            emptyState(
+                    icon: "chart.bar.doc.horizontal",
+                    title: "No Analytics Data",
+                    message: "Start monitoring network requests to see analytics."
+                )
+            .navigationTitle("Insights")
         } else {
             ScrollView {
                 VStack(spacing: 20) {
@@ -79,24 +84,7 @@ struct AnalyticsDashboardView: View {
             .navigationTitle("Insights")
         }
     }
-
-    private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "chart.bar.doc.horizontal")
-                .font(.system(size: 60))
-                .foregroundStyle(.secondary)
-            Text("No Analytics Data")
-                .font(.title2)
-                .fontWeight(.semibold)
-            Text("Start monitoring network requests to see analytics.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
-    }
-
+    
     private var summaryCardsView: some View {
         HStack(spacing: 16) {
             summaryCard(

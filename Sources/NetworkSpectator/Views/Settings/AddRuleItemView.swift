@@ -10,6 +10,7 @@ import SwiftUI
 struct AddRuleItemView: View {
     enum Rule: String, CaseIterable, Identifiable {
         case url = "URL"
+        case host = "Host"
         case path = "Path"
         case endPath = "EndPath"
         case pathComponent = "Path Component"
@@ -25,8 +26,8 @@ struct AddRuleItemView: View {
     let title: String
     let item: AddRuleItem?
     let onSave: (() -> Void)?
+    
     @State private var saveLocally: Bool = false
-
     @Environment(\.dismiss) private var dismiss
     @State private var text: String = ""
     @State private var response: String = ""
@@ -36,6 +37,7 @@ struct AddRuleItemView: View {
     @State private var showErrorAlert: Bool = false
     @State private var errorMessage: String = ""
     @State private var delay: String = ""
+    @State private var showDeleteAlert: Bool = false
 
     init(isMock: Bool, title: String, item: AddRuleItem? = nil, onSave: (() -> Void)? = nil) {
         self.isMock = isMock
@@ -149,7 +151,7 @@ struct AddRuleItemView: View {
                             Divider()
 
                             VStack(alignment: .leading, spacing: 6) {
-                                Label("Headers", systemImage: "list.bullet.rectangle")
+                                Label("Response Headers", systemImage: "list.bullet.rectangle")
                                     .font(.subheadline.weight(.medium))
                                     .foregroundStyle(.primary)
 
@@ -203,6 +205,32 @@ struct AddRuleItemView: View {
                     Text("Saved rules are applied automatically on app launch")
                         .font(Font.caption)
                 }
+                
+                if let editingItem = item, editingItem.showDelete {
+                    Section {
+                        Button(role: .destructive) {
+                            showDeleteAlert = true
+                        } label: {
+                            Text("Delete")
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 4)
+                        }
+                        .alert("Delete Rule", isPresented: $showDeleteAlert) {
+                            Button("Cancel", role: .cancel) { }
+                            Button("Delete", role: .destructive) {
+                                if editingItem.isMock {
+                                    MockServer.shared.remove(id: editingItem.id)
+                                } else {
+                                    SkipRequestForLoggingHandler.shared.remove(id: editingItem.id)
+                                }
+                                dismiss()
+                            }
+                        } message: {
+                            Text("Are you sure you want to delete this rule? This action cannot be undone.")
+                        }
+                    }
+                }
                     
             }
             #if os(macOS)
@@ -235,12 +263,14 @@ struct AddRuleItemView: View {
         switch rule {
         case .url:
             return "Match the complete URL"
+        case .host:
+            return "Match the host name"
         case .path:
-            return "Match the URL path"
+            return "Match the complete path excluding the host name"
         case .endPath:
-            return "Match URLs ending with this path"
+            return "Match the ending path from the URL"
         case .pathComponent:
-            return "Match any path component"
+            return "Match any path component from the URL"
         }
     }
 
@@ -249,6 +279,8 @@ struct AddRuleItemView: View {
         switch rule {
         case .url:
             matchRule = .url(text)
+        case .host:
+            matchRule = .hostName(text)
         case .endPath:
             matchRule = .endPath(text)
         case .path:
