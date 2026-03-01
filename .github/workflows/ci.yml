@@ -27,13 +27,13 @@ jobs:
             -skipPackagePluginValidation \
             | xcpretty
 
-      # - name: Run Tests (iOS)
-      #   run: |
-      #     xcodebuild test \
-      #       -scheme NetworkSpectator \
-      #       -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
-      #       -skipPackagePluginValidation \
-      #       | xcpretty
+       - name: Run Tests (iOS)
+         run: |
+           xcodebuild test \
+             -scheme NetworkSpectator \
+             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+             -skipPackagePluginValidation \
+             | xcpretty
 
   build-macos:
     name: Build & Test (macOS)
@@ -53,10 +53,10 @@ jobs:
             -skipPackagePluginValidation \
             | xcpretty
 
-      # - name: Run Tests (macOS)
-      #   run: |
-      #     xcodebuild test \
-      #       -scheme NetworkSpectator \
-      #       -destination 'platform=macOS' \
-      #       -skipPackagePluginValidation \
-      #       | xcpretty
+       - name: Run Tests (macOS)
+         run: |
+           xcodebuild test \
+             -scheme NetworkSpectator \
+             -destination 'platform=macOS' \
+             -skipPackagePluginValidation \
+             | xcpretty
