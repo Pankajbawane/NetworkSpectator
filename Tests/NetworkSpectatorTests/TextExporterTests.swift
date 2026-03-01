@@ -18,10 +18,10 @@ struct TextExporterTests {
         let item = LogItem(
             url: "https://example.com/api/users",
             method: "GET",
-            headers: "Content-Type: application/json",
+            headers: ["Content-Type": "application/json"],
             statusCode: 200,
             responseBody: #"{"users": []}"#,
-            responseHeaders: "Content-Length: 100"
+            responseHeaders: ["Content-Length": "100"]
         )
         let exporter = TextExporter(item: item)
 

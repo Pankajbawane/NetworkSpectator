@@ -151,7 +151,7 @@ struct AddRuleItemView: View {
                             Divider()
 
                             VStack(alignment: .leading, spacing: 6) {
-                                Label("Headers", systemImage: "list.bullet.rectangle")
+                                Label("Response Headers", systemImage: "list.bullet.rectangle")
                                     .font(.subheadline.weight(.medium))
                                     .foregroundStyle(.primary)
 
