@@ -25,6 +25,13 @@ struct LogResponseDetailsView: View {
                 loadingView()
             } else if hasError {
                 errorView()
+            } else if isResponseImage {
+                VStack(alignment: .leading, spacing: 12) {
+                    responseMetadata()
+                    ResponseImageView(data: item.responseRaw)
+                    Spacer()
+                }
+                .padding(.horizontal)
             } else if item.responseBody.isEmpty {
                 emptyStateView()
             } else {
@@ -36,6 +43,10 @@ struct LogResponseDetailsView: View {
             }
         }
     }
+    
+    var isResponseImage: Bool {
+        item.mimetype?.contains("image") ?? false
+    }
 
     @ViewBuilder
     private func responseBodyView() -> some View {
@@ -44,17 +55,6 @@ struct LogResponseDetailsView: View {
             .padding(12)
             .background(Color.secondary.opacity(0.2))
             .cornerRadius(8)
-            .contextMenu {
-                Button(action: {
-            #if canImport(UIKit)
-                    UIPasteboard.general.string = item.responseBody
-            #elseif canImport(AppKit)
-                    NSPasteboard.general.setString(item.responseBody, forType: .string)
-            #endif
-                }) {
-                    Label("Copy Full Response", systemImage: "doc.on.doc")
-                }
-            }
     }
 
     @ViewBuilder
@@ -85,6 +85,10 @@ struct LogResponseDetailsView: View {
             Text("\(byteCountFormatted)")
                 .font(.caption2)
                 .foregroundColor(.secondary)
+
+            if !isResponseImage {
+                copyable(value: item.responseBody)
+            }
         }
     }
 
@@ -100,7 +104,12 @@ struct LogResponseDetailsView: View {
     }
 
     private var byteCountFormatted: String {
-        let bytes = item.responseBody.utf8.count
+        let bytes: Int
+        if isResponseImage, let data = item.responseRaw {
+            bytes = data.count
+        } else {
+            bytes = item.responseBody.utf8.count
+        }
         let formatter = ByteCountFormatter()
         formatter.allowedUnits = [.useBytes, .useKB, .useMB]
         formatter.countStyle = .binary

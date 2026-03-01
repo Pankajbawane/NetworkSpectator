@@ -55,7 +55,7 @@ struct CSVExporterTests {
         let item = LogItem(
             url: "https://example.com/api/test",
             method: "POST",
-            headers: "Content-Type: application/json\nAuthorization: Bearer token",
+            headers: ["Content-Type": "application/json", "Authorization": "Bearer token"],
             statusCode: 200,
             responseBody: #"{"name": "John, Doe", "quote": "He said \"hello\""}"#
         )

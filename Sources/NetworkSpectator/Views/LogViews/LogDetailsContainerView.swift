@@ -21,6 +21,7 @@ struct LogDetailsContainerView: View {
 
     @State private var selected: DetailsTab = .basic
     @State private var showAlert = false
+    @State private var showAlertRuleAdded = false
     @State private var exportItem: ShareExportedItem?
     @State private var isExporting: Bool = false
     @State private var showExportFormatPicker = false
@@ -76,19 +77,35 @@ struct LogDetailsContainerView: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .sheet(isPresented: $showAddMockSheet) {
-            let rule = AddRuleItem(id: item.id,
-                                   text: item.url,
-                                   statusCode: "\(item.statusCode)",
-                                   rule: .url,
-                                   isMock: true)
-            return AddRuleItemView(isMock: true, title: item.isMocked ? "Update Mock" : "Add Mock", item: rule)
+            var ruleItem = AddRuleItem(id: UUID(),
+                                       text: item.url,
+                                       statusCode: "\(item.statusCode)",
+                                       rule: .url,
+                                       isMock: true)
+            if let mockId = item.mockId {
+                if let mock = MockServer.shared.mocks.first(where:  { $0.id == mockId }) {
+                    if let item = AddRuleItem(mock: mock) {
+                        ruleItem = item
+                    }
+                }
+            }
+            return AddRuleItemView(isMock: true, title: item.isMocked ? "Update Mock" : "Add Mock", item: ruleItem) {
+                showAlertRuleAdded = true
+            }
         }
         .sheet(isPresented: $showAddSkipSheet) {
-            let rule = AddRuleItem(id: item.id,
+            var rule = AddRuleItem(id: item.id,
                                    text: item.url,
                                    rule: .url,
                                    isMock: false)
-            AddRuleItemView(isMock: false, title: "Skip Logging", item: rule)
+            let skip = SkipRequestForLoggingHandler.shared.skipRequests.first(where:  { $0.id == item.id })
+            if let skip, let item = AddRuleItem(skipRequest: skip) {
+                rule = item
+            }
+            
+            return AddRuleItemView(isMock: false, title: "Skip Logging", item: rule) {
+                showAlertRuleAdded = true
+            }
         }
         .toolbar {
             
@@ -124,6 +141,13 @@ struct LogDetailsContainerView: View {
             }
         }, message: {
             Text("Unable to export the log. Please try again.")
+        })
+        .alert("Rules updated", isPresented: $showAlertRuleAdded, actions: {
+            Button("OK") {
+                showAlertRuleAdded = false
+            }
+        }, message: {
+            Text("Rule updated successfully and will be applied from the next HTTP requests.")
         })
         .confirmationDialog("Select Export Format",
                             isPresented: $showExportFormatPicker,

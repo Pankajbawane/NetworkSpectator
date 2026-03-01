@@ -127,18 +127,6 @@ struct MatchRuleTests {
         #expect(!rule.matches(request))
     }
 
-    @Test("Query parameter key only match")
-    func testQueryParameterKeyOnly() async throws {
-        let rule = MatchRule.queryParameter(key: "userId")
-        let request1 = URLRequest(url: URL(string: "https://example.com/api?userId=123")!)
-        let request2 = URLRequest(url: URL(string: "https://example.com/api?userId=456")!)
-        let request3 = URLRequest(url: URL(string: "https://example.com/api?other=value")!)
-
-        #expect(rule.matches(request1))
-        #expect(rule.matches(request2))
-        #expect(!rule.matches(request3))
-    }
-
     @Test("Query parameter key and value match")
     func testQueryParameterKeyAndValue() async throws {
         let rule = MatchRule.queryParameter(key: "userId", value: "123")
@@ -149,13 +137,6 @@ struct MatchRuleTests {
         #expect(!rule.matches(request2))
     }
 
-    @Test("Query parameter no query string")
-    func testQueryParameterNoQueryString() async throws {
-        let rule = MatchRule.queryParameter(key: "userId")
-        let request = URLRequest(url: URL(string: "https://example.com/api")!)
-        #expect(!rule.matches(request))
-    }
-
     @Test("Rule name generation")
     func testRuleName() async throws {
         #expect(MatchRule.hostName("example.com").ruleName == "Rule_Host Name: example.com")
@@ -164,6 +145,6 @@ struct MatchRuleTests {
         #expect(MatchRule.endPath("users").ruleName == "Rule_End Path: users")
         #expect(MatchRule.subPath("api").ruleName == "Rule_Sub Path: api")
         #expect(MatchRule.regex(".*").ruleName == "Rule_Regex: .*")
-        #expect(MatchRule.queryParameter(key: "id").ruleName == "Rule_Query Parameter")
+        #expect(MatchRule.queryParameter(key: "id", value: "value").ruleName == "Rule_Query Parameter")
     }
 }
