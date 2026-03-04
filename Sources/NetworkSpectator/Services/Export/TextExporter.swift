@@ -16,15 +16,16 @@ struct TextExporter: FileExportable {
     
     func export() async throws -> URL {
         let details: [String] = [
-            "URL\n" + item.url,
-            "Method\n" + item.method.uppercased(),
-            "Status Code\n\(item.statusCode)",
-            "Start Time\n\(item.startTime)",
-            "Finish Time\n\(item.finishTime ?? Date())",
-            "Response Time\n\(item.responseTime) s",
-            "Headers\n" + item.requestHeadersPrettyPrinted,
-            "Response\n" + item.responseBody,
-            "Response Headers\n" + item.responseHeadersPrettyPrinted
+            "URL:\n" + item.url,
+            "Method:\n" + item.method.uppercased(),
+            "Headers:\n" + item.requestHeadersPrettyPrinted,
+            "Request Body:\n" + item.requestBody,
+            "Status Code:\n\(item.statusCode)",
+            "Start Time:\n\(item.startTime)",
+            "Finish Time:\n\(item.finishTime ?? Date())",
+            "Response Time:\n\(item.responseTime) s",
+            "Response Headers:\n" + item.responseHeadersPrettyPrinted,
+            "Response Body:\n" + item.responseBody
         ]
         
         let text = details.joined(separator: "\n\n")
