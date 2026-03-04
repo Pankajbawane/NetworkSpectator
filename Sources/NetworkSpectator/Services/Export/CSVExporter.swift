@@ -12,7 +12,7 @@ struct CSVExporter: FileExportable {
         "HTTP Method", "Status Code", "URL",
         "Start time", "End time", "Response Time", "Mime Type", "Text Encoding",
         "Request Headers", "Response Headers", "Request Payload", "Response",
-        "Error Description", "Error Localized Description"
+        "Error Localized Description"
     ]
     let items: [LogItem]
     let fileExtension: String = "csv"
@@ -50,14 +50,13 @@ struct CSVExporter: FileExportable {
             let mimeType = escapeCSV(request.mimetype ?? "")
             let encoding = escapeCSV(request.textEncodingName ?? "")
             let response = escapeCSV(request.responseBody)
-            let errorDesc = escapeCSV(request.errorDescription ?? "")
             let errorLocalizedDesc = escapeCSV(request.errorLocalizedDescription ?? "")
 
             let row = [
                 method, statusCode, url,
                 startTime, endTime, duration, mimeType,
                 encoding, requestHeaders, responseHeaders,
-                requestPayload, response, errorDesc, errorLocalizedDesc
+                requestPayload, response, errorLocalizedDesc
             ].joined(separator: ",")
 
             rows.append(row)

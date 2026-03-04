@@ -12,7 +12,7 @@ struct LogDetailsContainerView: View {
 
     // Stronger typing for picker selection
     enum DetailsTab: String, CaseIterable, Identifiable {
-        case basic = "Basic"
+        case basic = "Overview"
         case request = "Request"
         case headers = "Headers"
         case response = "Response"
