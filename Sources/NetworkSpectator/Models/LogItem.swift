@@ -201,7 +201,7 @@ private extension LogItem {
         guard let data = data, !data.isEmpty else { return "" }
         // Try JSON first
         if let json = try? JSONSerialization.jsonObject(with: data, options: []),
-           let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted]),
+           let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .withoutEscapingSlashes]),
            let pretty = String(data: jsonData, encoding: .utf8) {
             return pretty
         }

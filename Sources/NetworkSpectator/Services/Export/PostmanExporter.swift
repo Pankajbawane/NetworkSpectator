@@ -7,6 +7,7 @@
 
 import Foundation
 
+// Build and export Postman Collection using schema: https://schema.postman.com/json/collection/v2.1.0/collection.json
 struct PostmanExporter: FileExportable {
 
     let item: LogItem
@@ -43,7 +44,7 @@ struct PostmanExporter: FileExportable {
         ]
 
         // 2. Parse headers from "key:value" format into Postman format
-        let requestHeaders = parseHeaders(from: item.requestHeadersPrettyPrinted)
+        let requestHeaders = parseHeaders(from: item.headers)
 
         // 3. Build request dictionary
         var requestDict: [String: Any] = [
@@ -54,7 +55,7 @@ struct PostmanExporter: FileExportable {
 
         // 4. Add body if applicable
         if !item.requestBody.isEmpty {
-            let bodyMode = detectBodyMode(from: item.requestBody, headers: item.requestHeadersPrettyPrinted)
+            let bodyMode = detectBodyMode(from: item.requestBody, headers: item.headers)
             requestDict["body"] = createBodyDict(content: item.requestBody, mode: bodyMode)
         }
 
@@ -71,45 +72,34 @@ struct PostmanExporter: FileExportable {
         // 7. Build collection JSON
         let collection: [String: Any] = [
             "info": [
-                "name": "Exported Network Logs",
-                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                "name": "Exported from NetworkSpectator",
+                "schema": "https://schema.postman.com/json/collection/v2.1.0/collection.json"
             ],
             "item": collectionItem
         ]
 
         // 8. Serialize to JSON
-        return try JSONSerialization.data(withJSONObject: collection, options: [.prettyPrinted])
+        return try JSONSerialization.data(withJSONObject: collection, options: [.prettyPrinted, .withoutEscapingSlashes])
     }
 
-    // MARK: - Private Helpers
+    // MARK: - Helpers
 
-    private func parseHeaders(from headersString: String) -> [[String: String]] {
-        guard !headersString.isEmpty else { return [] }
-
-        return headersString
-            .split(separator: "\n")
-            .compactMap { line -> [String: String]? in
-                let parts = line.split(separator: ":", maxSplits: 1)
-                guard parts.count == 2 else { return nil }
-
-                let key = parts[0].trimmingCharacters(in: .whitespaces)
-                let value = parts[1].trimmingCharacters(in: .whitespaces)
-
-                return ["key": key, "value": value]
+    private func parseHeaders(from headers: [String: String]) -> [[String: String]] {
+        guard !headers.isEmpty else { return [] }
+        
+        return headers.map { header -> [String: String] in
+                return ["key": header.key, "value": header.value]
             }
     }
 
-    private func detectBodyMode(from body: String, headers: String) -> String {
-        let lowercasedHeaders = headers.lowercased()
+    private func detectBodyMode(from body: String, headers: [String: String]) -> String {
+        let contentTypeHeader = headers.first(where: { $0.key.lowercased() == "content-type" })?.value ?? ""
 
-        if lowercasedHeaders.contains("content-type:application/json") ||
-           lowercasedHeaders.contains("content-type: application/json") {
+        if contentTypeHeader.contains("application/json") {
             return "json"
-        } else if lowercasedHeaders.contains("content-type:application/x-www-form-urlencoded") ||
-                  lowercasedHeaders.contains("content-type: application/x-www-form-urlencoded") {
+        } else if contentTypeHeader.contains("application/x-www-form-urlencoded") {
             return "urlencoded"
-        } else if lowercasedHeaders.contains("content-type:application/xml") ||
-                  lowercasedHeaders.contains("content-type: application/xml") {
+        } else if contentTypeHeader.contains("application/xml") {
             return "xml"
         }
 
@@ -132,27 +122,7 @@ struct PostmanExporter: FileExportable {
     }
 
     private func generateItemName(method: String, path: String) -> String {
-        let cleanPath = path.isEmpty ? "/" : path
-        return "\(method.uppercased()) \(cleanPath)"
-    }
-
-    private func createResponseExample() -> [String: Any]? {
-        guard item.statusCode > 0 else { return nil }
-
-        let responseHeaders = parseHeaders(from: item.responseHeadersPrettyPrinted)
-
-        var responseDict: [String: Any] = [
-            "name": "Example Response",
-            "originalRequest": [:],
-            "status": "Status \(item.statusCode)",
-            "code": item.statusCode,
-            "header": responseHeaders
-        ]
-
-        if !item.responseBody.isEmpty {
-            responseDict["body"] = item.responseBody
-        }
-
-        return responseDict
+        let cleanPath = path.isEmpty ? "/" : path.prefix(15)
+        return "NetworkSpectator - \(method.uppercased()) \(cleanPath)"
     }
 }

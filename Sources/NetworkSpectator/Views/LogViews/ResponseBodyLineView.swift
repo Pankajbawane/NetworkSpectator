@@ -47,22 +47,8 @@ struct ResponseBodyLineView: View {
 
     private func processContent() async {
         // Process on background thread to avoid blocking UI
-        let processedLines = await Task.detached(priority: .userInitiated) {
-            // Try to parse as JSON first
-            if let data = responseBody.data(using: .utf8),
-               let jsonObject = try? JSONSerialization.jsonObject(with: data),
-               let prettyData = try? JSONSerialization.data(
-                withJSONObject: jsonObject,
-                options: [.prettyPrinted]
-               ),
-               let prettyString = String(data: prettyData, encoding: .utf8) {
-                // It's valid JSON, return pretty-printed lines
-                return (true, prettyString.components(separatedBy: .newlines))
-            } else {
-                // Not JSON or invalid, just split by newlines
-                let rawLines = responseBody.components(separatedBy: .newlines)
-                return (false, rawLines.isEmpty ? [""] : rawLines)
-            }
+        let processedLines = await Task(priority: .userInitiated) {
+            return (true, responseBody.components(separatedBy: .newlines))
         }.value
 
         isJSON = processedLines.0
