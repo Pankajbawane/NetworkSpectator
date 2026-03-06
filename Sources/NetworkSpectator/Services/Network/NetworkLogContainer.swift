@@ -21,7 +21,7 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     private var itemUpdateTask: Task<Void, Never>?
     
     /// Safeguard againts redudant calls. Avoids multiple calls to start/stop monitoring.
-    private var isLoggingEnabled: Bool = false
+    private(set) var isLoggingEnabled: Bool = false
 
     private init() { }
     
