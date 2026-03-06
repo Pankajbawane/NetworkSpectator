@@ -14,6 +14,8 @@ struct EmptyStateView: View {
     @State var isLoggingEnabled: Bool = NetworkLogContainer.shared.isLoggingEnabled
 
     @State private var rotationAngle: Double = 0
+    @State private var gearRotation: Double = 0
+    @State private var isTapped: Bool = false
 
     private var viewState: ViewState {
         if !isLoggingEnabled {
@@ -27,9 +29,25 @@ struct EmptyStateView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: viewState.icon)
-                .font(.system(size: 50))
-                .foregroundStyle(.tertiary)
+            if viewState == .disabledLogging {
+                Image(systemName: viewState.icon)
+                    .font(.system(size: 50))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(gearRotation))
+                    .animation(
+                        .linear(duration: 30).repeatForever(autoreverses: false),
+                        value: gearRotation
+                    )
+                    .onAppear {
+                        if viewState == .disabledLogging {
+                            gearRotation = 360
+                        }
+                    }
+            } else {
+                Image(systemName: viewState.icon)
+                    .font(.system(size: 50))
+                    .foregroundStyle(.tertiary)
+            }
 
             VStack(spacing: 6) {
                 Text(viewState.title)
@@ -45,45 +63,7 @@ struct EmptyStateView: View {
                     .padding(.horizontal, 40)
                 
                 if viewState == .disabledLogging {
-                    Button {
-                        NetworkLogContainer.shared.enable()
-                    } label: {
-                        Text("Enable Monitoring")
-                            .font(.body)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.blue)
-                            .padding(10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(.blue, lineWidth: 2)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(
-                                        AngularGradient(
-                                            gradient: Gradient(colors: [
-                                                .white.opacity(0.1),
-                                                .green.opacity(0.2),
-                                                .cyan.opacity(1),
-                                                .green.opacity(0.2),
-                                                .white.opacity(0.1),
-                                            ]),
-                                            center: .center,
-                                            angle: .degrees(rotationAngle)
-                                        ),
-                                        lineWidth: 3
-                                    )
-                            )
-                    }
-                    .padding(15)
-                    .onAppear {
-                        withAnimation(
-                            .linear(duration: 3)
-                            .repeatForever(autoreverses: false)
-                        ) {
-                            rotationAngle = 360
-                        }
-                    }
+                    enableLoggingButton
                 }
             }
 
@@ -98,7 +78,60 @@ struct EmptyStateView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(#colorLiteral(red: 0.97, green: 0.97, blue: 0.97, alpha: 1)).opacity(viewState == .disabledLogging ? 0.2 : 0.3))
+        .background(Color.white.opacity(viewState == .disabledLogging ? 0.15 : 0.3))
+    }
+    
+    @ViewBuilder
+    var enableLoggingButton: some View {
+        let tintColor: Color = isTapped ? .green : .blue
+        Button {
+            guard !isTapped else { return }
+            NetworkLogContainer.shared.enable()
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.5)) {
+                isTapped = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                isLoggingEnabled = NetworkLogContainer.shared.isLoggingEnabled
+            }
+        } label: {
+            Text(isTapped ? "Enabled Monitoring" : "Enable Monitoring")
+                .font(.body)
+                .fontWeight(.semibold)
+                .padding(10)
+                .foregroundStyle(tintColor)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(tintColor, lineWidth: 2)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(
+                            AngularGradient(
+                                gradient: Gradient(colors: [
+                                    .white.opacity(0.1),
+                                    .green.opacity(0.2),
+                                    .cyan.opacity(1),
+                                    .green.opacity(0.2),
+                                    .white.opacity(0.1),
+                                ]),
+                                center: .center,
+                                angle: .degrees(rotationAngle)
+                            ),
+                            lineWidth: 3
+                        )
+                )
+        }
+        .buttonStyle(BounceButtonStyle())
+        .disabled(isTapped)
+        .padding(15)
+        .onAppear {
+            withAnimation(
+                .linear(duration: 3)
+                .repeatForever(autoreverses: false)
+            ) {
+                rotationAngle = 360
+            }
+        }
     }
 }
 
@@ -115,7 +148,7 @@ extension EmptyStateView {
             case .search:
                 return "magnifyingglass"
             case .disabledLogging:
-                return "globe.badge.clock.fill"
+                return "gearshape.fill"
             }
         }
         
@@ -140,6 +173,14 @@ extension EmptyStateView {
                 return "Enable monitoring to see network activity. To enable programmatically, call `NetworkLogger.enable()` in the app launch implementation."
             }
         }
+    }
+}
+
+private struct BounceButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.5), value: configuration.isPressed)
     }
 }
 
