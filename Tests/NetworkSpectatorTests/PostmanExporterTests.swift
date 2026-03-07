@@ -30,7 +30,7 @@ struct PostmanExporterTests {
 
         // Verify info section
         let info = json?["info"] as? [String: Any]
-        #expect(info?["name"] as? String == "Exported Network Logs")
+        #expect(info?["name"] as? String == "Exported from NetworkSpectator")
         #expect((info?["schema"] as? String)?.contains("postman.com") == true)
 
         // Verify item section
