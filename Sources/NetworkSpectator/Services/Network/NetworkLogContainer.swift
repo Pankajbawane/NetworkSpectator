@@ -17,6 +17,9 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     /// Items on the MainActor to update on UI layer.
     @Published var items: [LogItem] = []
     
+    /// Index cache for faster lookup.
+    private(set) var indices: [UUID: Int] = [:]
+    
     /// Task to observe item updates from the store actor.
     private var itemUpdateTask: Task<Void, Never>?
     
@@ -24,6 +27,15 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     private(set) var isLoggingEnabled: Bool = false
 
     private init() { }
+    
+    /// onDemand: When true, Monitoring state to be handled by UI, else enables immediately.
+    func setOnDemand(_ onDemand: Bool) {
+        self.onDemand = onDemand
+        // Check if preference was to enable accross launches.
+        if onDemand, MonitorPreferenceStorage().retrieve() {
+            enable()
+        }
+    }
     
     /// Enables monitoring and logging. 'isLoggingEnabled' flag avoids redudant invocation.
     func enable() {
@@ -62,6 +74,7 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
                 // Hop to the main actor to update published state
                 switch updatedItems {
                 case .append(let item):
+                    self.indices[item.id] = self.items.count
                     self.items.append(item)
                 case .update(let item, let index):
                     // Updated LogItem
@@ -69,6 +82,7 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
                         self.items[index] = item
                     } else {
                         // Recovery - If item not found, treat as new
+                        self.indices[item.id] = self.items.count
                         self.items.append(item)
                     }
                 }
@@ -79,7 +93,8 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     private func reset() {
         itemUpdateTask?.cancel()
         itemUpdateTask = nil
-        items.removeAll()
+        items = []
+        indices = [:]
     }
 
     /// Cancels ongoing observation of network log updates.
@@ -177,7 +192,7 @@ internal actor NetworkLogStore {
     }
     
     fileprivate func clear() {
-        cache.removeAll()
-        pending.removeAll()
+        cache = [:]
+        pending = []
     }
 }
