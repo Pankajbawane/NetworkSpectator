@@ -84,7 +84,7 @@ struct EmptyStateView: View {
                 HStack {
                     Spacer()
                         .frame(width: 20)
-                    Text("Add NetworkSpectator.start(onDemand:) early in your app's lifecycle to capture HTTP traffic. In on-demand mode, you can toggle monitoring at any time and optionally persist the preference across launches.")
+                    Text("Add NetworkSpectator.start(:) early in your app's lifecycle to capture HTTP traffic. In on-demand mode, you can toggle monitoring at any time and optionally persist the preference across app launches.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
@@ -158,7 +158,6 @@ struct EmptyStateView: View {
             // Reset animation.
             isTapped = false
             gearRotation = 0
-            rotationAngle = 0
         }
     }
 }
