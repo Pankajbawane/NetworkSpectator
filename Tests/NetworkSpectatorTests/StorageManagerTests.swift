@@ -23,6 +23,10 @@ class MockStorage: Storeable {
         return nil
     }
     
+    func value(forKey defaultName: String) -> Any? {
+        store[defaultName]
+    }
+    
     func removeObject(forKey defaultName: String) {
         store[defaultName] = nil
     }
