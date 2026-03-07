@@ -11,10 +11,17 @@ struct SettingsView: View {
 
     @State private var mockCount: Int = 0
     @State private var skipLoggingCount: Int = 0
+    @State private var toggleMonitoring: Bool = false
+    @State private var togglePersistence: Bool = false
     @ObservedObject private var store = NetworkLogContainer.shared
+    
+    let preferenceStorage = MonitorPreferenceStorage()
 
     var body: some View {
         List {
+            if store.onDemandMonitoring {
+                monitoringManagementSection
+            }
             insightSection
             mockManagementSection
             skipLoggingManagementSection
@@ -27,9 +34,71 @@ struct SettingsView: View {
         .navigationTitle("Tools")
         .onAppear {
             loadCounts()
+            loadMonitoringState()
         }
     }
 
+    // MARK: - Monitoring Management Section
+    
+    private var monitoringManagementSection: some View {
+        Section {
+            Toggle(isOn: $toggleMonitoring) {
+                VStack {
+                    HStack(spacing: 12) {
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                            .font(.title3)
+                            .foregroundStyle(store.isLoggingEnabled ? .green : .secondary)
+                            .frame(width: 28)
+                        
+                        Text("Network Monitoring")
+                            .font(.body)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+            
+        } header: {
+            Text("Monitoring is \(store.isLoggingEnabled ? "active" : "disabled")")
+                .font(.subheadline)
+                .monospaced(true)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+        } footer: {
+            if toggleMonitoring {
+                Toggle(isOn: $togglePersistence) {
+                    HStack {
+                        Text("Keep enabled accross app launches")
+                            .font(.callout)
+                            .foregroundStyle(.primary)
+                        Spacer()
+                    }
+                    Divider()
+                }
+                #if os(macOS)
+                .toggleStyle(CheckboxToggleStyle())
+                #endif
+                .disabled(!toggleMonitoring)
+            }
+        }
+        .toggleStyle(SwitchToggleStyle())
+        .onChange(of: toggleMonitoring) { value in
+            if value {
+                store.enable()
+            } else {
+                store.disable()
+                preferenceStorage.clear()
+                togglePersistence = false
+            }
+        }
+        .onChange(of: togglePersistence) { value in
+            if value {
+                preferenceStorage.save(true)
+            } else {
+                preferenceStorage.clear()
+            }
+        }
+    }
+    
     // MARK: - Insights Section
 
     private var insightSection: some View {
@@ -168,5 +237,10 @@ struct SettingsView: View {
     private func loadCounts() {
         mockCount = MockServer.shared.mocks.count
         skipLoggingCount = SkipRequestForLoggingHandler.shared.skipRequests.count
+    }
+
+    private func loadMonitoringState() {
+        toggleMonitoring = store.isLoggingEnabled
+        togglePersistence = preferenceStorage.retrieve()
     }
 }

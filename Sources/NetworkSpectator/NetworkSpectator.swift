@@ -65,7 +65,7 @@ public struct NetworkSpectator: Sendable {
     public static func start(onDemand: Bool = false) {
         Task {
             if onDemand {
-                await NetworkLogContainer.shared.setOnDemand(onDemand)
+                await NetworkLogContainer.shared.enableOnDemand()
             } else {
                 await NetworkLogContainer.shared.enable()
             }

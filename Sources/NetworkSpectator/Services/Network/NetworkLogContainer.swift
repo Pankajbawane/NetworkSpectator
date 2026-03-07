@@ -24,15 +24,18 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     private var itemUpdateTask: Task<Void, Never>?
     
     /// Safeguard againts redudant calls. Avoids multiple calls to start/stop monitoring.
-    private(set) var isLoggingEnabled: Bool = false
+    @Published private(set) var isLoggingEnabled: Bool = false
+    
+    /// When monitoring needs to be enabled on demand through UI.
+    private(set) var onDemandMonitoring: Bool = false
 
     private init() { }
     
     /// onDemand: When true, Monitoring state to be handled by UI, else enables immediately.
-    func setOnDemand(_ onDemand: Bool) {
-        self.onDemand = onDemand
-        // Check if preference was to enable accross launches.
-        if onDemand, MonitorPreferenceStorage().retrieve() {
+    func enableOnDemand() {
+        self.onDemandMonitoring = true
+        // if preference was stored.
+        if MonitorPreferenceStorage().retrieve() {
             enable()
         }
     }
