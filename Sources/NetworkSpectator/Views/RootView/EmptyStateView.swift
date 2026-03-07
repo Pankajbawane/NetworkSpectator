@@ -80,12 +80,26 @@ struct EmptyStateView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white.opacity(viewState == .disabledLogging ? 0.15 : 0.3))
         .overlay(alignment: .bottom) {
-            if !monitor.isLoggingEnabled && monitor.setupMode == .none {
-                Text("Add NetworkSpectator.start(onDemand:) early in your app's lifecycle to capture HTTP traffic. In on-demand mode, you can toggle monitoring at any time and optionally persist the preference across launches.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
+            if !monitor.isLoggingEnabled && (monitor.setupMode == .none || monitor.setupMode == .uiInitiated) {
+                HStack {
+                    Spacer()
+                        .frame(width: 20)
+                    Text("Add NetworkSpectator.start(onDemand:) early in your app's lifecycle to capture HTTP traffic. In on-demand mode, you can toggle monitoring at any time and optionally persist the preference across launches.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                        .padding(15)
+                        .background {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(.gray).opacity(0.1))
+                        }
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color(.gray).opacity(0.3), lineWidth: 1)
+                        }
+                    Spacer()
+                        .frame(width: 20)
+                }
             }
         }
     }
@@ -99,7 +113,7 @@ struct EmptyStateView: View {
             // Delay enable so the bounce + green state is visible before the view transitions
             Task {
                 try? await Task.sleep(for: .milliseconds(600))
-                NetworkLogContainer.shared.enable()
+                NetworkLogContainer.shared.enableInternally()
             }
         } label: {
             Text(isTapped ? "Enabled Monitoring" : "Enable Monitoring")
@@ -139,6 +153,12 @@ struct EmptyStateView: View {
             ) {
                 rotationAngle = 360
             }
+        }
+        .onDisappear {
+            // Reset animation.
+            isTapped = false
+            gearRotation = 0
+            rotationAngle = 0
         }
     }
 }

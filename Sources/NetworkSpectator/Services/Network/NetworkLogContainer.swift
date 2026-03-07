@@ -40,6 +40,14 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
         }
     }
     
+    /// When enabled only with UI.
+    func enableInternally() {
+        if setupMode == .none {
+            setupMode = .uiInitiated
+        }
+        enable()
+    }
+    
     /// Enables monitoring and logging. 'isLoggingEnabled' flag avoids redudant invocation.
     func enable() {
         guard !isLoggingEnabled else {
@@ -131,6 +139,8 @@ extension NetworkLogContainer {
         case started
         /// NetworkSpectator.start(onDemand: true) was called.
         case onDemand
+        /// Started through UI.
+        case uiInitiated
     }
 }
 

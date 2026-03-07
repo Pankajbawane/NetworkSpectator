@@ -78,9 +78,10 @@ struct SettingsView: View {
                     #if os(macOS)
                     .toggleStyle(CheckboxToggleStyle())
                     #endif
-                    .disabled(!toggleMonitoring || store.setupMode == .none)
-                    
-                    Text("Use NetworkSpectator.start(onDemand:) early in your app's lifecycle to enable on-demand monitoring. When remembered, this setting persists across launches and monitoring begins automatically on next app start.")
+                    .disabled(!toggleMonitoring || store.setupMode == .none || store.setupMode == .uiInitiated)
+                    if store.setupMode == .none || store.setupMode == .uiInitiated {
+                        Text("Use NetworkSpectator.start(onDemand:) early in your app's lifecycle to enable on-demand monitoring. When remembered, this setting persists across launches and monitoring begins automatically on next app start.")
+                    }
                 }
                     
             }
@@ -88,7 +89,7 @@ struct SettingsView: View {
         .toggleStyle(SwitchToggleStyle())
         .onChange(of: toggleMonitoring) { value in
             if value {
-                store.enable()
+                store.enableInternally()
             } else {
                 store.disable()
                 preferenceStorage.clear()
