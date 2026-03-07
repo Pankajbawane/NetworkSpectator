@@ -19,7 +19,7 @@ struct SettingsView: View {
 
     var body: some View {
         List {
-            if !store.initializedProgrammatically || store.onDemandMonitoring {
+            if store.setupMode != .started {
                 monitoringManagementSection
             }
             insightSection
@@ -78,7 +78,7 @@ struct SettingsView: View {
                     #if os(macOS)
                     .toggleStyle(CheckboxToggleStyle())
                     #endif
-                    .disabled(!toggleMonitoring || !store.initializedProgrammatically)
+                    .disabled(!toggleMonitoring || store.setupMode == .none)
                     
                     Text("Use NetworkSpectator.start(onDemand:) early in your app's lifecycle to enable on-demand monitoring. When remembered, this setting persists across launches and monitoring begins automatically on next app start.")
                 }

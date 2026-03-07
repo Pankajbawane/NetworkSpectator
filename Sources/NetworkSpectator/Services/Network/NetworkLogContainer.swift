@@ -26,17 +26,14 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     /// Safeguard againts redudant calls. Avoids multiple calls to start/stop monitoring.
     @Published private(set) var isLoggingEnabled: Bool = false
     
-    /// When monitoring needs to be enabled on demand through UI.
-    private(set) var onDemandMonitoring: Bool = false
-    
-    /// Helps undertand the setup mode.
-    private(set) var initializedProgrammatically: Bool = false
+    /// Tracks how monitoring was initialized.
+    private(set) var setupMode: SetupMode = .none
 
     private init() { }
     
     /// When Monitoring state to be handled by UI on demand.
     func enableOnDemand() {
-        self.onDemandMonitoring = true
+        setupMode = .onDemand
         // if preference was stored.
         if MonitorPreferenceStorage().retrieve() {
             enable()
@@ -48,6 +45,9 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
         guard !isLoggingEnabled else {
             DebugPrint.log("NETWORK SPECTATOR: Monitoring was already active.")
             return
+        }
+        if setupMode == .none {
+            setupMode = .started
         }
         URLProtocol.registerClass(NetworkURLProtocol.self)
         URLSessionConfiguration.enableNetworkMonitoring()
@@ -69,10 +69,6 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
         DebugPrint.log("NETWORK SPECTATOR: Monitoring stopped.")
     }
     
-    func initialize() {
-        initializedProgrammatically = true
-    }
-
     /// Starts observing updates from the network log store.
     private func startObservingUpdates() {
         itemUpdateTask = Task { @MainActor [weak self] in
@@ -123,6 +119,18 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
             // Start observing after current items are removed completely.
             startObservingUpdates()
         }
+    }
+}
+
+extension NetworkLogContainer {
+    /// How the monitoring was initialized.
+    enum SetupMode {
+        /// Not yet initialized — user opened the UI without calling start().
+        case none
+        /// NetworkSpectator.start() was called (always-on monitoring).
+        case started
+        /// NetworkSpectator.start(onDemand: true) was called.
+        case onDemand
     }
 }
 

@@ -64,7 +64,6 @@ public struct NetworkSpectator: Sendable {
     ///   When `false` (the default), logging begins immediately.
     public static func start(onDemand: Bool = false) {
         Task {
-            await NetworkLogContainer.shared.initialize()
             if onDemand {
                 await NetworkLogContainer.shared.enableOnDemand()
             } else {

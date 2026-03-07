@@ -80,7 +80,7 @@ struct EmptyStateView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white.opacity(viewState == .disabledLogging ? 0.15 : 0.3))
         .overlay(alignment: .bottom) {
-            if !monitor.isLoggingEnabled && !monitor.initializedProgrammatically {
+            if !monitor.isLoggingEnabled && monitor.setupMode == .none {
                 Text("Add NetworkSpectator.start(onDemand:) early in your app's lifecycle to capture HTTP traffic. In on-demand mode, you can toggle monitoring at any time and optionally persist the preference across launches.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
