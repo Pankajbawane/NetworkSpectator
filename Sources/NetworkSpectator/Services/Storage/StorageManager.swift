@@ -10,12 +10,14 @@ import Foundation
 enum StorageKey: String {
     case mockRules = "MOCK_RULES"
     case skipRules = "SKIP_RULES"
+    case monitorPreference = "MONITOR_PREFERENCE"
 }
 
 protocol Storeable {
     func set(_ value: Any?, forKey defaultName: String)
     func data(forKey defaultName: String) -> Data?
     func removeObject(forKey defaultName: String)
+    func value(forKey defaultName: String) -> Any?
     @discardableResult func synchronize() -> Bool
 }
 

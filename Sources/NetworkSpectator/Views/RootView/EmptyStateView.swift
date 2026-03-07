@@ -11,14 +11,14 @@ struct EmptyStateView: View {
 
     let isSearchActive: Bool
     let searchText: String
-    @State var isLoggingEnabled: Bool = NetworkLogContainer.shared.isLoggingEnabled
+    @ObservedObject var monitor = NetworkLogContainer.shared
 
     @State private var rotationAngle: Double = 0
     @State private var gearRotation: Double = 0
     @State private var isTapped: Bool = false
 
     private var viewState: ViewState {
-        if !isLoggingEnabled {
+        if !monitor.isLoggingEnabled {
             return .disabledLogging
         }
         if isSearchActive {
@@ -86,12 +86,11 @@ struct EmptyStateView: View {
         let tintColor: Color = isTapped ? .green : .blue
         Button {
             guard !isTapped else { return }
-            NetworkLogContainer.shared.enable()
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.5)) {
-                isTapped = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                isLoggingEnabled = NetworkLogContainer.shared.isLoggingEnabled
+            isTapped = true
+            // Delay enable so the bounce + green state is visible before the view transitions
+            Task {
+                try? await Task.sleep(for: .milliseconds(600))
+                NetworkLogContainer.shared.enable()
             }
         } label: {
             Text(isTapped ? "Enabled Monitoring" : "Enable Monitoring")
@@ -170,7 +169,7 @@ extension EmptyStateView {
             case .search:
                 return "No requests matched. Try adjusting your search or filters."
             case .disabledLogging:
-                return "Enable monitoring to see network activity. To enable programmatically, call `NetworkLogger.enable()` in the app launch implementation."
+                return "Enable monitoring to see network activity. Alternatively, it can be enabled via Tools > Network Monitor toggle and allows to store preference."
             }
         }
     }
@@ -179,8 +178,11 @@ extension EmptyStateView {
 private struct BounceButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.5), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.88 : 1.0)
+            .animation(.spring(response: 0.25,
+                               dampingFraction: 0.4,
+                               blendDuration: 0),
+                       value: configuration.isPressed)
     }
 }
 
