@@ -169,7 +169,7 @@ extension EmptyStateView {
             case .search:
                 return "No requests matched. Try adjusting your search or filters."
             case .disabledLogging:
-                return "Enable monitoring to see network activity. Alternatively, it can be enabled via Tools > Network Monitor toggle and allows to store preference."
+                return "Tap below to start capturing network activity for this session. For persistent monitoring across launches, enable it via Tools > Network Monitor."
             }
         }
     }

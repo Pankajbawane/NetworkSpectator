@@ -67,7 +67,7 @@ struct SettingsView: View {
             if toggleMonitoring {
                 Toggle(isOn: $togglePersistence) {
                     HStack {
-                        Text("Keep enabled accross app launches")
+                        Text("Remember this setting between app launches")
                             .font(.callout)
                             .foregroundStyle(.primary)
                         Spacer()
