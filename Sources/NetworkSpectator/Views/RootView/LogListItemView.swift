@@ -110,12 +110,7 @@ struct LogListItemView: View {
     // MARK: - Helper Methods
 
     private func formatBytes() -> String {
-        let byteCount: Int
-        if let mime = item.mimetype, mime.hasPrefix("image") {
-            byteCount = item.responseRaw?.count ?? 0
-        } else {
-            byteCount = item.responseBody.count
-        }
+        let byteCount: Int = item.responseBody.count
         let formatter = ByteCountFormatter()
         formatter.countStyle = .binary
         formatter.allowedUnits = [.useKB, .useMB, .useBytes]

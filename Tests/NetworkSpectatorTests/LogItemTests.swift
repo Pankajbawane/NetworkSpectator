@@ -215,11 +215,12 @@ struct LogItemTests {
 
     @Test("LogItem codable encoding and decoding")
     func testCodable() async throws {
+        let responseData = #"{"key":"value"}"#.data(using: .utf8)
         let original = LogItem(
             url: "https://example.com/api",
             method: "GET",
             statusCode: 200,
-            responseBody: "test"
+            responseRaw: responseData
         )
 
         let encoder = JSONEncoder()
@@ -231,6 +232,40 @@ struct LogItemTests {
         #expect(decoded.url == original.url)
         #expect(decoded.method == original.method)
         #expect(decoded.statusCode == original.statusCode)
+        #expect(decoded.responseRaw == original.responseRaw)
         #expect(decoded.responseBody == original.responseBody)
+    }
+
+    // MARK: - responseBody Tests
+
+    @Test("responseBody returns pretty printed JSON from responseRaw")
+    func testResponseBodyPrettyPrintsJSON() async throws {
+        let jsonData = #"{"name":"John","age":30}"#.data(using: .utf8)
+        let item = LogItem(url: "https://example.com", responseRaw: jsonData)
+
+        let body = item.responseBody
+        #expect(body.contains("name"))
+        #expect(body.contains("John"))
+        #expect(body.contains("age"))
+        #expect(body.contains("30"))
+    }
+
+    @Test("responseBody returns empty string when responseRaw is nil")
+    func testResponseBodyEmptyWhenNil() async throws {
+        let item = LogItem(url: "https://example.com", responseRaw: nil)
+        #expect(item.responseBody == "")
+    }
+
+    @Test("responseBody returns empty string when responseRaw is empty")
+    func testResponseBodyEmptyWhenEmpty() async throws {
+        let item = LogItem(url: "https://example.com", responseRaw: Data())
+        #expect(item.responseBody == "")
+    }
+
+    @Test("responseBody returns plain text for non-JSON data")
+    func testResponseBodyPlainText() async throws {
+        let textData = "Hello, World!".data(using: .utf8)
+        let item = LogItem(url: "https://example.com", responseRaw: textData)
+        #expect(item.responseBody == "Hello, World!")
     }
 }
