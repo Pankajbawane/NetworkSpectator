@@ -45,9 +45,9 @@ struct SettingsView: View {
             Toggle(isOn: $toggleMonitoring) {
                 VStack {
                     HStack(spacing: 12) {
-                        Image(systemName: "antenna.radiowaves.left.and.right")
+                        Image(systemName: store.isLoggingEnabled ? "network" : "network.slash")
                             .font(.title3)
-                            .foregroundStyle(store.isLoggingEnabled ? .green : .secondary)
+                            .foregroundStyle(store.isLoggingEnabled ? .blue : .secondary)
                             .frame(width: 28)
                         
                         Text("Network Monitoring")
@@ -58,7 +58,7 @@ struct SettingsView: View {
             }
             
         } header: {
-            Text("Monitoring is \(store.isLoggingEnabled ? "active" : "disabled")")
+            Text("Monitoring is \(store.isLoggingEnabled ? "enabled" : "disabled")")
                 .font(.subheadline)
                 .monospaced(true)
                 .fontWeight(.semibold)
@@ -109,7 +109,7 @@ struct SettingsView: View {
                 HStack(spacing: 12) {
                     Image(systemName: "chart.bar.xaxis.ascending")
                         .font(.title3)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(.brown)
                         .frame(width: 28)
 
                     VStack(alignment: .leading, spacing: 2) {
