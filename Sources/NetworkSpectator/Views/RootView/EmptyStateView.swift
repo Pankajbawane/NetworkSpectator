@@ -8,29 +8,66 @@
 import SwiftUI
 
 struct EmptyStateView: View {
+
     let isSearchActive: Bool
     let searchText: String
+    @ObservedObject var monitor = NetworkLogContainer.shared
+
+    @State private var rotationAngle: Double = 0
+    @State private var gearRotation: Double = 0
+    @State private var isTapped: Bool = false
+
+    private var viewState: ViewState {
+        if !monitor.isLoggingEnabled {
+            return .disabledLogging
+        }
+        if isSearchActive {
+            return .search
+        }
+        return .emptyData
+    }
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: iconName)
-                .font(.system(size: 50))
-                .foregroundStyle(.tertiary)
-
-            VStack(spacing: 6) {
-                Text(title)
-                    .font(.title3)
-                    .fontWeight(.semibold)
+            if viewState == .disabledLogging {
+                Image(systemName: viewState.icon)
+                    .font(.system(size: 50))
                     .foregroundStyle(.secondary)
-
-                Text(message)
-                    .font(.subheadline)
+                    .rotationEffect(.degrees(gearRotation))
+                    .animation(
+                        .linear(duration: 30).repeatForever(autoreverses: false),
+                        value: gearRotation
+                    )
+                    .onAppear {
+                        if viewState == .disabledLogging {
+                            gearRotation = 360
+                        }
+                    }
+            } else {
+                Image(systemName: viewState.icon)
+                    .font(.system(size: 50))
                     .foregroundStyle(.tertiary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
             }
 
-            if isSearchActive && !searchText.isEmpty {
+            VStack(spacing: 6) {
+                Text(viewState.title)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .monospaced(true)
+                    .foregroundStyle(.primary)
+
+                Text(viewState.message)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+                
+                if viewState == .disabledLogging {
+                    enableLoggingButton
+                }
+            }
+
+            if viewState == .search && !searchText.isEmpty {
                 Button {
                     // This will be handled by parent view clearing search
                 } label: {
@@ -41,35 +78,114 @@ struct EmptyStateView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(#colorLiteral(red: 0.97, green: 0.97, blue: 0.97, alpha: 1)).opacity(0.3))
+        .background(Color.white.opacity(viewState == .disabledLogging ? 0.15 : 0.3))
     }
-
-    private var iconName: String {
-        if isSearchActive {
-            return "magnifyingglass"
+    
+    @ViewBuilder
+    var enableLoggingButton: some View {
+        let tintColor: Color = isTapped ? .green : .blue
+        Button {
+            guard !isTapped else { return }
+            isTapped = true
+            // Delay enable so the bounce + green state is visible before the view transitions
+            Task {
+                try? await Task.sleep(for: .milliseconds(600))
+                NetworkLogContainer.shared.enable()
+            }
+        } label: {
+            Text(isTapped ? "Enabled Monitoring" : "Enable Monitoring")
+                .font(.body)
+                .fontWeight(.semibold)
+                .padding(10)
+                .foregroundStyle(tintColor)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(tintColor, lineWidth: 2)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(
+                            AngularGradient(
+                                gradient: Gradient(colors: [
+                                    .white.opacity(0.1),
+                                    .green.opacity(0.2),
+                                    .cyan.opacity(1),
+                                    .green.opacity(0.2),
+                                    .white.opacity(0.1),
+                                ]),
+                                center: .center,
+                                angle: .degrees(rotationAngle)
+                            ),
+                            lineWidth: 3
+                        )
+                )
         }
-        return "network"
+        .buttonStyle(BounceButtonStyle())
+        .disabled(isTapped)
+        .padding(15)
+        .onAppear {
+            withAnimation(
+                .linear(duration: 3)
+                .repeatForever(autoreverses: false)
+            ) {
+                rotationAngle = 360
+            }
+        }
     }
+}
 
-    private var title: String {
-        if isSearchActive {
-            return "No Results Found"
+extension EmptyStateView {
+    enum ViewState {
+        case emptyData
+        case search
+        case disabledLogging
+        
+        var icon: String {
+            switch self {
+            case .emptyData:
+                return "network"
+            case .search:
+                return "magnifyingglass"
+            case .disabledLogging:
+                return "gearshape.fill"
+            }
         }
-        return "No Network Requests"
+        
+        var title: String {
+            switch self {
+            case .emptyData:
+                return "No Network Requests"
+            case .search:
+                return "No Results Found"
+            case .disabledLogging:
+                return "NetworkSpectator"
+            }
+        }
+        
+        var message: String {
+            switch self {
+            case .emptyData:
+                return "Network requests will appear here as your app makes HTTP calls. Start using your app to see network activity."
+            case .search:
+                return "No requests matched. Try adjusting your search or filters."
+            case .disabledLogging:
+                return "Tap below to start capturing network activity for this session. For persistent monitoring across launches, enable it via Tools > Network Monitor."
+            }
+        }
     }
+}
 
-    private var message: String {
-        if isSearchActive {
-            return "No requests match '\(searchText)'. Try adjusting your search or filters."
-        }
-        return "Network requests will appear here as your app makes API calls. Start using your app to see network activity."
+private struct BounceButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.88 : 1.0)
+            .animation(.spring(response: 0.25,
+                               dampingFraction: 0.4,
+                               blendDuration: 0),
+                       value: configuration.isPressed)
     }
 }
 
 #Preview("Empty State") {
     EmptyStateView(isSearchActive: false, searchText: "")
-}
-
-#Preview("Search Empty") {
-    EmptyStateView(isSearchActive: true, searchText: "api/users")
 }
