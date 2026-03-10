@@ -1,5 +1,5 @@
 //
-//  LogSessionManager.swift
+//  LogHistoryManager.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 03/03/26.
@@ -13,24 +13,28 @@ import AppKit
 #endif
 
 /// Manages session-based persistence of log items to disk.
+/// Periodically snapshots items from `NetworkLogStore` and persists them.
 /// All disk I/O runs on the actor's serial executor, off the main thread.
-actor LogSessionManager {
+actor LogHistoryManager {
 
     // MARK: - Dependencies
 
     private let storage: LogHistoryStorage
+    private let itemProvider: @Sendable () async -> [LogItem]
 
     // MARK: - Session State
 
-    private var sessionItems: [LogItem] = []
     private var sessionStartTime: Date?
-    private var sessionEndTime: Date?
     private var currentKey: String?
 
     // MARK: - Debounce State
 
     private var writeTask: Task<Void, Never>?
     private let debounceInterval: Duration
+
+    // MARK: - Observation State
+
+    private var isObserving: Bool = false
 
     // MARK: - Date Formatting
 
@@ -43,46 +47,57 @@ actor LogSessionManager {
 
     // MARK: - Singleton
 
-    static let shared = LogSessionManager()
+    static let shared = LogHistoryManager()
+
+    private static let defaultItemProvider: @Sendable () async -> [LogItem] = {
+        await NetworkLogStore.shared.snapshot()
+    }
 
     init(storage: LogHistoryStorage = LogHistoryStorage(),
-         debounceInterval: Duration = .seconds(2)) {
+         debounceInterval: Duration = .seconds(2),
+         itemProvider: @escaping @Sendable () async -> [LogItem] = LogHistoryManager.defaultItemProvider) {
         self.storage = storage
         self.debounceInterval = debounceInterval
+        self.itemProvider = itemProvider
         observeAppLifecycle()
     }
 
-    // MARK: - Public API
+    // MARK: - Observation Lifecycle
 
-    /// Called when a new log item is appended (request initiated).
-    func appendItem(_ item: LogItem) {
-        if sessionStartTime == nil {
-            sessionStartTime = item.startTime
-        }
-        sessionItems.append(item)
-        sessionEndTime = item.startTime
-        scheduleDebouncedWrite()
+    /// Marks the session as active and records the start time.
+    func startObserving() {
+        guard !isObserving else { return }
+        isObserving = true
+        sessionStartTime = Date()
     }
 
-    /// Called when an existing log item is updated (response received).
-    func updateItem(_ item: LogItem, at index: Int) {
-        if index < sessionItems.count, sessionItems[index].id == item.id {
-            sessionItems[index] = item
-        } else if let existingIndex = sessionItems.firstIndex(where: { $0.id == item.id }) {
-            sessionItems[existingIndex] = item
-        } else {
-            sessionItems.append(item)
-        }
-        sessionEndTime = item.finishTime ?? item.startTime
+    /// Cancels any pending writes and resets observation state.
+    func stopObserving() {
+        isObserving = false
+        writeTask?.cancel()
+        writeTask = nil
+    }
+
+    /// Immediately persists the current session, resets state, and stops observing.
+    func finalizeAndStopObserving() async {
+        await finalizeSession()
+        stopObserving()
+    }
+
+    /// Schedules a debounced persist. Called by `NetworkLogContainer` after applying
+    /// a batch of updates to notify that new data is available.
+    func schedulePersist() {
+        guard isObserving else { return }
         scheduleDebouncedWrite()
     }
 
     /// Immediately persists the current session and resets state.
-    func finalizeSession() {
+    func finalizeSession() async {
         writeTask?.cancel()
         writeTask = nil
-        persistCurrentSession()
+        await persistCurrentSession()
         resetSession()
+        isObserving = false
     }
 
     // MARK: - Debounce
@@ -102,34 +117,33 @@ actor LogSessionManager {
 
     // MARK: - Persistence
 
-    private func persistCurrentSession() {
-        guard !sessionItems.isEmpty,
-              let start = sessionStartTime,
-              let end = sessionEndTime else { return }
-        
-        let data = try? JSONEncoder().encode(sessionItems)
+    private func persistCurrentSession() async {
+        let items = await itemProvider()
+        guard !items.isEmpty, let start = sessionStartTime else { return }
+
+        let end = items.last?.finishTime ?? items.last?.startTime ?? start
+
+        let data = try? JSONEncoder().encode(items)
         let formatter = ByteCountFormatter()
         formatter.countStyle = .binary
         formatter.allowedUnits = [.useKB, .useMB, .useBytes]
         formatter.includesUnit = true
-        
+
         let size = formatter.string(fromByteCount: Int64(data?.count ?? 0))
 
-        let newKey = "\(dateFormatter.string(from: start)) - \(dateFormatter.string(from: end)) | Total: \(sessionItems.count) | Size: " + size
+        let newKey = "\(dateFormatter.string(from: start)) - \(dateFormatter.string(from: end)) | Total: \(items.count) | Size: " + size
 
         // If key changed, remove the old file
         if let oldKey = currentKey, oldKey != newKey {
             storage.delete(forKey: oldKey)
         }
 
-        storage.save(sessionItems, forKey: newKey)
+        storage.save(items, forKey: newKey)
         currentKey = newKey
     }
 
     private func resetSession() {
-        sessionItems.removeAll()
         sessionStartTime = nil
-        sessionEndTime = nil
         currentKey = nil
     }
 

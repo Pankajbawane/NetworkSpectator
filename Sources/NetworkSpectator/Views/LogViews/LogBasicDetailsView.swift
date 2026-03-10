@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LogBasicDetailsView: View {
-    @Binding var item: LogItem
+    let item: LogItem
 
     struct DetailRow: Identifiable {
         var id: String { title }

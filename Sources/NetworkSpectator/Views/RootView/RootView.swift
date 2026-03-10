@@ -96,10 +96,7 @@ struct RootView: View {
                         Section {
                             ForEach(items) { item in
                                 NavigationLink {
-                                    // Find the binding for this specific item in the store
-                                    if let index = store.items.firstIndex(where: { $0.id == item.id }) {
-                                        LogDetailsContainerView(item: $store.items[index])
-                                    }
+                                    LogDetailsContainerView(item: item)
                                 } label: {
                                     LogListItemView(item: item)
                                 }

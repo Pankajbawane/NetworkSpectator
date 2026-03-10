@@ -17,6 +17,9 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     /// Items on the MainActor to update on UI layer.
     @Published var items: [LogItem] = []
     
+    /// Lookup from LogItem.id to index in `items` for O(1) updates.
+    private var indexByID: [UUID: Int] = [:]
+    
     /// Task to observe item updates from the store actor.
     private var itemUpdateTask: Task<Void, Never>?
     
@@ -36,6 +39,7 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
         startObservingUpdates()
         isLoggingEnabled = true
         DebugPrint.log("NETWORK SPECTATOR: Logging initiated.")
+        Task { await LogHistoryManager.shared.startObserving() }
     }
     
     /// Disables monitoring and logging. 'isLoggingEnabled' flag avoids redudant invocation.
@@ -44,7 +48,7 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
             DebugPrint.log("NETWORK SPECTATOR: Monitoring was inactive.")
             return
         }
-        Task { await LogSessionManager.shared.finalizeSession() }
+        Task { await LogHistoryManager.shared.finalizeAndStopObserving() }
         URLProtocol.unregisterClass(NetworkURLProtocol.self)
         URLSessionConfiguration.disableNetworkMonitoring()
         stop()
@@ -52,37 +56,45 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
         DebugPrint.log("NETWORK SPECTATOR: Monitoring stopped.")
     }
     
-    /// Starts observing updates from the network log store.
+    /// Notifies `LogHistoryManager` that items changed so it can schedule a debounced persist.
+    private func notifyHistoryManager() {
+        Task { await LogHistoryManager.shared.schedulePersist() }
+    }
+    
+    /// Starts observing batched updates from the network log store for UI updates.
     private func startObservingUpdates() {
         itemUpdateTask = Task { @MainActor [weak self] in
             guard let self else { return }
             
-            // Iterate the async stream produced by the LogStore
-            for await updatedItems in await NetworkLogStore.shared.itemUpdates() {
+            for await batch in await NetworkLogStore.shared.batchUpdates() {
                 if Task.isCancelled { break }
-                // Hop to the main actor to update published state
-                switch updatedItems {
-                case .append(let item):
-                    self.items.append(item)
-                    Task { await LogSessionManager.shared.appendItem(item) }
-                case .update(let item, let index):
-                    // Updated LogItem
-                    if index < self.items.count, self.items[index].id == item.id {
-                        self.items[index] = item
-                    } else {
-                        // Recovery - If item not found, treat as new
-                        self.items.append(item)
-                    }
-                    Task { await LogSessionManager.shared.updateItem(item, at: index) }
+                self.applyBatch(batch)
+            }
+        }
+    }
+    
+    /// Applies a batch of updates to `items` in a single mutation,
+    /// triggering only one `@Published` change notification.
+    private func applyBatch(_ batch: [NetworkLogStore.ItemUpdate]) {
+        for update in batch {
+            switch update {
+            case .append(let item):
+                indexByID[item.id] = items.count
+                items.append(item)
+            case .update(let item, let id):
+                if let index = indexByID[id], index < items.count, items[index].id == id {
+                    items[index] = item
                 }
             }
         }
+        notifyHistoryManager()
     }
     
     private func reset() {
         itemUpdateTask?.cancel()
         itemUpdateTask = nil
         items.removeAll()
+        indexByID.removeAll()
     }
     
     /// Cancels ongoing observation of network log updates.
@@ -97,90 +109,160 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     func clear() {
         reset()
         Task {
-            await LogSessionManager.shared.finalizeSession()
+            await LogHistoryManager.shared.finalizeAndStopObserving()
             await NetworkLogStore.shared.stop()
-            // Start observing after current items are removed completely.
+            // Restart observation for both UI and history persistence.
             startObservingUpdates()
+            await LogHistoryManager.shared.startObserving()
         }
     }
 }
 
 internal actor NetworkLogStore {
     
-    enum ItemStream {
+    /// Represents an individual update to a log item.
+    enum ItemUpdate: Sendable {
+        /// A new item was logged.
         case append(LogItem)
-        case update(LogItem, Int)
+        /// An existing item was updated (e.g. response received). Carries the updated item and its original ID.
+        case update(LogItem, UUID)
     }
     
-    /// Cache to track which items have been added.
-    private var cache: [UUID: Int] = [:]
+    /// The authoritative list of all log items for the current session.
+    private var items: [LogItem] = []
     
-    private var continuation: AsyncStream<ItemStream>.Continuation?
+    /// Maps item ID to index in `items` for O(1) lookups.
+    private var indexByID: [UUID: Int] = [:]
     
-    /// Buffer updates that arrive before a continuation is registered.
-    private var pending: [ItemStream] = []
+    /// Active subscriber continuations keyed by unique subscriber ID.
+    /// Each subscriber receives batches of updates independently.
+    private var continuations: [UUID: AsyncStream<[ItemUpdate]>.Continuation] = [:]
+    
+    /// Buffer of updates that accumulate between batch flushes.
+    private var buffer: [ItemUpdate] = []
+    
+    /// Updates that arrive before any subscriber is registered.
+    private var pending: [ItemUpdate] = []
+    
+    /// Task that manages the time-based flush interval.
+    private var flushTask: Task<Void, Never>?
+    
+    /// Maximum number of updates to buffer before flushing immediately.
+    private let maxBatchSize: Int = 50
+    
+    /// Time window to coalesce updates before flushing.
+    private let flushInterval: Duration = .milliseconds(100)
     
     /// Singleton.
     static let shared = NetworkLogStore()
 
     private init() { }
 
-    func itemUpdates() -> AsyncStream<ItemStream> {
-        AsyncStream<ItemStream> { [weak self] continuation in
+    /// Creates a new `AsyncStream` subscription that delivers batched updates.
+    /// Multiple subscribers are supported; each receives all future batches independently.
+    func batchUpdates() -> AsyncStream<[ItemUpdate]> {
+        let subscriberID = UUID()
+        let (stream, continuation) = AsyncStream<[ItemUpdate]>.makeStream()
+        
+        continuations[subscriberID] = continuation
+        
+        // Deliver any pending updates buffered before a subscriber attached.
+        if !pending.isEmpty {
+            continuation.yield(pending)
+            pending.removeAll()
+        }
+        
+        continuation.onTermination = { @Sendable _ in
+            Task { await self.removeContinuation(for: subscriberID) }
+        }
+        
+        return stream
+    }
+    
+    private func removeContinuation(for id: UUID) {
+        continuations.removeValue(forKey: id)
+    }
+
+    /// Returns a snapshot of the current items for persistence.
+    func snapshot() -> [LogItem] {
+        items
+    }
+    
+    /// Returns the count of current items.
+    var itemCount: Int {
+        items.count
+    }
+
+    /// Adds or updates an item. Updates are buffered and delivered in batches
+    /// to reduce the frequency of actor-to-MainActor hops.
+    func add(_ item: LogItem) {
+        let update: ItemUpdate
+        
+        if let index = indexByID[item.id] {
+            items[index] = item
+            update = .update(item, item.id)
+        } else {
+            indexByID[item.id] = items.count
+            items.append(item)
+            update = .append(item)
+        }
+
+        if continuations.isEmpty {
+            pending.append(update)
+        } else {
+            buffer.append(update)
             
-            guard let self else {
-                continuation.finish()
-                return
-            }
-            Task {
-                await storeContinuation(continuation)
+            // Flush immediately if buffer exceeds threshold.
+            if buffer.count >= maxBatchSize {
+                flushBuffer()
+            } else {
+                scheduleFlush()
             }
         }
     }
     
-    func storeContinuation(_ continuation: AsyncStream<ItemStream>.Continuation) {
-        if self.continuation != nil {
-            self.continuation?.finish()
-        }
-        self.continuation = continuation
-        // Deliver any pending updates that were buffered before a subscriber attached.
-        if !pending.isEmpty {
-            for update in pending {
-                self.continuation?.yield(update)
-            }
-            pending.removeAll()
+    /// Schedules a time-delayed flush. Resets the timer on each call so that
+    /// rapid successive updates are coalesced into a single batch.
+    private func scheduleFlush() {
+        guard flushTask == nil else { return }
+        let interval = flushInterval
+        flushTask = Task { [weak self] in
+            try? await Task.sleep(for: interval)
+            guard !Task.isCancelled else { return }
+            await self?.flushBuffer()
         }
     }
-
-    /// Adds or updates an item and notifies LogContainer.
-    func add(_ item: LogItem) {
-        let update: ItemStream
+    
+    /// Sends buffered updates to all subscribers as a single batch.
+    private func flushBuffer() {
+        flushTask?.cancel()
+        flushTask = nil
+        guard !buffer.isEmpty else { return }
         
-        if let index = cache[item.id] {
-            // Item exists - send update
-            update = .update(item, index)
-        } else {
-            // New item - add to cache and send append
-            cache[item.id] = cache.count
-            update = .append(item)
-        }
-
-        if let continuation {
-            continuation.yield(update)
-        } else {
-            pending.append(update)
+        let batch = buffer
+        buffer.removeAll()
+        
+        for continuation in continuations.values {
+            continuation.yield(batch)
         }
     }
 
     /// Disables the store and finishes all active streams.
     fileprivate func stop() {
-        continuation?.finish()
-        continuation = nil
+        flushBuffer()
+        for continuation in continuations.values {
+            continuation.finish()
+        }
+        continuations.removeAll()
         clear()
     }
     
     fileprivate func clear() {
-        cache.removeAll()
+        items.removeAll()
+        indexByID.removeAll()
+        buffer.removeAll()
         pending.removeAll()
+        flushTask?.cancel()
+        flushTask = nil
     }
 }

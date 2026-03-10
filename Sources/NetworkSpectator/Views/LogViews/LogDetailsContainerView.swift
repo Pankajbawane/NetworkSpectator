@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LogDetailsContainerView: View {
-    @Binding var item: LogItem
+    let item: LogItem
 
     // Stronger typing for picker selection
     enum DetailsTab: String, CaseIterable, Identifiable {
@@ -178,13 +178,13 @@ struct LogDetailsContainerView: View {
     private func detailsView(for tab: DetailsTab) -> some View {
         switch tab {
         case .basic:
-            LogBasicDetailsView(item: $item)
+            LogBasicDetailsView(item: item)
         case .request:
-            LogRequestDetailsView(item: $item)
+            LogRequestDetailsView(item: item)
         case .headers:
-            LogHeadersDetailsView(item: $item)
+            LogHeadersDetailsView(item: item)
         case .response:
-            LogResponseDetailsView(item: $item)
+            LogResponseDetailsView(item: item)
         }
     }
 

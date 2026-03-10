@@ -6,12 +6,20 @@
 //
 
 import Foundation
+import os
 
 final internal class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     
     private var sessionTask: URLSessionDataTask?
     private var mockTask: Task<Void, Never>?
+    private let protectedLog: OSAllocatedUnfairLock<LogItem>
     private static let taskCacheKey = "TRACK_CACHED_TASK_KEY"
+    
+    override init(request: URLRequest, cachedResponse: CachedURLResponse?, client: (any URLProtocolClient)?) {
+        protectedLog = OSAllocatedUnfairLock(initialState: LogItem.fromRequest(request))
+        super.init(request: request, cachedResponse: cachedResponse, client: client)
+        
+    }
 
     override class func canInit(with request: URLRequest) -> Bool {
         // Avoid intercepting requests twice
@@ -52,13 +60,19 @@ final internal class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         let mock = MockServer.shared.responseIfMocked(thisRequest as URLRequest)
 
         // Log the request including headers and body (if any)
-        let log = LogItem.fromRequest(thisRequest as URLRequest, mock?.id)
-        logging(log)
+        let requestLog = protectedLog.withLock { log in
+            log = log.withMockID(mock?.id)
+            return log
+        }
+        logging(requestLog)
         
         let completion: @Sendable (Data?, URLResponse?, Error?) -> Void = { [weak self] data, response, error in
             guard let self else { return }
-            let finalUpdatedLog = log.withResponse(response: response, data: data, error: error)
-            self.logging(finalUpdatedLog)
+            let responseLog = self.protectedLog.withLock { log in
+                log = log.withResponse(response: response, data: data, error: error)
+                return log
+            }
+            self.logging(responseLog)
 
             if let error = error {
                 self.client?.urlProtocol(self, didFailWithError: error)
@@ -136,6 +150,13 @@ final internal class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     }
 
     override func stopLoading() {
+        let cancelledLog: LogItem? = protectedLog.withLock { log in
+            guard log.finishTime == nil else { return nil }
+            return log.withResponse(response: nil, data: nil, error: URLError(.cancelled))
+        }
+        if let cancelledLog {
+            logging(cancelledLog)
+        }
         sessionTask?.cancel()
         sessionTask = nil
         mockTask?.cancel()

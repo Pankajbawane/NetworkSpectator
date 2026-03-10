@@ -9,7 +9,7 @@ import SwiftUI
 
 struct LogRequestDetailsView: View {
 
-    @Binding var item: LogItem
+    let item: LogItem
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {

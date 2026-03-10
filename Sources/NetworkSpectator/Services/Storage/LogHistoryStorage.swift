@@ -64,8 +64,6 @@ struct LogHistoryStorage {
         do {
             let logData = try JSONEncoder().encode(items)
             let fileURL = url(forKey: key)
-            let urlcomp = URLQueryItem(name: "lastAccess", value: "now")
-            fileURL.query()
             try fileManager.write(logData, to: fileURL)
         } catch {
             DebugPrint.log("LogHistoryStorage: Failed to save for key '\(key)': \(error)")

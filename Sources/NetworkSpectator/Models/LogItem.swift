@@ -139,6 +139,16 @@ extension LogItem {
         let body = prettyPrintedBody(request.httpBody)
         return LogItem(url: urlString, method: method, headers: headers, requestBody: body, mockId: mockId)
     }
+    
+    func withMockID(_ mockId: UUID? = nil) -> LogItem {
+        return LogItem(id: id,
+                       startTime: startTime,
+                       url: url,
+                       method: method,
+                       headers: headers,
+                       requestBody: requestBody,
+                       mockId: mockId)
+    }
 
     /// Returns a new LogItem by attaching response information to an existing request LogItem.
     func withResponse(response: URLResponse?, data: Data?, error: Error?) -> LogItem {
