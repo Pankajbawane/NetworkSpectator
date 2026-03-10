@@ -15,7 +15,7 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     static let shared = NetworkLogContainer()
     
     /// Items on the MainActor to update on UI layer.
-    @Published var items: [LogItem] = []
+    @Published private(set) var items: [LogItem] = []
     
     /// Lookup from LogItem.id to index in `items` for O(1) updates.
     private var indexByID: [UUID: Int] = [:]
@@ -23,12 +23,12 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     /// Task to observe item updates from the store actor.
     private var itemUpdateTask: Task<Void, Never>?
     
-    /// Safeguard againts redudant calls. Avoids multiple calls to start/stop monitoring.
+    /// Safeguard against redundant calls. Avoids multiple calls to start/stop monitoring.
     private var isLoggingEnabled: Bool = false
     
     private init() { }
     
-    /// Enables monitoring and logging. 'isLoggingEnabled' flag avoids redudant invocation.
+    /// Enables monitoring and logging. 'isLoggingEnabled' flag avoids redundant invocation.
     func enable() {
         guard !isLoggingEnabled else {
             DebugPrint.log("NETWORK SPECTATOR: Monitoring was already active.")
@@ -42,7 +42,7 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
         Task { await LogHistoryManager.shared.startObserving() }
     }
     
-    /// Disables monitoring and logging. 'isLoggingEnabled' flag avoids redudant invocation.
+    /// Disables monitoring and logging. 'isLoggingEnabled' flag avoids redundant invocation.
     func disable() {
         guard isLoggingEnabled else {
             DebugPrint.log("NETWORK SPECTATOR: Monitoring was inactive.")
@@ -76,17 +76,33 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     /// Applies a batch of updates to `items` in a single mutation,
     /// triggering only one `@Published` change notification.
     private func applyBatch(_ batch: [NetworkLogStore.ItemUpdate]) {
+        var newItems = items
+        var newIndexByID = indexByID
+
         for update in batch {
             switch update {
             case .append(let item):
-                indexByID[item.id] = items.count
-                items.append(item)
+                newIndexByID[item.id] = newItems.count
+                newItems.append(item)
             case .update(let item, let id):
-                if let index = indexByID[id], index < items.count, items[index].id == id {
-                    items[index] = item
+                if let index = newIndexByID[id], index < newItems.count, newItems[index].id == id {
+                    newItems[index] = item
+                } else if let index = newItems.firstIndex(where: { $0.id == id }) {
+                    // Fallback if mapping is stale; repair mapping and update.
+                    newIndexByID[id] = index
+                    newItems[index] = item
+                } else {
+                    // Consider it a new item.
+                    newIndexByID[id] = newItems.count
+                    newItems.append(item)
                 }
             }
         }
+
+        // Single published mutation per batch
+        indexByID = newIndexByID
+        items = newItems
+
         notifyHistoryManager()
     }
     
@@ -99,9 +115,11 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     
     /// Cancels ongoing observation of network log updates.
     private func stop() {
-        reset()
         Task {
             await NetworkLogStore.shared.stop()
+            await MainActor.run {
+                self.reset()
+            }
         }
     }
     
@@ -224,7 +242,8 @@ internal actor NetworkLogStore {
     /// Schedules a time-delayed flush. Resets the timer on each call so that
     /// rapid successive updates are coalesced into a single batch.
     private func scheduleFlush() {
-        guard flushTask == nil else { return }
+        // Reset the timer on each call so rapid successive updates are coalesced into a single batch.
+        flushTask?.cancel()
         let interval = flushInterval
         flushTask = Task { [weak self] in
             try? await Task.sleep(for: interval)
@@ -240,7 +259,7 @@ internal actor NetworkLogStore {
         guard !buffer.isEmpty else { return }
         
         let batch = buffer
-        buffer.removeAll()
+        buffer = []
         
         for continuation in continuations.values {
             continuation.yield(batch)
@@ -253,7 +272,7 @@ internal actor NetworkLogStore {
         for continuation in continuations.values {
             continuation.finish()
         }
-        continuations.removeAll()
+        continuations = [:]
         clear()
     }
     
