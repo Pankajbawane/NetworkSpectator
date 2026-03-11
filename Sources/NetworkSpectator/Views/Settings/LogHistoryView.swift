@@ -20,26 +20,32 @@ struct LogHistoryView: View {
     }
     
     var body: some View {
-        VStack {
+        List {
             Section {
                 Toggle(isOn: $historyToggle) {
-                    VStack {
-                        Text("History")
-                            .font(Font.subheadline.bold())
-                            .foregroundStyle(.primary)
+                    HStack {
+                        Text("History is \(historyToggle ? "enabled" : "disabled")")
+                            .font(.body)
+                            .fontWeight(.bold)
+                            .foregroundStyle(historyToggle ? .green : .red)
+                        Spacer()
                     }
                 }
+                #if os(macOS)
+                .toggleStyle(SwitchToggleStyle())
+                #endif
             }
-            .padding()
             
-            List(logs, id: \.key) { log in
+            
+            ForEach(logs, id: \.key) { log in
                 NavigationLink {
                     let items = storage.retrieve(forKey: log.key)
                     RootContentView(logItems: items, isHistoricLogs: true, title: log.key)
                 } label: {
                     VStack(alignment: .leading, spacing: 5) {
                         Label(log.timestamp, systemImage: "clock")
-                            .font(Font.callout.bold())
+                            .font(.callout)
+                            .fontWeight(.semibold)
                             .foregroundStyle(.primary)
                         
                         HStack(spacing: 8) {
@@ -56,7 +62,10 @@ struct LogHistoryView: View {
                     .contentShape(RoundedRectangle(cornerRadius: 8))
                 }
             }
-            .listStyle(.inset)
+            
+            #if os(iOS)
+            .listStyle(.insetGrouped)
+            #endif
         }
         .toolbar {
             if !logs.isEmpty {
@@ -68,11 +77,14 @@ struct LogHistoryView: View {
                     .tint(.red)
                     .foregroundStyle(.red)
                     .padding(.horizontal, 5)
-                    .fontWeight(.bold)
+                    .fontWeight(.semibold)
                 }
             }
         }
         .navigationTitle(Text("Log History"))
+        .onChange(of: historyToggle) { toggle in
+            // Change history logging preference.
+        }
     }
     
     private func formatBytes(_ byteCount: Int) -> String {
