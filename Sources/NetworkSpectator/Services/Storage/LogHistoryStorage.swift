@@ -57,7 +57,7 @@ struct LogHistoryStorage {
         ensureDirectoryExists()
     }
 
-    // MARK: - Public API
+    // MARK: - Save and retreive.
 
     /// Saves an array of log items for the given key.
     func save(_ items: [LogItem], forKey key: String) {
@@ -66,7 +66,7 @@ struct LogHistoryStorage {
             let fileURL = url(forKey: key)
             try fileManager.write(logData, to: fileURL)
         } catch {
-            DebugPrint.log("LogHistoryStorage: Failed to save for key '\(key)': \(error)")
+            DebugPrint.log("NETWORK SPECTATOR: Failed to save for key '\(key)': \(error)")
         }
     }
 
@@ -78,7 +78,7 @@ struct LogHistoryStorage {
             let data = try fileManager.contentsOfFile(at: fileURL)
             return try JSONDecoder().decode([LogItem].self, from: data)
         } catch {
-            DebugPrint.log("LogHistoryStorage: Failed to retrieve for key '\(key)': \(error)")
+            DebugPrint.log("NETWORK SPECTATOR: Failed to retrieve for key '\(key)': \(error)")
             return []
         }
     }
@@ -90,7 +90,7 @@ struct LogHistoryStorage {
         do {
             try fileManager.removeItem(at: fileURL)
         } catch {
-            DebugPrint.log("LogHistoryStorage: Failed to delete for key '\(key)': \(error)")
+            DebugPrint.log("NETWORK SPECTATOR: Failed to delete for key '\(key)': \(error)")
         }
     }
 
@@ -108,7 +108,7 @@ struct LogHistoryStorage {
                 }
                 .sorted(by: { $0.key > $1.key })
         } catch {
-            DebugPrint.log("LogHistoryStorage: Failed to list keys: \(error)")
+            DebugPrint.log("NETWORK SPECTATOR: Failed to list keys: \(error)")
             return []
         }
     }
@@ -120,7 +120,7 @@ struct LogHistoryStorage {
         }
     }
 
-    // MARK: - Private Helpers
+    // MARK: - Helpers
 
     private func url(forKey key: String) -> URL {
         let safeFilename = encodedFilename(for: key)
@@ -154,7 +154,7 @@ struct LogHistoryStorage {
             do {
                 try fileManager.createDirectory(at: baseURL, withIntermediateDirectories: true, attributes: nil)
             } catch {
-                DebugPrint.log("LogHistoryStorage: Failed to create directory: \(error)")
+                DebugPrint.log("NETWORK SPECTATOR: Failed to create directory: \(error)")
             }
         }
     }

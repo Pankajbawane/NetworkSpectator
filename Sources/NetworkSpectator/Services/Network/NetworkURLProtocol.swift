@@ -13,7 +13,7 @@ final internal class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     private var sessionTask: URLSessionDataTask?
     private var mockTask: Task<Void, Never>?
     private let protectedLog: OSAllocatedUnfairLock<LogItem>
-    private static let taskCacheKey = "TRACK_CACHED_TASK_KEY"
+    private static let taskCacheKey = "NETWORKSPECTATOR_TRACK_CACHED_TASK_KEY"
     
     override init(request: URLRequest, cachedResponse: CachedURLResponse?, client: (any URLProtocolClient)?) {
         protectedLog = OSAllocatedUnfairLock(initialState: LogItem.fromRequest(request))

@@ -8,9 +8,9 @@
 import Foundation
 
 enum StorageKey: String {
-    case mockRules = "MOCK_RULES"
-    case skipRules = "SKIP_RULES"
-    case monitorPreference = "MONITOR_PREFERENCE"
+    case mockRules = "NETWORKSPECTATOR_MOCK_RULES"
+    case skipRules = "NETWORKSPECTATOR_SKIP_RULES"
+    case monitorPreference = "NETWORKSPECTATOR_MONITOR_PREFERENCE"
 }
 
 protocol Storeable {

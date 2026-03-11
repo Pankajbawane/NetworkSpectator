@@ -17,16 +17,13 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     /// Items on the MainActor to update on UI layer.
     @Published private(set) var items: [LogItem] = []
     
-    /// Index cache for faster lookup from LogItem.id to index.
-    private(set) var indexByID: [UUID: Int] = [:]
-    
     /// Task to observe item updates from the store actor.
     private var itemUpdateTask: Task<Void, Never>?
     
-    /// Safeguard againts redudant calls. Avoids multiple calls to start/stop monitoring.
+    /// Safeguard against redundant activations. Avoids multiple calls to start/stop monitoring.
     @Published private(set) var isLoggingEnabled: Bool = false
     
-    /// Tracks how monitoring was initialized.
+    /// Tracks how monitoring was initialized, programmatically or UI.
     private(set) var setupMode: SetupMode = .none
 
     private init() { }
@@ -48,7 +45,7 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
         enable()
     }
     
-    /// Enables monitoring and logging. 'isLoggingEnabled' flag avoids redudant invocation.
+    /// Enables monitoring and logging. 'isLoggingEnabled' flag avoids redundant invocation.
     func enable() {
         guard !isLoggingEnabled else {
             DebugPrint.log("NETWORK SPECTATOR: Monitoring was already active.")
@@ -79,18 +76,13 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
         DebugPrint.log("NETWORK SPECTATOR: Monitoring stopped.")
     }
     
-    /// Notifies `LogHistoryManager` that items changed so it can schedule a debounced persist.
-    private func notifyHistoryManager() {
-        Task { await LogHistoryManager.shared.schedulePersist() }
-    }
-    
     /// Starts observing batched updates from the network log store for UI updates.
     private func startObservingUpdates() {
         itemUpdateTask = Task { @MainActor [weak self] in
-            guard let self else { return }
+            guard self != nil else { return }
             
             for await batch in await NetworkLogStore.shared.batchUpdates() {
-                if Task.isCancelled { break }
+                guard !Task.isCancelled, let self else { break }
                 self.applyBatch(batch)
             }
         }
@@ -98,52 +90,27 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     
     /// Applies a batch of updates to `items` in a single mutation,
     /// triggering only one `@Published` change notification.
-    private func applyBatch(_ batch: [NetworkLogStore.ItemUpdate]) {
-        var newItems = items
-        var newIndexByID = indexByID
-
-        for update in batch {
-            switch update {
-            case .append(let item):
-                newIndexByID[item.id] = newItems.count
-                newItems.append(item)
-            case .update(let item, let id):
-                if let index = newIndexByID[id], index < newItems.count, newItems[index].id == id {
-                    newItems[index] = item
-                } else if let index = newItems.firstIndex(where: { $0.id == id }) {
-                    // Fallback if mapping is stale; repair mapping and update.
-                    newIndexByID[id] = index
-                    newItems[index] = item
-                } else {
-                    // Consider it a new item.
-                    newIndexByID[id] = newItems.count
-                    newItems.append(item)
-                }
-            }
-        }
+    private func applyBatch(_ batch: [LogItem]) {
 
         // Single published mutation per batch
-        indexByID = newIndexByID
-        items = newItems
-
-        notifyHistoryManager()
+        items = batch
     }
     
     private func reset() {
         itemUpdateTask?.cancel()
         itemUpdateTask = nil
         items = []
-        indexByID = [:]
     }
     
     /// Cancels ongoing observation of network log updates.
     private func stop() {
+        // Cancel observation immediately to prevent batches arriving after stop is called.
+        itemUpdateTask?.cancel()
+        itemUpdateTask = nil
         Task {
             await NetworkLogStore.shared.stop()
-            await MainActor.run {
-                self.reset()
-            }
         }
+        items = []
     }
     
     /// Clears current list of items. This does not stop the monitoring.
@@ -152,8 +119,11 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
         Task {
             await LogHistoryManager.shared.finalizeAndStopObserving()
             await NetworkLogStore.shared.stop()
-            // Restart observation for both UI and history persistence.
-            startObservingUpdates()
+            // Restart observation on MainActor since startObservingUpdates
+            // mutates @MainActor-isolated state (itemUpdateTask).
+            await MainActor.run { [weak self] in
+                self?.startObservingUpdates()
+            }
             await LogHistoryManager.shared.startObserving()
         }
     }
@@ -192,13 +162,10 @@ internal actor NetworkLogStore {
     
     /// Active subscriber continuations keyed by unique subscriber ID.
     /// Each subscriber receives batches of updates independently.
-    private var continuations: [UUID: AsyncStream<[ItemUpdate]>.Continuation] = [:]
+    private var continuations: [UUID: AsyncStream<[LogItem]>.Continuation] = [:]
     
     /// Buffer of updates that accumulate between batch flushes.
-    private var buffer: [ItemUpdate] = []
-    
-    /// Updates that arrive before any subscriber is registered.
-    private var pending: [ItemUpdate] = []
+    private var pendingUpdatesCount: Int = 0
     
     /// Task that manages the time-based flush interval.
     private var flushTask: Task<Void, Never>?
@@ -216,17 +183,11 @@ internal actor NetworkLogStore {
 
     /// Creates a new `AsyncStream` subscription that delivers batched updates.
     /// Multiple subscribers are supported; each receives all future batches independently.
-    func batchUpdates() -> AsyncStream<[ItemUpdate]> {
+    func batchUpdates() -> AsyncStream<[LogItem]> {
         let subscriberID = UUID()
-        let (stream, continuation) = AsyncStream<[ItemUpdate]>.makeStream()
+        let (stream, continuation) = AsyncStream<[LogItem]>.makeStream()
         
         continuations[subscriberID] = continuation
-        
-        // Deliver any pending updates buffered before a subscriber attached.
-        if !pending.isEmpty {
-            continuation.yield(pending)
-            pending.removeAll()
-        }
         
         continuation.onTermination = { @Sendable _ in
             Task { await self.removeContinuation(for: subscriberID) }
@@ -252,28 +213,21 @@ internal actor NetworkLogStore {
     /// Adds or updates an item. Updates are buffered and delivered in batches
     /// to reduce the frequency of actor-to-MainActor hops.
     func add(_ item: LogItem) {
-        let update: ItemUpdate
         
         if let index = indexByID[item.id] {
             items[index] = item
-            update = .update(item, item.id)
         } else {
             indexByID[item.id] = items.count
             items.append(item)
-            update = .append(item)
         }
-
-        if continuations.isEmpty {
-            pending.append(update)
+        
+        pendingUpdatesCount += 1
+        
+        // Flush immediately if buffer exceeds threshold.
+        if pendingUpdatesCount >= maxBatchSize {
+            flushBuffer()
         } else {
-            buffer.append(update)
-            
-            // Flush immediately if buffer exceeds threshold.
-            if buffer.count >= maxBatchSize {
-                flushBuffer()
-            } else {
-                scheduleFlush()
-            }
+            scheduleFlush()
         }
     }
     
@@ -294,13 +248,12 @@ internal actor NetworkLogStore {
     private func flushBuffer() {
         flushTask?.cancel()
         flushTask = nil
-        guard !buffer.isEmpty else { return }
+        guard !items.isEmpty else { return }
         
-        let batch = buffer
-        buffer = []
+        pendingUpdatesCount = 0
         
         for continuation in continuations.values {
-            continuation.yield(batch)
+            continuation.yield(items)
         }
     }
 
@@ -317,8 +270,7 @@ internal actor NetworkLogStore {
     fileprivate func clear() {
         items = []
         indexByID = [:]
-        buffer = []
-        pending = []
+        pendingUpdatesCount = 0
         flushTask?.cancel()
         flushTask = nil
     }
