@@ -9,6 +9,7 @@ import SwiftUI
 
 struct LogDetailsContainerView: View {
     let item: LogItem
+    let isHistoricLogs: Bool
 
     // Stronger typing for picker selection
     enum DetailsTab: String, CaseIterable, Identifiable {
@@ -33,6 +34,11 @@ struct LogDetailsContainerView: View {
         case csv = "CSV"
         case postmanCollection = "Postman Collection"
         var id: String { rawValue }
+    }
+    
+    init(item: LogItem, isHistoricLogs: Bool = false) {
+        self.item = item
+        self.isHistoricLogs = isHistoricLogs
     }
 
     // Filtered picker options depending on item content
@@ -108,26 +114,27 @@ struct LogDetailsContainerView: View {
             }
         }
         .toolbar {
-            
             ToolbarItemGroup(placement: .automatic) {
-                // CTA to register mock.
-                Button(action: { showAddMockSheet = true }) {
-                    Label("Mock", systemImage: "shuffle")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .padding(7)
+                if !isHistoricLogs {
+                    // CTA to register mock.
+                    Button(action: { showAddMockSheet = true }) {
+                        Label("Mock", systemImage: "shuffle")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .padding(7)
+                    }
+                    .tint(item.isMocked ? .green : .primary)
+                    .accessibilityLabel("Mock")
+                    
+                    // CTA to ignore requests from logging.
+                    Button(action: { showAddSkipSheet = true }) {
+                        Label("Skip Log", systemImage: "eye.slash")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .padding(7)
+                    }
+                    .accessibilityLabel("Skip Logging")
                 }
-                .tint(item.isMocked ? .green : .primary)
-                .accessibilityLabel("Mock")
-                
-                // CTA to ignore requests from logging.
-                Button(action: { showAddSkipSheet = true }) {
-                    Label("Skip Log", systemImage: "eye.slash")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .padding(7)
-                }
-                .accessibilityLabel("Skip Logging")
                 
                 Button(action: { showExportFormatPicker = true }) {
                     Label("Export", systemImage: "square.and.arrow.up")

@@ -23,13 +23,11 @@ struct LogHistoryView: View {
     var body: some View {
         
         List(logs, id: \.key) { log in
-            Button(log.key) {
-                presentSheet = true
-                key = log.key
+            NavigationLink(log.key) {
+                let items = storage.retrieve(forKey: log.key)
+                RootContentView(logItems: items, isHistoricLogs: true, title: log.key)
             }
-        }.sheet(isPresented: $presentSheet) {
-            let items = storage.retrieve(forKey: key)
-            RootView(isLoggingLive: false, logsHistory: items)
         }
+        .navigationTitle(Text("Log History"))
     }
 }
