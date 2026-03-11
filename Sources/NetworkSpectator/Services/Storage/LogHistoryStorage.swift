@@ -33,6 +33,7 @@ struct HistoryItem: Codable, Identifiable {
     let timestamp: String
     let count: String
     let size: Int
+    var isCurrentSession: Bool = false
     
     var id: String {
         key

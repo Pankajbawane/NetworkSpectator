@@ -32,7 +32,7 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     func enableOnDemand() {
         setupMode = .onDemand
         // if preference was stored.
-        if MonitorPreferenceStorage().retrieve() {
+        if PreferenceStorage(preference: .monitoring).retrieve() {
             enable()
         }
     }

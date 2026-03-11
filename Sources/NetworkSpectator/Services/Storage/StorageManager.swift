@@ -11,6 +11,7 @@ enum StorageKey: String {
     case mockRules = "NETWORKSPECTATOR_MOCK_RULES"
     case skipRules = "NETWORKSPECTATOR_SKIP_RULES"
     case monitorPreference = "NETWORKSPECTATOR_MONITOR_PREFERENCE"
+    case historyPreference = "NETWORKSPECTATOR_HISTORY_PREFERENCE"
 }
 
 protocol Storeable {

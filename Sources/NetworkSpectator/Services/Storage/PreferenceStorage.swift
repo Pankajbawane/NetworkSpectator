@@ -7,13 +7,25 @@
 
 import Foundation
 
-struct MonitorPreferenceStorage {
+struct PreferenceStorage {
+    
+    enum Preference {
+        case monitoring
+        case history
+        
+        var key: StorageKey {
+            switch self {
+            case .monitoring: return .monitorPreference
+            case .history: return .historyPreference
+            }
+        }
+    }
     
     private let key: StorageKey
     private let store: Storeable
     
-    init(key: StorageKey = .monitorPreference, store: Storeable = UserDefaults.standard) {
-        self.key = key
+    init(preference: Preference, store: Storeable = UserDefaults.standard) {
+        self.key = preference.key
         self.store = store
     }
     
@@ -24,8 +36,8 @@ struct MonitorPreferenceStorage {
     }
     
     /// Retrieves from UserDefaults
-    func retrieve() -> Bool {
-        store.value(forKey: key.rawValue) as? Bool ?? false
+    func retrieve(_ defaultValue: Bool = false) -> Bool {
+        return store.value(forKey: key.rawValue) as? Bool ?? defaultValue
     }
     
     /// Clears all stored rules

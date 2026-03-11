@@ -15,7 +15,7 @@ struct SettingsView: View {
     @State private var togglePersistence: Bool = false
     @ObservedObject private var store = NetworkLogContainer.shared
     
-    let preferenceStorage = MonitorPreferenceStorage()
+    let preferenceStorage = PreferenceStorage(preference: .monitoring)
 
     var body: some View {
         List {
@@ -98,11 +98,7 @@ struct SettingsView: View {
             }
         }
         .onChange(of: togglePersistence) { value in
-            if value {
-                preferenceStorage.save(true)
-            } else {
-                preferenceStorage.clear()
-            }
+            preferenceStorage.save(value)
         }
     }
     

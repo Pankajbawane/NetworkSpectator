@@ -36,6 +36,14 @@ actor LogHistoryManager {
     // MARK: - Observation State
 
     private var isObserving: Bool = false
+    
+    var historyStorePreference: Bool {
+        PreferenceStorage(preference: .history).retrieve(true)
+    }
+    
+    func currentSessionKey() -> String? {
+        sessionKey
+    }
 
     // MARK: - Date Formatting
 
@@ -74,6 +82,7 @@ actor LogHistoryManager {
 
     /// Marks the session as active, records the start time, and begins observing batch updates.
     func startObserving() {
+        guard historyStorePreference else { return }
         guard !isObserving else { return }
         isObserving = true
         sessionStartTime = Date()
@@ -142,7 +151,6 @@ actor LogHistoryManager {
         guard let data = try? JSONEncoder().encode(items) else { return }
 
         let end = items.last?.finishTime ?? items.last?.startTime ?? start
-        let size = ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .binary)
 
         let newKey = "\(dateFormatter.string(from: start)) - \(dateFormatter.string(from: end))|Count: \(items.count)"
 
@@ -176,7 +184,7 @@ actor LogHistoryManager {
             object: nil,
             queue: nil
         ) { _ in
-            Task { await self.finalizeSession() }
+            Task { await self.finalizeAndStopObserving() }
         }
         #elseif canImport(AppKit)
         NotificationCenter.default.addObserver(
@@ -184,7 +192,7 @@ actor LogHistoryManager {
             object: nil,
             queue: nil
         ) { _ in
-            Task { await self.finalizeSession() }
+            Task { await self.finalizeAndStopObserving() }
         }
         #endif
     }
