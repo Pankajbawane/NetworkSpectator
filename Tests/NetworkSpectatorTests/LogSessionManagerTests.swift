@@ -70,7 +70,7 @@ struct LogSessionManagerTests {
         let (manager, mockFS) = makeManager(items: items)
 
         await manager.startObserving()
-        await manager.finalizeSession()
+        await manager.finalizeAndStopObserving()
 
         let storage = makeStorage(mockFS)
         let keys = storage.listKeys()
@@ -89,7 +89,7 @@ struct LogSessionManagerTests {
         let (manager, mockFS) = makeManager(items: items)
 
         await manager.startObserving()
-        await manager.finalizeSession()
+        await manager.finalizeAndStopObserving()
 
         let storage = makeStorage(mockFS)
         let keys = storage.listKeys()
@@ -168,7 +168,7 @@ struct LogSessionManagerTests {
         let (manager, mockFS) = makeManager(items: items)
 
         await manager.startObserving()
-        await manager.finalizeSession()
+        await manager.finalizeAndStopObserving()
 
         // Should have written immediately without waiting for debounce
         let storage = makeStorage(mockFS)
@@ -189,7 +189,7 @@ struct LogSessionManagerTests {
 
         // First session
         await manager.startObserving()
-        await manager.finalizeSession()
+        await manager.finalizeAndStopObserving()
 
         let storage = makeStorage(mockFS)
         let firstKeys = storage.listKeys()
@@ -201,12 +201,11 @@ struct LogSessionManagerTests {
             #expect(persisted.first?.url == "https://session1.com")
         }
 
-        // Second session with different items — should overwrite since
-        // sessionStartTime is approximately the same (sub-second execution).
+        // Second session with different items
         let time2 = Date(timeIntervalSince1970: 1709500000)
         items.value = [sampleLogItem(url: "https://session2.com", startTime: time2)]
         await manager.startObserving()
-        await manager.finalizeSession()
+        await manager.finalizeAndStopObserving()
 
         // Verify the latest persisted data reflects session 2
         let secondKeys = storage.listKeys()
@@ -221,7 +220,7 @@ struct LogSessionManagerTests {
         let (manager, mockFS) = makeManager(items: items)
 
         await manager.startObserving()
-        await manager.finalizeSession()
+        await manager.finalizeAndStopObserving()
 
         let filesWritten = mockFS.files.filter { $0.key.contains("json") }.count
         #expect(filesWritten == 0)
@@ -254,7 +253,7 @@ struct LogSessionManagerTests {
         )
         items.value = [completedItem]
 
-        await manager.finalizeSession()
+        await manager.finalizeAndStopObserving()
 
         let storage = makeStorage(mockFS)
         let keys = storage.listKeys()
@@ -283,7 +282,7 @@ struct LogSessionManagerTests {
         let (manager, mockFS) = makeManager(items: items)
 
         await manager.startObserving()
-        await manager.finalizeSession()
+        await manager.finalizeAndStopObserving()
 
         let storage = makeStorage(mockFS)
         let keys = storage.listKeys()
@@ -367,7 +366,7 @@ struct LogSessionManagerTests {
         try? await Task.sleep(for: .milliseconds(50))
         await manager.startObserving() // should be a no-op
 
-        await manager.finalizeSession()
+        await manager.finalizeAndStopObserving()
 
         let storage = makeStorage(mockFS)
         let keys = storage.listKeys()
@@ -388,7 +387,7 @@ struct LogSessionManagerTests {
 
         // Second session: restart and finalize
         await manager.startObserving()
-        await manager.finalizeSession()
+        await manager.finalizeAndStopObserving()
 
         let storage = makeStorage(mockFS)
         let keys = storage.listKeys()

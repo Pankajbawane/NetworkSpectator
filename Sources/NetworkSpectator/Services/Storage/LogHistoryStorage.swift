@@ -57,16 +57,26 @@ struct LogHistoryStorage {
         ensureDirectoryExists()
     }
 
-    // MARK: - Save and retreive.
+    // MARK: - Save and retrieve.
+
+    /// Saves pre-encoded data for the given key. Avoids double encoding when the caller
+    /// has already serialized the items (e.g. to compute byte size).
+    func save(_ data: Data, forKey key: String) {
+        do {
+            let fileURL = url(forKey: key)
+            try fileManager.write(data, to: fileURL)
+        } catch {
+            DebugPrint.log("NETWORK SPECTATOR: Failed to save for key '\(key)': \(error)")
+        }
+    }
 
     /// Saves an array of log items for the given key.
     func save(_ items: [LogItem], forKey key: String) {
         do {
             let logData = try JSONEncoder().encode(items)
-            let fileURL = url(forKey: key)
-            try fileManager.write(logData, to: fileURL)
+            save(logData, forKey: key)
         } catch {
-            DebugPrint.log("NETWORK SPECTATOR: Failed to save for key '\(key)': \(error)")
+            DebugPrint.log("NETWORK SPECTATOR: Failed to encode for key '\(key)': \(error)")
         }
     }
 
