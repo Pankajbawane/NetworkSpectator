@@ -32,6 +32,18 @@ struct SettingsView: View {
         #else
         .listStyle(.inset)
         #endif
+        .navigationDestination(for: SettingsRoute.self) { route in
+            switch route {
+            case .insights:
+                AnalyticsDashboardView(data: store.items)
+            case .history:
+                LogHistoryView()
+            case .mockManagement:
+                MockManagementView()
+            case .skipLogging:
+                SkipLoggingManagementView()
+            }
+        }
         .navigationTitle("Tools")
         .onAppear {
             loadCounts()
@@ -106,9 +118,7 @@ struct SettingsView: View {
 
     private var insightSection: some View {
         Section {
-            NavigationLink {
-                AnalyticsDashboardView(data: store.items)
-            } label: {
+            NavigationLink(value: SettingsRoute.insights) {
                 HStack(spacing: 12) {
                     Image(systemName: "chart.bar.xaxis.ascending")
                         .font(.title3)
@@ -135,9 +145,7 @@ struct SettingsView: View {
 
     private var historySection: some View {
         Section {
-            NavigationLink {
-                LogHistoryView()
-            } label: {
+            NavigationLink(value: SettingsRoute.history) {
                 HStack(spacing: 12) {
                     Image(systemName: "arrow.clockwise.circle.fill")
                         .font(.title2)
@@ -164,9 +172,7 @@ struct SettingsView: View {
 
     private var mockManagementSection: some View {
         Section {
-            NavigationLink {
-                MockManagementView()
-            } label: {
+            NavigationLink(value: SettingsRoute.mockManagement) {
                 HStack(spacing: 12) {
                     Image(systemName: "rectangle.stack.fill")
                         .font(.title3)
@@ -216,9 +222,7 @@ struct SettingsView: View {
     
     private var skipLoggingManagementSection: some View {
         Section {
-            NavigationLink {
-                SkipLoggingManagementView()
-            } label: {
+            NavigationLink(value: SettingsRoute.skipLogging) {
                 HStack(spacing: 12) {
                     Image(systemName: "eye.slash.fill")
                         .font(.title3)
@@ -274,5 +278,15 @@ struct SettingsView: View {
     private func loadMonitoringState() {
         toggleMonitoring = store.isLoggingEnabled
         togglePersistence = preferenceStorage.retrieve()
+    }
+}
+
+// MARK: - Navigation
+extension SettingsView {
+    enum SettingsRoute: Hashable {
+        case insights
+        case history
+        case mockManagement
+        case skipLogging
     }
 }

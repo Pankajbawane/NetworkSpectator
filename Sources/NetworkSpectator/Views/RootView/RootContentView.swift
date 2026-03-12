@@ -91,9 +91,7 @@ struct RootContentView: View {
                     // Requests list
                     Section {
                         ForEach(items) { item in
-                            NavigationLink {
-                                LogDetailsContainerView(item: item, isHistoricLogs: isHistoricLogs)
-                            } label: {
+                            NavigationLink(value: RootContentRoute.logDetail(item)) {
                                 LogListItemView(item: item)
                             }
                             .listRowBackground(rowBackgroundColor(item))
@@ -125,6 +123,16 @@ struct RootContentView: View {
                 #if os(macOS)
         .searchable(text: $searchText, placement: .automatic, prompt: "Search by URL")
         #endif
+        .navigationDestination(for: RootContentRoute.self) { route in
+            switch route {
+            case .logDetail(let item):
+                LogDetailsContainerView(item: item, isHistoricLogs: isHistoricLogs)
+            case .settings:
+                SettingsView()
+            case .insights:
+                AnalyticsDashboardView(data: logItems)
+            }
+        }
         .navigationTitle(title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -151,9 +159,7 @@ struct RootContentView: View {
                 
                 if isHistoricLogs {
                     // Insights button
-                    NavigationLink {
-                        AnalyticsDashboardView(data: logItems)
-                    } label: {
+                    NavigationLink(value: RootContentRoute.insights) {
                         Image(systemName: "chart.bar.xaxis.ascending")
                     }
                     .accessibilityLabel("Insights")
@@ -196,9 +202,7 @@ struct RootContentView: View {
                 
                 if !isHistoricLogs {
                     // Settings button
-                    NavigationLink {
-                        SettingsView()
-                    } label: {
+                    NavigationLink(value: RootContentRoute.settings) {
                         Image(systemName: "gearshape")
                     }
                     .accessibilityLabel("Tools")
@@ -249,5 +253,14 @@ struct RootContentView: View {
         }
         
         return .clear
+    }
+}
+
+// MARK: - Navigation
+extension RootContentView {
+    enum RootContentRoute: Hashable {
+        case logDetail(LogItem)
+        case settings
+        case insights
     }
 }

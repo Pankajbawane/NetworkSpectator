@@ -9,6 +9,9 @@ import SwiftUI
 
 struct LogHistoryView: View {
     
+    
+
+    
     let storage: LogHistoryStorage
     let preference: PreferenceStorage
     @State var logs: [HistoryItem] = []
@@ -75,6 +78,13 @@ struct LogHistoryView: View {
             }
         }
         .navigationTitle(Text("Log History"))
+        .navigationDestination(for: LogHistoryRoute.self) { route in
+            RootContentView(
+                logItems: storage.retrieve(forKey: route.key),
+                isHistoricLogs: true,
+                title: route.title
+            )
+        }
         .onChange(of: historyToggle) { toggle in
             // Change history logging preference.
             preference.save(toggle)
@@ -113,10 +123,7 @@ struct LogHistoryView: View {
     @ViewBuilder
     var listView: some View {
         ForEach(logs, id: \.key) { log in
-            NavigationLink {
-                let items = storage.retrieve(forKey: log.key)
-                RootContentView(logItems: items, isHistoricLogs: true, title: log.key)
-            } label: {
+            NavigationLink(value: LogHistoryRoute(key: log.key, title: log.key)) {
                 VStack(alignment: .leading, spacing: 5) {
                     
                     if log.isCurrentSession {
@@ -159,5 +166,13 @@ struct LogHistoryView: View {
         formatter.allowedUnits = [.useKB, .useMB, .useBytes]
         formatter.includesUnit = true
         return formatter.string(fromByteCount: Int64(byteCount))
+    }
+}
+
+// MARK: - Navigation
+extension LogHistoryView {
+    struct LogHistoryRoute: Hashable {
+        let key: String
+        let title: String
     }
 }
