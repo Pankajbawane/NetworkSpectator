@@ -84,7 +84,7 @@ struct EmptyStateView: View {
                 HStack {
                     Spacer()
                         .frame(width: 20)
-                    Text("Add NetworkSpectator.start(:) early in your app's lifecycle to capture HTTP traffic. In on-demand mode, you can toggle monitoring at any time and optionally persist the preference across app launches.")
+                    Text("Add NetworkSpectator.start(:) early in your app's lifecycle to capture all HTTP traffic. In on-demand mode, you can toggle monitoring at any time and persist the preference across app launches.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
@@ -113,7 +113,10 @@ struct EmptyStateView: View {
             // Delay enable so the bounce + green state is visible before the view transitions
             Task {
                 try? await Task.sleep(for: .milliseconds(600))
-                NetworkLogContainer.shared.enableInternally()
+                monitor.enableInternally()
+                if monitor.setupMode == .onDemand {
+                    PreferenceStorage(preference: .monitoring).save(true)
+                }
             }
         } label: {
             Text(isTapped ? "Enabled Monitoring" : "Enable Monitoring")

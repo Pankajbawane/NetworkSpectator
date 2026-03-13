@@ -73,6 +73,7 @@ struct SettingsView: View {
                     .padding(.vertical, 4)
                 }
             }
+            .toggleStyle(SwitchToggleStyle())
             
         } header: {
             Text("Monitoring is \(store.isLoggingEnabled ? "enabled" : "disabled")")
@@ -81,40 +82,24 @@ struct SettingsView: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(.secondary)
         } footer: {
-            if toggleMonitoring {
-                VStack {
-                    Toggle(isOn: $togglePersistence) {
-                        HStack {
-                            Text("Remember this setting between app launches")
-                                .font(.callout)
-                                .foregroundStyle(.primary)
-                            Spacer()
-                        }
+                if store.setupMode == .none || store.setupMode == .uiInitiated {
+                    VStack {
+                        Text("Use NetworkSpectator.start(onDemand:) early in your app's lifecycle to enable on-demand monitoring. It allows this preference to persists across launches and monitoring begins automatically on app launch.")
+                            .font(.footnote)
                         Divider()
                     }
-                    #if os(macOS)
-                    .toggleStyle(CheckboxToggleStyle())
-                    #endif
-                    .disabled(!toggleMonitoring || store.setupMode == .none || store.setupMode == .uiInitiated)
-                    if store.setupMode == .none || store.setupMode == .uiInitiated {
-                        Text("Use NetworkSpectator.start(onDemand:) early in your app's lifecycle to enable on-demand monitoring. When remembered, this setting persists across launches and monitoring begins automatically on next app start.")
-                    }
                 }
-                    
-            }
         }
-        .toggleStyle(SwitchToggleStyle())
         .onChange(of: toggleMonitoring) { value in
+            if store.setupMode == .onDemand {
+                PreferenceStorage(preference: .monitoring).save(true)
+            }
+            preferenceStorage.save(value)
             if value {
                 store.enableInternally()
             } else {
                 store.disable()
-                preferenceStorage.clear()
-                togglePersistence = false
             }
-        }
-        .onChange(of: togglePersistence) { value in
-            preferenceStorage.save(value)
         }
     }
     
@@ -280,7 +265,6 @@ struct SettingsView: View {
 
     private func loadMonitoringState() {
         toggleMonitoring = store.isLoggingEnabled
-        togglePersistence = preferenceStorage.retrieve()
     }
 }
 
