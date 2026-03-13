@@ -213,6 +213,44 @@ struct LogItemTests {
         #expect(finishedItem.responseRaw == data)
     }
 
+    // MARK: - withMockID Tests
+    
+    @Test("withMockID sets mock ID and preserves all other fields")
+    func testWithMockIDSetsID() async throws {
+        let mockId = UUID()
+        let item = LogItem(
+            url: "https://example.com/api",
+            method: "POST",
+            headers: ["Content-Type": "application/json"],
+            requestBody: "{\"key\":\"val\"}"
+        )
+
+        let updated = item.withMockID(mockId)
+
+        #expect(updated.mockId == mockId)
+        #expect(updated.id == item.id)
+        #expect(updated.startTime == item.startTime)
+        #expect(updated.url == item.url)
+        #expect(updated.method == item.method)
+        #expect(updated.headers == item.headers)
+        #expect(updated.requestBody == item.requestBody)
+    }
+
+    @Test("withMockID with nil clears mock ID")
+    func testWithMockIDNilClearsMockID() async throws {
+        let item = LogItem(url: "https://example.com", mockId: UUID())
+        let updated = item.withMockID(nil)
+        #expect(updated.mockId == nil)
+        #expect(updated.isMocked == false)
+    }
+
+    @Test("withMockID default parameter is nil")
+    func testWithMockIDDefaultParamIsNil() async throws {
+        let item = LogItem(url: "https://example.com", mockId: UUID())
+        let updated = item.withMockID()
+        #expect(updated.mockId == nil)
+    }
+
     @Test("LogItem codable encoding and decoding")
     func testCodable() async throws {
         let responseData = #"{"key":"value"}"#.data(using: .utf8)

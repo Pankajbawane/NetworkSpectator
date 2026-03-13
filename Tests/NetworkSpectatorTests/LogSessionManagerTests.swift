@@ -94,8 +94,8 @@ struct LogSessionManagerTests {
         let storage = makeStorage(mockFS)
         let keys = storage.listKeys()
         #expect(keys.count == 1)
-        // The key should start with the session start time (approximately now)
-        #expect(keys.first?.key.contains("Total: 1") == true)
+        // The key ends with the item count after the last pipe delimiter
+        #expect(keys.first?.key.hasSuffix("|1") == true)
     }
 
     @Test("Debounce coalesces writes via schedulePersist")
@@ -158,7 +158,7 @@ struct LogSessionManagerTests {
         let secondKeys = storage.listKeys()
         #expect(secondKeys.count == 1)
         #expect(secondKeys.first?.key != firstKey)
-        #expect(secondKeys.first?.key.contains("Total: 2") == true)
+        #expect(secondKeys.first?.key.hasSuffix("|2") == true)
     }
 
     @Test("Finalize writes immediately bypassing debounce")
@@ -372,7 +372,7 @@ struct LogSessionManagerTests {
         let keys = storage.listKeys()
         #expect(keys.count == 1)
         // The key should reflect the original start time, not a later one
-        #expect(keys.first?.key.contains("Total: 1") == true)
+        #expect(keys.first?.key.hasSuffix("|1") == true)
     }
 
     @Test("schedulePersist after stopObserving and re-startObserving works")
@@ -392,7 +392,7 @@ struct LogSessionManagerTests {
         let storage = makeStorage(mockFS)
         let keys = storage.listKeys()
         #expect(keys.count == 1)
-        #expect(keys.first?.key.contains("Total: 1") == true)
+        #expect(keys.first?.key.hasSuffix("|1") == true)
     }
 }
 

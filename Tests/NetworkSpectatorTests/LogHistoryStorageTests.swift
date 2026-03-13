@@ -169,16 +169,17 @@ struct LogHistoryStorageTests {
     func testPropertyPreservation() {
         let (storage, _) = makeStorage()
         let key = "test-key"
+        let responseData = "{\"id\":1}".data(using: .utf8)
         let item = LogItem(
             url: "https://api.example.com/data",
             method: "POST",
             headers: ["Authorization": "Bearer token123", "Content-Type": "application/json"],
             requestBody: "{\"name\":\"test\"}",
             statusCode: 201,
-            responseBody: "{\"id\":1}",
             responseHeaders: ["X-Request-Id": "abc-123"],
             mimetype: "application/json",
             textEncodingName: "utf-8",
+            responseRaw: responseData,
             errorDescription: nil,
             errorLocalizedDescription: nil,
             finishTime: Date(),
@@ -197,7 +198,7 @@ struct LogHistoryStorageTests {
             #expect(saved.statusCode == 201)
             #expect(saved.headers["Authorization"] == "Bearer token123")
             #expect(saved.requestBody == "{\"name\":\"test\"}")
-            #expect(saved.responseBody == "{\"id\":1}")
+            #expect(saved.responseRaw == responseData)
             #expect(saved.mimetype == "application/json")
             #expect(saved.responseTime == 1.25)
             #expect(saved.isLoading == false)
