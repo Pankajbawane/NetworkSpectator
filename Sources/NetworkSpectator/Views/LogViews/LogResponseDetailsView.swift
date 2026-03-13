@@ -9,7 +9,7 @@ import SwiftUI
 
 struct LogResponseDetailsView: View {
 
-    let item: LogItem
+    @Binding var item: LogItem
 
     private var isLoading: Bool {
         item.finishTime == nil

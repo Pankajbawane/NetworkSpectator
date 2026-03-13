@@ -15,7 +15,9 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     static let shared = NetworkLogContainer()
     
     /// Items on the MainActor to update on UI layer.
-    @Published private(set) var items: [LogItem] = []
+    @Published var items: [LogItem] = []
+    
+    var indexByID: [UUID: Int] = [:]
     
     /// Task to observe item updates from the store actor.
     private var itemUpdateTask: Task<Void, Never>?
@@ -90,10 +92,11 @@ internal final class NetworkLogContainer: ObservableObject, Sendable {
     
     /// Applies a batch of updates to `items` in a single mutation,
     /// triggering only one `@Published` change notification.
-    private func applyBatch(_ batch: [LogItem]) {
+    private func applyBatch(_ batch: NetworkLogStore.ItemUpdate) {
 
         // Single published mutation per batch
-        items = batch
+        items = batch.items
+        indexByID = batch.indices
     }
     
     private func reset() {
@@ -146,12 +149,10 @@ extension NetworkLogContainer {
 /// LogStore actor for thread-safe management and streaming of network log items.
 internal actor NetworkLogStore {
     
-    /// Represents an individual update to a log item.
-    enum ItemUpdate: Sendable {
-        /// A new item was logged.
-        case append(LogItem)
-        /// An existing item was updated (e.g. response received). Carries the updated item and its original ID.
-        case update(LogItem, UUID)
+    /// Represents an individual update item.
+    struct ItemUpdate: Sendable {
+        let items: [LogItem]
+        let indices: [UUID: Int]
     }
     
     /// The authoritative list of all log items for the current session.
@@ -162,7 +163,7 @@ internal actor NetworkLogStore {
     
     /// Active subscriber continuations keyed by unique subscriber ID.
     /// Each subscriber receives batches of updates independently.
-    private var continuations: [UUID: AsyncStream<[LogItem]>.Continuation] = [:]
+    private var continuations: [UUID: AsyncStream<ItemUpdate>.Continuation] = [:]
     
     /// Buffer of updates that accumulate between batch flushes.
     private var pendingUpdatesCount: Int = 0
@@ -183,9 +184,9 @@ internal actor NetworkLogStore {
 
     /// Creates a new `AsyncStream` subscription that delivers batched updates.
     /// Multiple subscribers are supported; each receives all future batches independently.
-    func batchUpdates() -> AsyncStream<[LogItem]> {
+    func batchUpdates() -> AsyncStream<ItemUpdate> {
         let subscriberID = UUID()
-        let (stream, continuation) = AsyncStream<[LogItem]>.makeStream()
+        let (stream, continuation) = AsyncStream<ItemUpdate>.makeStream()
         
         continuations[subscriberID] = continuation
         
@@ -253,7 +254,8 @@ internal actor NetworkLogStore {
         pendingUpdatesCount = 0
         
         for continuation in continuations.values {
-            continuation.yield(items)
+            let batch = ItemUpdate(items: items, indices: indexByID)
+            continuation.yield(batch)
         }
     }
 

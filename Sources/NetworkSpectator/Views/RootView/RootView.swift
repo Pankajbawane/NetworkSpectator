@@ -12,7 +12,7 @@ struct RootView: View {
     
     var body: some View {
         NavigationStack {
-            RootContentView(logItems: store.items)
+            RootContentView(logItems: $store.items, indexByID: $store.indexByID)
         }
     }
 }

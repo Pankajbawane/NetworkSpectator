@@ -16,16 +16,20 @@ struct RootContentView: View {
     @State private var selectedStatusCodes: Set<String> = []
     @State private var showFilterSheet = false
     @State private var showClearAlert = false
+
+    @Binding var logItems: [LogItem]
+    @Binding var indexByID: [UUID: Int]
     
-    let isHistoricLogs: Bool
-    let logItems: [LogItem]
     let title: String
-    
-    init(logItems: [LogItem] = [],
+    let isHistoricLogs: Bool
+
+    init(logItems: Binding<[LogItem]>,
+         indexByID: Binding<[UUID: Int]>,
          isHistoricLogs: Bool = false,
          title: String = "NetworkSpectator") {
         self.isHistoricLogs = isHistoricLogs
-        self.logItems = logItems
+        self._logItems = logItems
+        self._indexByID = indexByID
         self.title = title
     }
 
@@ -65,7 +69,7 @@ struct RootContentView: View {
     var hasActiveFilters: Bool {
         !selectedMethods.isEmpty || !selectedStatusCodes.isEmpty
     }
-    
+
     var body: some View {
         ZStack {
             if items.isEmpty {
@@ -74,141 +78,25 @@ struct RootContentView: View {
                     searchText: searchText
                 )
             } else {
-                List {
-                    // Filter chips section
-                    if hasActiveFilters {
-                        Section {
-                            FilterChipsView(
-                                selectedMethods: $selectedMethods,
-                                selectedStatusCategories: $selectedStatusCodes
-                            )
-                        }
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                    }
-                    
-                    // Requests list
-                    Section {
-                        ForEach(items) { item in
-                            NavigationLink(value: RootContentRoute.logDetail(item)) {
-                                LogListItemView(item: item)
-                            }
-                            .listRowBackground(rowBackgroundColor(item))
-                        }
-                    } header: {
-                        if !items.isEmpty {
-                            HStack {
-                                Text("\(items.count) Request\(items.count == 1 ? "" : "s")")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.secondary)
-                                Spacer()
-                            }
-                        }
-                    }
-                }
-                #if os(iOS)
-                .listStyle(.insetGrouped)
-                #endif
-                #if os(macOS)
-                .listStyle(.inset)
-                #endif
+                logListView
             }
         }
         #if os(iOS)
         .searchable(text: $searchText,
                     placement: .navigationBarDrawer(displayMode: .automatic),
                     prompt: "Search by URL")
-                #endif
-                #if os(macOS)
+        #endif
+        #if os(macOS)
         .searchable(text: $searchText, placement: .automatic, prompt: "Search by URL")
         #endif
         .navigationDestination(for: RootContentRoute.self) { route in
-            switch route {
-            case .logDetail(let item):
-                LogDetailsContainerView(item: item, isHistoricLogs: isHistoricLogs)
-            case .settings:
-                SettingsView()
-            case .insights:
-                AnalyticsDashboardView(data: logItems)
-            }
+            destinationView(for: route)
         }
         .navigationTitle(title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
-        .toolbar {
-            // Trailing items
-            ToolbarItemGroup(placement: .automatic) {
-                // Filter button
-                Button {
-                    showFilterSheet = true
-                } label: {
-                    ZStack(alignment: .topTrailing) {
-                        Image(systemName: "line.3.horizontal.decrease.circle")
-                        if hasActiveFilters {
-                            Circle()
-                                .fill(Color.blue)
-                                .frame(width: 8, height: 8)
-                                .offset(x: 4, y: -4)
-                        }
-                    }
-                }
-                .accessibilityLabel("Filter requests")
-                .disabled(logItems.isEmpty)
-                
-                if isHistoricLogs {
-                    // Insights button
-                    NavigationLink(value: RootContentRoute.insights) {
-                        Image(systemName: "chart.bar.xaxis.ascending")
-                    }
-                    .accessibilityLabel("Insights")
-                    .disabled(logItems.isEmpty)
-                }
-                
-                // Clear button (live logs only)
-                if !isHistoricLogs {
-                    Button {
-                        showClearAlert = true
-                    } label: {
-                        Image(systemName: "trash")
-                    }
-                    .accessibilityLabel("Clear all requests")
-                    .disabled(logItems.isEmpty)
-                }
-                
-                // Export button
-                Button {
-                    isExporting = true
-                    Task {
-                        do {
-                            let url = try await ExportManager.csv(logItems).exporter.export()
-                            exportItem = ShareExportedItem(data: url)
-                        } catch {
-                            showAlert = true
-                        }
-                        isExporting = false
-                    }
-                } label: {
-                    if isExporting {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(systemName: "square.and.arrow.up")
-                    }
-                }
-                .accessibilityLabel("Export requests")
-                .disabled(isExporting || logItems.isEmpty)
-                
-                if !isHistoricLogs {
-                    // Settings button
-                    NavigationLink(value: RootContentRoute.settings) {
-                        Image(systemName: "gearshape")
-                    }
-                    .accessibilityLabel("Tools")
-                }
-                
-            }
-        }
+        .toolbar { toolbarContent }
         .alert("Export failed", isPresented: $showAlert, actions: {
             Button("Ok") {
                 showAlert = false
@@ -240,7 +128,142 @@ struct RootContentView: View {
             )
         }
     }
-    
+
+    // MARK: - Subviews
+
+    private var logListView: some View {
+        List {
+            // Filter chips section
+            if hasActiveFilters {
+                Section {
+                    FilterChipsView(
+                        selectedMethods: $selectedMethods,
+                        selectedStatusCategories: $selectedStatusCodes
+                    )
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            }
+
+            // Requests list
+            Section {
+                ForEach(items) { item in
+                    NavigationLink(value: RootContentRoute.logDetail(item)) {
+                        LogListItemView(item: item)
+                    }
+                    .listRowBackground(rowBackgroundColor(item))
+                }
+            } header: {
+                if !items.isEmpty {
+                    HStack {
+                        Text("\(items.count) Request\(items.count == 1 ? "" : "s")")
+                            .font(.caption.bold())
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                }
+            }
+        }
+        #if os(iOS)
+        .listStyle(.insetGrouped)
+        #endif
+        #if os(macOS)
+        .listStyle(.inset)
+        #endif
+    }
+
+    @ViewBuilder
+    private func destinationView(for route: RootContentRoute) -> some View {
+        switch route {
+        case .logDetail(let item):
+            if !isHistoricLogs, let index = indexByID[item.id] {
+                LogDetailsContainerView(item: $logItems[index], isHistoricLogs: isHistoricLogs)
+            } else {
+                LogDetailsContainerView(item: .constant(item), isHistoricLogs: isHistoricLogs)
+            }
+        case .settings:
+            SettingsView()
+        case .insights(let data):
+            AnalyticsDashboardView(data: data)
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItemGroup(placement: .automatic) {
+            filterButton
+
+            if isHistoricLogs {
+                NavigationLink(value: RootContentRoute.insights(logItems)) {
+                    Image(systemName: "chart.bar.xaxis.ascending")
+                }
+                .accessibilityLabel("Insights")
+                .disabled(logItems.isEmpty)
+            }
+
+            if !isHistoricLogs {
+                Button {
+                    showClearAlert = true
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .accessibilityLabel("Clear all requests")
+                .disabled(logItems.isEmpty)
+            }
+
+            exportButton
+
+            if !isHistoricLogs {
+                NavigationLink(value: RootContentRoute.settings) {
+                    Image(systemName: "gearshape")
+                }
+                .accessibilityLabel("Tools")
+            }
+        }
+    }
+
+    private var filterButton: some View {
+        Button {
+            showFilterSheet = true
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                if hasActiveFilters {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 8, height: 8)
+                        .offset(x: 4, y: -4)
+                }
+            }
+        }
+        .accessibilityLabel("Filter requests")
+        .disabled(logItems.isEmpty)
+    }
+
+    private var exportButton: some View {
+        Button {
+            isExporting = true
+            Task {
+                do {
+                    let url = try await ExportManager.csv(logItems).exporter.export()
+                    exportItem = ShareExportedItem(data: url)
+                } catch {
+                    showAlert = true
+                }
+                isExporting = false
+            }
+        } label: {
+            if isExporting {
+                ProgressView()
+                    .controlSize(.small)
+            } else {
+                Image(systemName: "square.and.arrow.up")
+            }
+        }
+        .accessibilityLabel("Export requests")
+        .disabled(isExporting || logItems.isEmpty)
+    }
+
     func rowBackgroundColor(_ item: LogItem) -> Color {
         // Priority: Error > Loading > Status code based
         if item.errorDescription != nil {
@@ -250,7 +273,7 @@ struct RootContentView: View {
         if item.isLoading {
             return Color.yellow.opacity(0.1)
         }
-        
+
         return .clear
     }
 }
@@ -260,6 +283,6 @@ extension RootContentView {
     enum RootContentRoute: Hashable {
         case logDetail(LogItem)
         case settings
-        case insights
+        case insights([LogItem])
     }
 }

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LogDetailsContainerView: View {
-    let item: LogItem
+    @Binding var item: LogItem
     let isHistoricLogs: Bool
 
     // Stronger typing for picker selection
@@ -36,8 +36,8 @@ struct LogDetailsContainerView: View {
         var id: String { rawValue }
     }
     
-    init(item: LogItem, isHistoricLogs: Bool = false) {
-        self.item = item
+    init(item: Binding<LogItem>, isHistoricLogs: Bool = false) {
+        self._item = item
         self.isHistoricLogs = isHistoricLogs
     }
 
@@ -185,13 +185,13 @@ struct LogDetailsContainerView: View {
     private func detailsView(for tab: DetailsTab) -> some View {
         switch tab {
         case .basic:
-            LogBasicDetailsView(item: item)
+            LogBasicDetailsView(item: $item)
         case .request:
-            LogRequestDetailsView(item: item)
+            LogRequestDetailsView(item: $item)
         case .headers:
-            LogHeadersDetailsView(item: item)
+            LogHeadersDetailsView(item: $item)
         case .response:
-            LogResponseDetailsView(item: item)
+            LogResponseDetailsView(item: $item)
         }
     }
 

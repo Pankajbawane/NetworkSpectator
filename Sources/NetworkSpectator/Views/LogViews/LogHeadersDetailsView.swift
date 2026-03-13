@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LogHeadersDetailsView: View {
-    let item: LogItem
+    @Binding var item: LogItem
 
     var body: some View {
         ScrollView(.vertical) {

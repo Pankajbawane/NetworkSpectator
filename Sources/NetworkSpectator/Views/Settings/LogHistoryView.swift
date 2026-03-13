@@ -94,8 +94,10 @@ struct LogHistoryView: View {
         }
         .navigationTitle("Log History")
         .navigationDestination(for: LogHistoryRoute.self) { route in
+            let items = storage.retrieve(forKey: route.key)
+            
             RootContentView(
-                logItems: storage.retrieve(forKey: route.key),
+                logItems: Binding.constant(items), indexByID: Binding.constant([:]),
                 isHistoricLogs: true,
                 title: route.title
             )
