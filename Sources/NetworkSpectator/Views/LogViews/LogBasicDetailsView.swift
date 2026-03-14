@@ -10,21 +10,6 @@ import SwiftUI
 struct LogBasicDetailsView: View {
     let item: LogItem
 
-    struct DetailRow: Identifiable {
-        var id: String { title }
-        let title: String
-        let value: String
-        let icon: String?
-        let valueColor: Color?
-
-        init(title: String, value: String, icon: String? = nil, valueColor: Color? = nil) {
-            self.title = title
-            self.value = value
-            self.icon = icon
-            self.valueColor = valueColor
-        }
-    }
-
     private var details: [DetailRow] {
         var rows: [DetailRow] = [
             .init(title: "HTTP Method", value: item.method.uppercased(), icon: "arrow.left.arrow.right"),
@@ -51,25 +36,11 @@ struct LogBasicDetailsView: View {
     }
 
     private var methodColor: Color {
-        switch item.method.uppercased() {
-        case "GET": return .blue
-        case "POST": return .green
-        case "PUT": return .orange
-        case "DELETE": return .red
-        case "PATCH": return .purple
-        default: return .primary
-        }
+        HTTPMethodColor.color(for: item.method)
     }
 
     private var statusCodeColor: Color {
-        let code = item.statusCode
-        switch code {
-        case 200..<300: return .green
-        case 300..<400: return .yellow.opacity(0.3)
-        case 400..<500: return .orange
-        case 500..<600: return .red
-        default: return .gray.opacity(0.2)
-        }
+        StatusCodeColor.color(for: item.statusCode)
     }
 
     private var responseTimeColor: Color {
@@ -95,6 +66,7 @@ struct LogBasicDetailsView: View {
         }
     }
 
+    @ViewBuilder
     private func rowItem(_ row: DetailRow) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
@@ -135,5 +107,22 @@ struct LogBasicDetailsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
+    }
+}
+
+extension LogBasicDetailsView {
+    struct DetailRow: Identifiable {
+        var id: String { title }
+        let title: String
+        let value: String
+        let icon: String?
+        let valueColor: Color?
+        
+        init(title: String, value: String, icon: String? = nil, valueColor: Color? = nil) {
+            self.title = title
+            self.value = value
+            self.icon = icon
+            self.valueColor = valueColor
+        }
     }
 }

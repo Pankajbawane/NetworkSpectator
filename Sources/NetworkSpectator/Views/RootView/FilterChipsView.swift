@@ -56,27 +56,11 @@ struct FilterChipsView: View {
     }
 
     private func methodColor(_ method: String) -> Color {
-        switch method.uppercased() {
-        case "GET": return .blue
-        case "POST": return .indigo
-        case "PUT": return .orange
-        case "PATCH": return .purple
-        case "DELETE": return .red
-        case "HEAD": return .gray
-        case "OPTIONS": return .brown
-        default: return .secondary
-        }
+        HTTPMethodColor.color(for: method)
     }
 
     private func statusCategoryColor(_ category: String) -> Color {
-        switch category {
-        case "100..<200": return .gray
-        case "200..<300": return .green
-        case "300..<400": return .yellow
-        case "400..<500": return .red
-        case "500..<600": return .orange
-        default: return .gray
-        }
+        StatusCodeColor.color(range: category)
     }
 }
 

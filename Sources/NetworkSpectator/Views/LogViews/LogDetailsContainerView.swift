@@ -68,10 +68,11 @@ struct LogDetailsContainerView: View {
             if item.isMocked {
                 HStack {
                     Image(systemName: "info.circle")
-                    Text("Mocked response. Use the Mock button to update or disable.")
-                        .font(.caption)
+                    Text(isHistoricLogs ? "This response was mocked." : "This response is mocked. Tap Mock to edit or disable the rule.")
                     Spacer()
                 }
+                .font(.caption)
+                .foregroundColor(.secondary)
                 .padding(.horizontal)
             }
             Picker("", selection: $selected) {
@@ -129,7 +130,7 @@ struct LogDetailsContainerView: View {
                 if !isHistoricLogs {
                     // CTA to register mock.
                     Button(action: { showAddMockSheet = true }) {
-                        Label("Mock", systemImage: "shuffle")
+                        Label("Mock", systemImage: "network.slash")
                             .font(.caption)
                             .fontWeight(.bold)
                             .padding(7)

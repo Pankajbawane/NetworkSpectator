@@ -151,16 +151,7 @@ struct HTTPMethodBadge: View {
     }
 
     private var methodColor: Color {
-        switch method.uppercased() {
-        case "GET": return .blue
-        case "POST": return .indigo
-        case "PUT": return .orange
-        case "PATCH": return .purple
-        case "DELETE": return .red
-        case "HEAD": return .gray
-        case "OPTIONS": return .brown
-        default: return .secondary
-        }
+        HTTPMethodColor.color(for: method)
     }
 }
 
@@ -193,13 +184,7 @@ struct StatusCodeBadge: View {
     }
 
     private var statusBackgroundColor: Color {
-        switch statusCode {
-        case 200..<300: return .green
-        case 300..<400: return .yellow.opacity(0.3)
-        case 400..<500: return .red
-        case 500..<600: return .orange
-        default: return .gray.opacity(0.2)
-        }
+        StatusCodeColor.color(for: statusCode)
     }
 }
 

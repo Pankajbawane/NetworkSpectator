@@ -36,7 +36,7 @@ struct SettingsView: View {
         .navigationDestination(for: SettingsRoute.self) { route in
             switch route {
             case .insights:
-                AnalyticsDashboardView(data: store.items)
+                AnalyticsDashboardView(items: store.items)
             case .history:
                 LogHistoryView()
             case .mockManagement:
@@ -136,7 +136,7 @@ struct SettingsView: View {
         Section {
             NavigationLink(value: SettingsRoute.history) {
                 HStack(spacing: 12) {
-                    Image(systemName: "arrow.counterclockwise.square.fill")
+                    Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
                         .font(.title2)
                         .foregroundStyle(.mint)
 

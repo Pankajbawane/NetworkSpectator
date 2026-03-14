@@ -133,9 +133,10 @@ struct LogHistoryView: View {
         let totalSize = logs.reduce(0) { $0 + $1.size }
         let totalSizeFormatted = formatBytes(totalSize)
         let runningKey = await LogHistoryManager.shared.currentSessionKey()
-        let timestamp = (runningKey ?? "").split(separator: " - ").first ?? "-"
+        let timestamp = (runningKey ?? "").split(separator: "|").first ?? "-"
         let firstTimestamp = logs.first?.startTimestamp ?? ""
         if !logs.isEmpty, timestamp == firstTimestamp {
+            // Current session logs will always be on top.
             logs[0].isCurrentSession = true
         }
         
@@ -146,39 +147,18 @@ struct LogHistoryView: View {
         }
     }
     
-    @ViewBuilder
     var listView: some View {
         ForEach(logs, id: \.key) { log in
-            NavigationLink(value: LogHistoryRoute(key: log.key, title: log.shortTitle)) {
-                VStack(alignment: .leading, spacing: 5) {
-                    
-                    if log.isCurrentSession {
-                        HStack {
-                            ProgressView()
-                                .frame(width: 20, height: 20)
-                            Text("Current Session")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
-                    } else {
-                        Label(log.formattedTitle, systemImage: "clock")
-                            .font(.callout)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.primary)
+            Group {
+                if log.isCurrentSession {
+                    listItemRow(log)
+                } else {
+                    NavigationLink(value: LogHistoryRoute(key: log.key,
+                                                          title: log.shortTitle,
+                                                          isLiveSession: log.isCurrentSession)) {
+                        listItemRow(log)
                     }
-                    
-                    HStack(spacing: 8) {
-                        Label(log.count, systemImage: "square.stack.3d.up.fill")
-                        
-                        Label("Size: " + formatBytes(log.size), systemImage: "arrow.down.circle")
-                        
-                        Spacer()
-                    }
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
                 }
-                .padding(.vertical, 5)
-                .contentShape(RoundedRectangle(cornerRadius: 8))
             }
             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                 if !log.isCurrentSession {
@@ -197,6 +177,39 @@ struct LogHistoryView: View {
         #endif
     }
     
+    @ViewBuilder
+    private func listItemRow(_ log: HistoryItem) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            
+            if log.isCurrentSession {
+                HStack {
+                    ProgressView()
+                        .controlSize(.small)
+                    
+                    Text(log.shortTitle + " (Current Session)")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Label(log.formattedTitle, systemImage: "clock")
+                    .font(.callout)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.primary)
+            }
+            
+            HStack(spacing: 8) {
+                Label(log.count, systemImage: "square.stack.3d.up.fill")
+                
+                Label("Size: " + formatBytes(log.size), systemImage: "arrow.down.circle")
+                
+                Spacer()
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 5)
+    }
+    
     private func formatBytes(_ byteCount: Int) -> String {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .binary
@@ -211,5 +224,6 @@ extension LogHistoryView {
     struct LogHistoryRoute: Hashable {
         let key: String
         let title: String
+        let isLiveSession: Bool
     }
 }

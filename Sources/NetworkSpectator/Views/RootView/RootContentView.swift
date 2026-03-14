@@ -176,7 +176,7 @@ struct RootContentView: View {
         case .settings:
             SettingsView()
         case .insights(let data):
-            AnalyticsDashboardView(data: data)
+            AnalyticsDashboardView(items: data)
         }
     }
 
