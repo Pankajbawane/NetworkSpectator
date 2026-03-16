@@ -100,9 +100,6 @@ struct RequestBarChartView: View {
 
         let times = logs.map(\.startTime)
         
-        //guard let minTime = times.min(), let maxTime = times.max() else { return nil }
-        //let span = maxTime.timeIntervalSince(minTime)
-        
         let granularity = TimeGranularity.second
 
         var counts: [Date: Int] = [:]
