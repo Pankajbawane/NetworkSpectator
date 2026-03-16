@@ -98,7 +98,7 @@ struct LogResponseDetailsView: View {
 
     private var byteCountFormatted: String {
         let bytes: Int
-        if isResponseImage, let data = item.responseRaw {
+        if let data = item.responseRaw {
             bytes = data.count
         } else {
             bytes = item.responseBody.utf8.count

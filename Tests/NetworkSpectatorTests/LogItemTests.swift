@@ -75,7 +75,7 @@ struct LogItemTests {
     @Test("LogItem status category unknown")
     func testStatusCategoryUnknown() async throws {
         let item = LogItem(url: "https://example.com", statusCode: 0)
-        #expect(item.statusCategory == "Unknown")
+        #expect(item.statusCategory == "NA")
     }
 
     @Test("LogItem status code range informational")
@@ -111,7 +111,7 @@ struct LogItemTests {
     @Test("LogItem status code range unknown")
     func testStatusCodeRangeUnknown() async throws {
         let item = LogItem(url: "https://example.com", statusCode: 0)
-        #expect(item.statusCodeRange == "Unknown")
+        #expect(item.statusCodeRange == "NA")
     }
 
     @Test("LogItem is error with 4xx status")
@@ -222,8 +222,9 @@ struct LogItemTests {
             url: "https://example.com/api",
             method: "POST",
             headers: ["Content-Type": "application/json"],
-            requestBody: "{\"key\":\"val\"}"
+            requestBodyRaw: "{\"key\":\"val\"}".data(using: .utf8)
         )
+        
 
         let updated = item.withMockID(mockId)
 
@@ -312,13 +313,13 @@ struct LogItemTests {
     @Test("LogItem status category Other for 600+")
     func testStatusCategoryOther() async throws {
         let item = LogItem(url: "https://example.com", statusCode: 600)
-        #expect(item.statusCategory == "Other")
+        #expect(item.statusCategory == "NA")
     }
 
     @Test("LogItem status code range Other for 600+")
     func testStatusCodeRangeOther() async throws {
         let item = LogItem(url: "https://example.com", statusCode: 600)
-        #expect(item.statusCodeRange == "Other")
+        #expect(item.statusCodeRange == "NA")
     }
 
     // MARK: - Pretty Printed Headers

@@ -91,7 +91,7 @@ struct RequestBarChartView: View {
                 }
             }
 
-            return .minute
+            return .fiveSeconds
         }
     }
 
@@ -99,10 +99,8 @@ struct RequestBarChartView: View {
         guard !logs.isEmpty else { return nil }
 
         let times = logs.map(\.startTime)
-        guard let minTime = times.min(), let maxTime = times.max() else { return nil }
-
-        let span = maxTime.timeIntervalSince(minTime)
-        let granularity = TimeGranularity.choose(for: max(span, 1), targetBuckets: 20)
+        
+        let granularity = TimeGranularity.second
 
         var counts: [Date: Int] = [:]
         for timestamp in times {
@@ -137,11 +135,13 @@ struct RequestBarChartView: View {
                     }
                     return dates
                 }()
+                
                 let labelledDates = Set(tickDates.enumerated().compactMap { index, date in
-                    index % 2 == 0 ? date : nil
+                    let offset: Int = max(tickDates.count / 15, 1)
+                    return index % offset == 0 ? date : nil
                 })
 
-                Chart(buckets) { bucket in
+            Chart(buckets) { bucket in
                     LineMark(
                         x: .value("Time", bucket.id),
                         y: .value("Requests", bucket.count)
@@ -174,9 +174,11 @@ struct RequestBarChartView: View {
                 .chartYScale(domain: yDomain)
                 .chartXAxis {
                     AxisMarks(values: tickDates) { value in
-                        AxisGridLine()
-                        AxisTick()
-                        if let date = value.as(Date.self), labelledDates.contains(date) {
+                        if let date = value.as(Date.self), domain.lowerBound == date {
+                            AxisValueLabel(collisionResolution: .greedy)
+                            AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                        } else if let date = value.as(Date.self), labelledDates.contains(date) {
+                            AxisGridLine()
                             AxisValueLabel(collisionResolution: .greedy)
                         }
                     }

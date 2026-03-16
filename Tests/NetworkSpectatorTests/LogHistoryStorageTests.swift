@@ -61,7 +61,7 @@ struct LogHistoryStorageTests {
             url: url,
             method: "GET",
             headers: ["Content-Type": "application/json"],
-            requestBody: "",
+            requestBodyRaw: nil,
             statusCode: statusCode,
             responseBody: "{\"ok\":true}",
             responseHeaders: ["Content-Type": "application/json"],
@@ -174,7 +174,7 @@ struct LogHistoryStorageTests {
             url: "https://api.example.com/data",
             method: "POST",
             headers: ["Authorization": "Bearer token123", "Content-Type": "application/json"],
-            requestBody: "{\"name\":\"test\"}",
+            requestBodyRaw: "{\"name\":\"test\"}".data(using: .utf8),
             statusCode: 201,
             responseHeaders: ["X-Request-Id": "abc-123"],
             mimetype: "application/json",
@@ -197,7 +197,7 @@ struct LogHistoryStorageTests {
             #expect(saved.method == "POST")
             #expect(saved.statusCode == 201)
             #expect(saved.headers["Authorization"] == "Bearer token123")
-            #expect(saved.requestBody == "{\"name\":\"test\"}")
+            #expect(saved.requestBody == "{\n  \"name\" : \"test\"\n}")
             #expect(saved.responseRaw == responseData)
             #expect(saved.mimetype == "application/json")
             #expect(saved.responseTime == 1.25)

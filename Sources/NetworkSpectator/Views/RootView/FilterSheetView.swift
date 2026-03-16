@@ -13,7 +13,7 @@ struct FilterSheetView: View {
     @Binding var selectedStatusCodeCategory: Set<String>
     
     let availableMethods: [String]
-    private let statusCodeCategory = ["100..<200", "200..<300", "300..<400", "400..<500", "500..<600", "Unknown"]
+    private let statusCodeCategory = ["100..<200", "200..<300", "300..<400", "400..<500", "500..<600", "NA"]
 
     var body: some View {
         NavigationStack {

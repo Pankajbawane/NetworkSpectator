@@ -72,9 +72,19 @@ struct LogListItemView: View {
                         .labelStyle(CompactLabelStyle(spacing: 2))
                     }
 
+                    if item.requestBodyRaw != nil {
+                        Label {
+                            Text(formatBytes(item.requestBodyRaw))
+                        } icon: {
+                            Image(systemName: "arrow.up.circle")
+                        }
+                        .font(.caption2)
+                        .labelStyle(CompactLabelStyle(spacing: 2))
+                    }
+                    
                     if !item.isLoading {
                         Label {
-                            Text(formatBytes())
+                            Text(formatBytes(item.responseRaw))
                         } icon: {
                             Image(systemName: "arrow.down.circle")
                         }
@@ -109,8 +119,8 @@ struct LogListItemView: View {
 
     // MARK: - Helper Methods
 
-    private func formatBytes() -> String {
-        let byteCount: Int = item.responseBody.count
+    private func formatBytes(_ data: Data?) -> String {
+        let byteCount: Int = data?.count ?? 0
         let formatter = ByteCountFormatter()
         formatter.countStyle = .binary
         formatter.allowedUnits = [.useKB, .useMB, .useBytes]

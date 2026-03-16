@@ -60,6 +60,8 @@ struct SkipLoggingManagementView: View {
         .sheet(item: $editingSkipItem) { item in
             AddRuleItemView(isMock: false, title: "Edit Skip Rule", item: item) {
                 loadData()
+            }.onDisappear {
+                loadData()
             }
         }
     }

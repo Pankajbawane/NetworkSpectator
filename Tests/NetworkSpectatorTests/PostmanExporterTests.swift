@@ -67,10 +67,12 @@ struct PostmanExporterTests {
 
     @Test("Postman export with request body")
     func testPostmanExportWithBody() async throws {
+        let requestJson = ["name": "John Doe"]
+        let requestData = try JSONSerialization.data(withJSONObject: requestJson, options: [])
         let item = LogItem(
             url: "https://api.example.com/users",
             method: "POST",
-            requestBody: #"{"name": "John Doe"}"#
+            requestBodyRaw: requestData
         )
         let exporter = PostmanExporter(item: item)
 

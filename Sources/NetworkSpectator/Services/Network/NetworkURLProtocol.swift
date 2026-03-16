@@ -16,7 +16,9 @@ final internal class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     private static let taskCacheKey = "NETWORKSPECTATOR_TRACK_CACHED_TASK_KEY"
     
     override init(request: URLRequest, cachedResponse: CachedURLResponse?, client: (any URLProtocolClient)?) {
-        protectedLog = OSAllocatedUnfairLock(initialState: LogItem.fromRequest(request))
+        // Capture the HTTP body if it's provided
+        let urlRequest = Self.captureHTTPBodyIfNeeded(request)
+        protectedLog = OSAllocatedUnfairLock(initialState: LogItem.fromRequest(urlRequest))
         super.init(request: request, cachedResponse: cachedResponse, client: client)
         
     }
@@ -52,12 +54,9 @@ final internal class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         }
         
         URLProtocol.setProperty(true, forKey: Self.taskCacheKey, in: thisRequest)
-
-        // Capture the HTTP body if it's provided as a stream so our logger can see it
-        captureHTTPBodyIfNeeded(on: thisRequest)
         
         // If the request is mocked.
-        let mock = MockServer.shared.responseIfMocked(thisRequest as URLRequest)
+        let mock = MockServer.shared.responseIfMocked(request)
 
         // Log the request including headers and body (if any)
         let requestLog = protectedLog.withLock { log in
@@ -110,14 +109,29 @@ final internal class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
 
         sessionTask?.resume()
     }
-
-    private func captureHTTPBodyIfNeeded(on request: NSMutableURLRequest) {
+    
+    override func stopLoading() {
+        let cancelledLog: LogItem? = protectedLog.withLock { log in
+            guard log.finishTime == nil else { return nil }
+            return log.withResponse(response: nil, data: nil, error: URLError(.cancelled))
+        }
+        if let cancelledLog {
+            logging(cancelledLog)
+        }
+        sessionTask?.cancel()
+        sessionTask = nil
+        mockTask?.cancel()
+        mockTask = nil
+    }
+    
+    nonisolated private static func captureHTTPBodyIfNeeded(_ urlRequest: URLRequest) -> URLRequest {
+        var request = urlRequest
         if let body = request.httpBody, !body.isEmpty {
-            return
+            return urlRequest
         }
 
         guard let stream = request.httpBodyStream else {
-            return
+            return urlRequest
         }
 
         let data = readData(from: stream)
@@ -127,9 +141,10 @@ final internal class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
 
         // Set httpBody so our logger can read it easily
         request.httpBody = data
+        return request
     }
 
-    private func readData(from stream: InputStream) -> Data {
+    nonisolated private static func readData(from stream: InputStream) -> Data {
         stream.open()
         defer { stream.close() }
 
@@ -147,20 +162,6 @@ final internal class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         }
 
         return data
-    }
-
-    override func stopLoading() {
-        let cancelledLog: LogItem? = protectedLog.withLock { log in
-            guard log.finishTime == nil else { return nil }
-            return log.withResponse(response: nil, data: nil, error: URLError(.cancelled))
-        }
-        if let cancelledLog {
-            logging(cancelledLog)
-        }
-        sessionTask?.cancel()
-        sessionTask = nil
-        mockTask?.cancel()
-        mockTask = nil
     }
     
     private func logging(_ item: LogItem) {

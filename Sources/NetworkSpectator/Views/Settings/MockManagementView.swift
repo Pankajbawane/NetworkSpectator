@@ -61,6 +61,9 @@ struct MockManagementView: View {
             AddRuleItemView(isMock: true, title: "Edit Mock", item: item) {
                 loadData()
             }
+            .onDisappear {
+                loadData()
+            }
         }
     }
 

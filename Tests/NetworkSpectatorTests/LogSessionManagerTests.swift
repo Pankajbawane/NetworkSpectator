@@ -49,7 +49,7 @@ struct LogSessionManagerTests {
             url: url,
             method: "GET",
             headers: ["Content-Type": "application/json"],
-            requestBody: "",
+            requestBodyRaw: nil,
             statusCode: statusCode,
             responseBody: isLoading ? "" : "{\"ok\":true}",
             responseHeaders: isLoading ? [:] : ["Content-Type": "application/json"],

@@ -219,10 +219,6 @@ struct AnalyticsDashboardView: View {
                 RequestBarChartView(logs: items)
             }
 
-            sectionContainer(title: "Status Code Distribution", icon: "checkmark.circle.fill") {
-                StatusCodeChartView(data: data.statusCodes)
-            }
-
             sectionContainer(title: "Top Hosts", icon: "server.rack") {
                 breakdownList(
                     items: Array(data.hosts.sorted { $0.count > $1.count }.prefix(5)),

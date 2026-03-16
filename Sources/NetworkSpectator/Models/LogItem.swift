@@ -18,7 +18,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
     // Request
     let method: String
     let headers: [String: String]
-    let requestBody: String
+    let requestBodyRaw: Data?
 
     // Response
     let statusCode: Int
@@ -52,6 +52,10 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         URLComponents(string: url)?.scheme
     }
     
+    var requestBody: String {
+       Self.prettyPrintedBody(requestBodyRaw)
+   }
+    
     var requestHeadersPrettyPrinted: String {
         Self.prettyPrintedHeaders(headers)
     }
@@ -73,7 +77,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         case 300..<400: return "Redirection"
         case 400..<500: return "Client Error"
         case 500..<600: return "Server Error"
-        default: return statusCode == 0 ? "Unknown" : "Other"
+        default: return "NA"
         }
     }
     
@@ -84,7 +88,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         case 300..<400: return "300..<400"
         case 400..<500: return "400..<500"
         case 500..<600: return "500..<600"
-        default: return statusCode == 0 ? "Unknown" : "Other"
+        default: return "NA"
         }
     }
 
@@ -97,7 +101,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         url: String,
         method: String = "",
         headers: [String: String] = [:],
-        requestBody: String = "",
+        requestBodyRaw: Data? = nil,
         statusCode: Int = 0,
         responseBody: String = "",
         responseHeaders: [String: String] = [:],
@@ -116,7 +120,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         self.url = url
         self.method = method
         self.headers = headers
-        self.requestBody = requestBody
+        self.requestBodyRaw = requestBodyRaw
         self.statusCode = statusCode
         self.responseHeaders = responseHeaders
         self.mimetype = mimetype
@@ -138,8 +142,8 @@ extension LogItem {
         let urlString = request.url?.absoluteString ?? ""
         let method = request.httpMethod ?? ""
         let headers = request.allHTTPHeaderFields ?? [:]
-        let body = prettyPrintedBody(request.httpBody)
-        return LogItem(url: urlString, method: method, headers: headers, requestBody: body, mockId: mockId)
+        let body = request.httpBody
+        return LogItem(url: urlString, method: method, headers: headers, requestBodyRaw: body, mockId: mockId)
     }
     
     func withMockID(_ mockId: UUID? = nil) -> LogItem {
@@ -148,7 +152,7 @@ extension LogItem {
                        url: url,
                        method: method,
                        headers: headers,
-                       requestBody: requestBody,
+                       requestBodyRaw: requestBodyRaw,
                        mockId: mockId)
     }
 
@@ -180,7 +184,7 @@ extension LogItem {
             url: url,
             method: method,
             headers: headers,
-            requestBody: requestBody,
+            requestBodyRaw: requestBodyRaw,
             statusCode: statusCode,
             responseBody: responseBody,
             responseHeaders: responseHeaders,

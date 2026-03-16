@@ -14,10 +14,10 @@ struct StatusCodeChartView: View {
     var body: some View {
         Chart(data) {
             BarMark(
-                x: .value("Status Code", $0.stringValue == "0" ? "Unknown" : $0.stringValue),
+                x: .value("Status Code", $0.stringValue == "0" ? "NA" : $0.stringValue),
                 y: .value("Count", $0.count)
             )
-            .foregroundStyle(by: .value("Status Code", $0.stringValue == "0" ? "Unknown" : $0.stringValue))
+            .foregroundStyle(by: .value("Status Code", $0.stringValue == "0" ? "NA" : $0.stringValue))
         }
         .chartYAxis {
             AxisMarks(position: .leading)

@@ -12,11 +12,15 @@ struct LogRequestDetailsView: View {
     let item: LogItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if item.requestBody.isEmpty {
-                emptyStateView()
-            } else {
-                ScrollView(.vertical) {
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 12) {
+                if item.requestBody.isEmpty {
+                    emptyState(icon: "doc.text",
+                               title: "No Request Body",
+                               message: "This request doesn't contain a body")
+                } else {
+                    responseMetadata()
+                    
                     Text(item.requestBody)
                         .font(.system(.caption, design: .monospaced))
                         .textSelection(.enabled)
@@ -26,36 +30,46 @@ struct LogRequestDetailsView: View {
                         .cornerRadius(8)
                         .contextMenu {
                             Button(action: {
-                                #if canImport(UIKit)
+                            #if canImport(UIKit)
                                 UIPasteboard.general.string = item.requestBody
-                                #elseif canImport(AppKit)
+                            #elseif canImport(AppKit)
                                 NSPasteboard.general.setString(item.requestBody, forType: .string)
-                                #endif
+                            #endif
                             }) {
                                 Label("Copy", systemImage: "doc.on.doc")
                             }
                         }
-                        .padding(.horizontal)
                 }
-            }
+            }.padding(.horizontal)
         }
     }
-
+    
     @ViewBuilder
-    private func emptyStateView() -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: "doc.text")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary.opacity(0.5))
-            Text("No Request Body")
-                .font(.headline)
-                .foregroundColor(.secondary)
-            Text("This request doesn't contain a body")
+    private func responseMetadata() -> some View {
+        HStack(spacing: 12) {
+            Label("json", systemImage: "doc.text")
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color(.systemGray).opacity(0.15))
+                .cornerRadius(8)
+            
+            Spacer()
+            
+            Text("\(byteCountFormatted)")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+            
+            copyable(value: item.requestBody)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+    }
+    
+    private var byteCountFormatted: String {
+        let bytes: Int = item.requestBodyRaw?.count ?? 0
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useBytes, .useKB, .useMB]
+        formatter.countStyle = .binary
+        return formatter.string(fromByteCount: Int64(bytes))
     }
 }
