@@ -7,7 +7,7 @@
 
 import Foundation
 
-internal extension URLSessionConfiguration {
+extension URLSessionConfiguration {
     
     static func enableNetworkMonitoring() {
         let defaultSelector = #selector(getter: URLSessionConfiguration.default)

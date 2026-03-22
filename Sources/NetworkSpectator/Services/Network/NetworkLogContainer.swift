@@ -10,12 +10,12 @@ import SwiftUI
 /// Manages network log updates and publishes on MainActor.
 /// Communicates with UI layer for updates.
 @MainActor
-internal final class NetworkLogContainer: ObservableObject, Sendable {
+final class NetworkLogContainer: ObservableObject, Sendable {
     /// Singleton.
     static let shared = NetworkLogContainer()
     
     /// Items on the MainActor to update on UI layer.
-    @Published var items: [LogItem] = []
+    @Published private(set) var items: [LogItem] = []
     
     var indexByID: [UUID: Int] = [:]
     

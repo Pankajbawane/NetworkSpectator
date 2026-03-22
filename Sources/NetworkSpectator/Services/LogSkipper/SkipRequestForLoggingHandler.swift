@@ -9,7 +9,7 @@ import Foundation
 
 final class SkipRequestForLoggingHandler: @unchecked Sendable {
 
-    internal static let shared: SkipRequestForLoggingHandler = .init()
+    static let shared: SkipRequestForLoggingHandler = .init()
 
     var skipRequests: Set<SkipRequestForLogging> = []
     private let storage: RuleStorage<SkipRequestForLogging>

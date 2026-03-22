@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 struct AddRuleItem: Identifiable {
     typealias Rule = AddRuleItemView.Rule
     

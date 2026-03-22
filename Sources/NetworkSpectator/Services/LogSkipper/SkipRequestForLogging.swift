@@ -13,7 +13,9 @@ public struct SkipRequestForLogging: Identifiable, Hashable, Codable {
     let rule: MatchRule
     let saveLocally: Bool
 
-    public init(rule: MatchRule, id: UUID = UUID(), saveLocally: Bool = false) {
+    public init(rule: MatchRule,
+                id: UUID = UUID(),
+                saveLocally: Bool = false) {
         self.rule = rule
         self.id = id
         self.saveLocally = saveLocally

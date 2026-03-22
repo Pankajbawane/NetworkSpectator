@@ -22,9 +22,7 @@ protocol Storeable {
     @discardableResult func synchronize() -> Bool
 }
 
-extension UserDefaults: Storeable {
-    
-}
+extension UserDefaults: Storeable { }
 
 /// Simple storage manager for persisting rules to UserDefaults
 struct RuleStorage<T: Codable> {

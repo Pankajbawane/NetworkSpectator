@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-final internal class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
+final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     
     private var sessionTask: URLSessionDataTask?
     private var mockTask: Task<Void, Never>?
