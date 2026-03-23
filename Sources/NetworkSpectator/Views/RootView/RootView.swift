@@ -13,6 +13,16 @@ struct RootView: View {
     var body: some View {
         NavigationStack {
             RootContentView(logItems: store.items)
+                .navigationDestination(for: RootContentView.RootContentRoute.self) { route in
+                    switch route {
+                    case .logDetail(let item, let isHistoric):
+                        LogDetailsContainerView(initialItem: item, isHistoricLogs: isHistoric)
+                    case .settings:
+                        SettingsView()
+                    case .insights(let data):
+                        AnalyticsDashboardView(items: data)
+                    }
+                }
         }
     }
 }

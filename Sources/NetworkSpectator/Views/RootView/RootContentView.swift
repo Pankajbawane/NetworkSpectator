@@ -85,9 +85,6 @@ struct RootContentView: View {
         #if os(macOS)
         .searchable(text: $searchText, placement: .automatic, prompt: "Search by URL")
         #endif
-        .navigationDestination(for: RootContentRoute.self) { route in
-            destinationView(for: route)
-        }
         .navigationTitle(title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -166,18 +163,6 @@ struct RootContentView: View {
         #if os(macOS)
         .listStyle(.inset)
         #endif
-    }
-
-    @ViewBuilder
-    private func destinationView(for route: RootContentRoute) -> some View {
-        switch route {
-        case .logDetail(let item, let isHistoric):
-            LogDetailsContainerView(initialItem: item, isHistoricLogs: isHistoric)
-        case .settings:
-            SettingsView()
-        case .insights(let data):
-            AnalyticsDashboardView(items: data)
-        }
     }
 
     @ToolbarContentBuilder
