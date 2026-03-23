@@ -22,7 +22,7 @@ git remote add upstream https://github.com/Pankajbawane/NetworkSpectator.git
 ```
 
 ### 3. Create a Topic Branch
-- Always create a new branch for your work: 
+- Always create a new branch from ```develop``` for your work: 
 ```
 git checkout -b feature/your-feature-name
 ```
@@ -46,7 +46,7 @@ git push origin feature/your-feature-name
 ```
 
 ### 6. Submit a Pull Request
-- Navigate to the original NetworkSpectator repository on GitHub and click Compare & pull request.
+- Navigate to the original NetworkSpectator repository on GitHub and open a pull request against the ```develop``` branch.
 - Describe your changes clearly in the PR description and link to any related issues.
 - For implementing a feature, prefix the title with ```Feature - ``` e.g. Feature - Export Logs in CSV.
 - For bug fixes, prefix the title with ```Bugfix```
