@@ -68,7 +68,7 @@ struct SkipLoggingManagementView: View {
 
     private func skipLoggingItemRow(_ item: SkipRequestForLogging) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: "minus.circle.fill")
+            Image(systemName: "checkmark.circle.fill")
                 .font(.title3)
                 .foregroundStyle(.orange)
 

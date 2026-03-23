@@ -29,12 +29,13 @@ struct LogHistoryView: View {
             Section {
                 Toggle(isOn: $historyToggle) {
                     HStack {
+                        Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
                         Text(historyToggle ? "History is enabled" : "Enable history")
-                            .font(.body)
-                            .fontWeight(.bold)
-                            .foregroundStyle(historyToggle ? .green : .primary)
                         Spacer()
                     }
+                    .font(.body)
+                    .fontWeight(.bold)
+                    .foregroundStyle(historyToggle ? .green : .primary)
                 }
                 #if os(macOS)
                 .toggleStyle(SwitchToggleStyle())
@@ -72,24 +73,23 @@ struct LogHistoryView: View {
                 if !logs.isEmpty {
                     HStack {
                         Spacer()
-                        Text("Swipe right to left to delete")
+                        Text("Swipe left to delete")
                             .font(.footnote)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
         }
         .toolbar {
-            if !logs.isEmpty {
-                ToolbarItem {
-                    Button("Delete all") {
-                        showDeleteAllAlert.toggle()
-                    }
-                    .tint(.red)
-                    .foregroundStyle(.red)
-                    .padding(.horizontal, 5)
-                    .fontWeight(.semibold)
+            ToolbarItem {
+                Button("Delete all", systemImage: logs.isEmpty ? "trash" : "trash.fill") {
+                    showDeleteAllAlert.toggle()
                 }
+                .disabled(logs.isEmpty)
+                .tint(.red)
+                .foregroundStyle(.red)
+                .padding(.horizontal, 5)
+                .fontWeight(.semibold)
             }
         }
         .navigationTitle("Log History")
