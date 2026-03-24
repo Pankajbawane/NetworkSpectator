@@ -41,17 +41,18 @@ struct LogHistoryView: View {
                 .toggleStyle(SwitchToggleStyle())
                 #endif
                 if !logs.isEmpty {
-                    HStack {
-                        Text("Items: \(logs.count)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .monospaced(true)
+                    HStack(spacing: 3) {
+                        Text("Sessions:")
+                            .fontWeight(.bold)
+                        Text("\(logs.count)")
                         
-                        Text("Size: \(totalSize)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .monospaced(true)
+                        Text("  Size:")
+                            .fontWeight(.bold)
+                        Text("\(totalSize)")
                     }
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .monospaced(true)
                 }
             }
             

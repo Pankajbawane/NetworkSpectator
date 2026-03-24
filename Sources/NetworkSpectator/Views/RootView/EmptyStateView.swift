@@ -66,16 +66,6 @@ struct EmptyStateView: View {
                     enableLoggingButton
                 }
             }
-
-            if viewState == .search && !searchText.isEmpty {
-                Button {
-                    // This will be handled by parent view clearing search
-                } label: {
-                    Label("Clear Search", systemImage: "xmark.circle.fill")
-                        .font(.callout)
-                }
-                .buttonStyle(.bordered)
-            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white.opacity(viewState == .disabledLogging ? 0.15 : 0.3))
