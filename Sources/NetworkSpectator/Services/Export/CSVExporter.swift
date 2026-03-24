@@ -72,16 +72,16 @@ struct CSVExporter: FileExportable {
     }
 
     private func escapeCSV(_ value: String) -> String {
-        // Normalize newlines to spaces so they don't confuse Excel's row parser
+        // Normalize any \r or \r\n to plain \n so embedded newlines are consistent.
+        // Row endings use \r\n (CRLF), so plain \n inside a quoted field is unambiguous.
         let normalized = value
-            .replacingOccurrences(of: "\r\n", with: " ")
-            .replacingOccurrences(of: "\n", with: " ")
-            .replacingOccurrences(of: "\r", with: " ")
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
 
         var escaped = normalized.replacingOccurrences(of: "\"", with: "\"\"")
 
-        // Wrap in quotes if contains: comma or quote
-        if escaped.contains(",") || escaped.contains("\"") {
+        // Wrap in quotes if contains: comma, quote, or newline
+        if escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n") {
             escaped = "\"\(escaped)\""
         }
 
