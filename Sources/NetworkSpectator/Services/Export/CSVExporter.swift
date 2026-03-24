@@ -10,9 +10,10 @@ import Foundation
 struct CSVExporter: FileExportable {
     let headerItems: [String] = [
         "HTTP Method", "Status Code", "URL",
-        "Start time", "End time", "Response Time", "Mime Type", "Text Encoding",
-        "Request Headers", "Response Headers", "Request Payload", "Response",
-        "Error Localized Description"
+        "Start time", "End time", "Response Time",
+        "Mime Type", "Text Encoding", "Request Headers",
+        "Response Headers", "Request Payload", "Response",
+        "Error"
     ]
     let items: [LogItem]
     let fileExtension: String = "csv"
@@ -26,12 +27,15 @@ struct CSVExporter: FileExportable {
 
     func export() async throws -> URL {
         let csv = generateCSV()
-        return try await save(content: csv)
+        // Prepend UTF-8 BOM so MS Excel correctly interprets the encoding
+        var data = Data([0xEF, 0xBB, 0xBF])
+        data.append(Data(csv.utf8))
+        return try await save(content: data)
     }
 
     private func generateCSV() -> String {
         // Build CSV header with proper escaping
-        let header = headerItems.map { escapeCSV($0) }.joined(separator: ",") + "\n"
+        let header = headerItems.map { escapeCSV($0) }.joined(separator: ",")
 
         // Pre-allocate array for better performance
         var rows: [String] = [header]
@@ -62,15 +66,22 @@ struct CSVExporter: FileExportable {
             rows.append(row)
         }
 
-        return rows.joined(separator: "\n")
+        // Use CRLF line endings for MS Excel compatibility
+        let crlf = "\r\n"
+        return rows.joined(separator: crlf)
     }
 
     private func escapeCSV(_ value: String) -> String {
-        var escaped = value.replacingOccurrences(of: "\"", with: "\"\"")
+        // Normalize newlines to spaces so they don't confuse Excel's row parser
+        let normalized = value
+            .replacingOccurrences(of: "\r\n", with: " ")
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\r", with: " ")
 
-        // Wrap in quotes if contains: comma, quote, newline, or carriage return
-        if escaped.contains(",") || escaped.contains("\"") ||
-           escaped.contains("\n") || escaped.contains("\r") {
+        var escaped = normalized.replacingOccurrences(of: "\"", with: "\"\"")
+
+        // Wrap in quotes if contains: comma or quote
+        if escaped.contains(",") || escaped.contains("\"") {
             escaped = "\"\(escaped)\""
         }
 
