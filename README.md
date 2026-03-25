@@ -1,4 +1,4 @@
-# NetworkSpectator: Monitor/Intercept HTTP Traffic on iOS and macOS
+# NetworkSpectator: Monitor and Inspect HTTP Traffic on iOS and macOS apps
 
 ![Swift 6.0+](https://img.shields.io/badge/Swift-6.0%2B-orange?logo=swift)
 ![Platforms](https://img.shields.io/badge/Platforms-iOS%2016.0%2B%20%7C%20macOS%2013.0%2B-blue)
@@ -6,7 +6,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/pankajbawane/NetworkSpectator/blob/main/LICENSE)
 [![Build](https://github.com/Pankajbawane/NetworkSpectator/actions/workflows/ci.yml/badge.svg)](https://github.com/Pankajbawane/NetworkSpectator/actions/workflows/ci.yml)
 
-NetworkSpectator is a Swift framework for monitoring and inspecting your app's HTTP traffic during development and testing. NetworkSpectator captures requests and responses, provides a clean UI for browsing and mocking them, and allows you to export logs for sharing.
+NetworkSpectator is a Swift network debugging library that intercepts, inspects, and logs HTTP/HTTPS request and response in your iOS or macOS app in real time.
+Browse captured API traffic in a native SwiftUI interface, export logs and create mock API responses programmatically or through a built-in UI. Designed for developers debugging network calls during development and QA teams validating app behavior without backend dependencies or developer intervention.
 
 ## Features
 
