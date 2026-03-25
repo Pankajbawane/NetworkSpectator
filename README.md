@@ -7,7 +7,8 @@
 [![Build](https://github.com/Pankajbawane/NetworkSpectator/actions/workflows/ci.yml/badge.svg)](https://github.com/Pankajbawane/NetworkSpectator/actions/workflows/ci.yml)
 
 NetworkSpectator is a Swift network debugging library that intercepts, inspects, and logs HTTP/HTTPS request and response in your iOS or macOS app in real time.
-Browse captured API traffic in a native SwiftUI interface, export logs and create mock API responses programmatically or through a built-in UI. Designed for developers debugging network calls during development and QA teams validating app behavior without backend dependencies or developer intervention.
+Browse captured API traffic in a native SwiftUI interface, export logs and create mock API responses programmatically or through a built-in UI.
+Designed for developers debugging network calls during development and QA teams validating app behavior without backend dependencies or developer intervention.
 
 ## Features
 
