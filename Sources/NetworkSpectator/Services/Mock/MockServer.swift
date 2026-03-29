@@ -54,7 +54,9 @@ final class MockServer: @unchecked Sendable {
     /// Persists mocks marked with saveLocally to storage
     private func persist() {
         let mocksToSave = mocks.filter { $0.saveLocally }
-        storage.save(Array(mocksToSave))
+        if !mocksToSave.isEmpty {
+            storage.save(Array(mocksToSave))
+        }
     }
 }
 

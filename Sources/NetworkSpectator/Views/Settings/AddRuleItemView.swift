@@ -303,12 +303,14 @@ struct AddRuleItemView: View {
                 let responseData = try HTTPInputConverter.jsonData(from: response)
                 let statuscode = try HTTPInputConverter.statusCode(from: statusCode)
                 let headersData = try HTTPInputConverter.headers(from: headers)
+                let response = HTTPResponse(headers: headersData,
+                                            statusCode: statuscode,
+                                            responseData: responseData,
+                                            error: nil,
+                                            responseTime: Double(delay) ?? 0)
                 let mock = Mock(rule: matchRule,
-                                response: responseData,
-                                headers: headersData,
-                                statusCode: statuscode,
-                                saveLocally: saveLocally,
-                                delay: Double(delay) ?? 0)
+                                response: response,
+                                saveLocally: saveLocally)
                 MockServer.shared.register(mock)
                 
                 // Call onSave callback if provided
