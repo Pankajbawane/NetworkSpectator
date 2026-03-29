@@ -14,6 +14,13 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     private var mockTask: Task<Void, Never>?
     private let protectedLog: OSAllocatedUnfairLock<LogItem>
     private static let taskCacheKey = "NETWORKSPECTATOR_TRACK_CACHED_TASK_KEY"
+    private static let _logger = OSAllocatedUnfairLock<any LogItemStorable>(
+        initialState: LogItemStoreUI()
+    )
+    static var logger: any LogItemStorable {
+        get { _logger.withLock { $0 } }
+        set { _logger.withLock { $0 = newValue } }
+    }
     
     override init(request: URLRequest, cachedResponse: CachedURLResponse?, client: (any URLProtocolClient)?) {
         // Capture the HTTP body if it's provided
@@ -91,8 +98,10 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
             let urlRequest = thisRequest as URLRequest
             mockTask = Task {
                 do {
-                    try await Task.sleep(for: .seconds(mock.delay))
-                    completion(mock.response, mock.urlResponse(urlRequest), mock.error)
+                    try await Task.sleep(for: .seconds(mock.response.responseTime))
+                    completion(mock.response.responseData,
+                               mock.response.urlResponse(urlRequest),
+                               mock.response.error)
                 } catch {
                     // Handle in stopLoading()
                 }
@@ -164,10 +173,7 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         return data
     }
     
-    private func logging(_ item: LogItem) {
-        DebugPrint.log(item)
-        Task {
-            await NetworkLogStore.shared.add(item)
-        }
+    func logging(_ item: LogItem) {
+        Self.logger.logging(item)
     }
 }

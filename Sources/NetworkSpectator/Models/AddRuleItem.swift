@@ -59,9 +59,9 @@ struct AddRuleItem: Identifiable {
                 return nil
             }
 
-            self.response = mock.response.flatMap { String(data: $0, encoding: .utf8) } ?? ""
-            self.statusCode = String(mock.statusCode)
-            self.headers = mock.headers.map { "\($0.key)===\($0.value)" }.joined(separator: "\n")
+            self.response = mock.response.responseData.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+            self.statusCode = String(mock.response.statusCode)
+            self.headers = mock.response.headers.map { "\($0.key)===\($0.value)" }.joined(separator: "\n")
             self.isMock = true
             self.saveLocally = mock.saveLocally
             self.showDelete = true
