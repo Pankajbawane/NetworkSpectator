@@ -41,7 +41,7 @@ public extension NetworkSpectator.Test {
     /// Enables network interception with the test logger.
     /// Call once before your tests make network requests.
     static func setUp() {
-        NetworkURLProtocol.logger = LogItemStoreTests()
+        NetworkURLProtocol.logger = TestLogItemLogger()
         NetworkURLProtocol.mockServer = .defaultServer()
         NetworkInterceptor.shared.enable()
     }

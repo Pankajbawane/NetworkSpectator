@@ -1,5 +1,5 @@
 //
-//  NetworkLogStorable.swift
+//  NetworkLogItemLogger.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 29/03/26.
@@ -7,11 +7,11 @@
 
 import Foundation
 
-protocol LogItemStorable: Sendable {
+protocol LogItemLogger: Sendable {
     func logging(_ item: LogItem)
 }
 
-struct LogItemStoreUI: LogItemStorable {
+struct UILogItemLogger: LogItemLogger {
     func logging(_ item: LogItem) {
         DebugPrint.log(item)
         Task {
@@ -20,7 +20,7 @@ struct LogItemStoreUI: LogItemStorable {
     }
 }
 
-struct LogItemStoreTests: LogItemStorable {
+struct TestLogItemLogger: LogItemLogger {
     func logging(_ item: LogItem) {
         Task {
             await TestLogStore.shared.add(item)

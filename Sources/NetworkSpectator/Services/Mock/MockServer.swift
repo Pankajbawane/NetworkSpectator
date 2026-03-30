@@ -9,7 +9,7 @@ import Foundation
 import os
 
 /// Manages registered mocks for network request interception.
-final class MockServer: @unchecked Sendable {
+final class MockServer: Sendable {
 
     private let state: OSAllocatedUnfairLock<Set<Mock>>
     private let storage: RuleStorage<Mock>
