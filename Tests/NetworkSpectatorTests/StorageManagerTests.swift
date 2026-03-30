@@ -9,7 +9,7 @@ import Testing
 import Foundation
 @testable import NetworkSpectator
 
-class MockStorage: Storeable {
+final class MockStorage: Storeable, @unchecked Sendable {
     var store: [String: Any] = [:]
     
     func set(_ value: Any?, forKey defaultName: String) {
@@ -45,16 +45,16 @@ struct RuleStorageTests {
         let store = MockStorage()
         let storage = RuleStorage<Mock>(key: .mockRules, store: store)
 
-        let mock1 = Mock(rule: .url("https://api.example.com/users"), response: nil as Data?, statusCode: 200, saveLocally: true)
-        let mock2 = Mock(rule: .path("/api/data"), response: "test".data(using: .utf8), statusCode: 404, saveLocally: true)
+        let mock1 = Mock(rule: .url("https://api.example.com/users"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
+        let mock2 = Mock(rule: .path("/api/data"), response: "test".data(using: .utf8), headers: [:], statusCode: 404, error: nil, saveLocally: true)
 
         storage.save([mock1, mock2])
         UserDefaults.standard.synchronize()
 
         let retrieved = storage.retrieve()
         #expect(retrieved.count == 2)
-        #expect(retrieved.contains(where: { $0.statusCode == 200 }))
-        #expect(retrieved.contains(where: { $0.statusCode == 404 }))
+        #expect(retrieved.contains(where: { $0.response.statusCode == 200 }))
+        #expect(retrieved.contains(where: { $0.response.statusCode == 404 }))
     }
 
     @Test("Save and retrieve skip requests")
@@ -88,7 +88,7 @@ struct RuleStorageTests {
         let store = MockStorage()
         let storage = RuleStorage<Mock>(key: .mockRules, store: store)
 
-        let mock = Mock(rule: .url("https://example.com"), response: nil as Data?, statusCode: 200, saveLocally: true)
+        let mock = Mock(rule: .url("https://example.com"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
         storage.save([mock])
 
         #expect(storage.retrieve().count == 1)
@@ -103,15 +103,15 @@ struct RuleStorageTests {
         let store = MockStorage()
         let storage = RuleStorage<Mock>(key: .mockRules, store: store)
 
-        let mock1 = Mock(rule: .url("https://first.com"), response: nil as Data?, statusCode: 200, saveLocally: true)
+        let mock1 = Mock(rule: .url("https://first.com"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
         storage.save([mock1])
 
-        let mock2 = Mock(rule: .url("https://second.com"), response: nil as Data?, statusCode: 201, saveLocally: true)
+        let mock2 = Mock(rule: .url("https://second.com"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: true)
         storage.save([mock2])
 
         let retrieved = storage.retrieve()
         #expect(retrieved.count == 1)
-        #expect(retrieved.first?.statusCode == 201)
+        #expect(retrieved.first?.response.statusCode == 201)
     }
 
     @Test("Storage preserves mock properties")
@@ -123,17 +123,17 @@ struct RuleStorageTests {
         let responseData = "{\"key\":\"value\"}".data(using: .utf8)
         let rule = MatchRule.url("https://api.example.com")
 
-        let mock = Mock(rule: rule, response: responseData, headers: headers, statusCode: 201, saveLocally: true)
+        let mock = Mock(rule: rule, response: responseData, headers: headers, statusCode: 201, error: nil, saveLocally: true)
         storage.save([mock])
 
         let retrieved = storage.retrieve()
         #expect(retrieved.count == 1)
 
         if let savedMock = retrieved.first {
-            #expect(savedMock.statusCode == 201)
-            #expect(savedMock.response == responseData)
-            #expect(savedMock.headers["Content-Type"] == "application/json")
-            #expect(savedMock.headers["X-Custom"] == "value")
+            #expect(savedMock.response.statusCode == 201)
+            #expect(savedMock.response.responseData == responseData)
+            #expect(savedMock.response.headers["Content-Type"] == "application/json")
+            #expect(savedMock.response.headers["X-Custom"] == "value")
             #expect(savedMock.saveLocally == true)
         }
     }

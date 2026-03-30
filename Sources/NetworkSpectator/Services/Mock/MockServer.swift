@@ -77,7 +77,9 @@ final class MockServer: @unchecked Sendable {
         let mocksToSave = state.withLock { mocks in
             mocks.filter { $0.saveLocally }
         }
-        if !mocksToSave.isEmpty {
+        if mocksToSave.isEmpty {
+            storage.clear()
+        } else {
             storage.save(Array(mocksToSave))
         }
     }

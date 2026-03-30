@@ -123,7 +123,7 @@ struct AddRuleItemTests {
     @Test("Init from Mock preserves saveLocally")
     func testInitFromMockSaveLocally() {
         let noData: Data? = nil
-        let mock = Mock(rule: .url("https://example.com"), response: noData, saveLocally: true)
+        let mock = Mock(rule: .url("https://example.com"), response: noData, headers: [:], statusCode: 200, error: nil, saveLocally: true)
         let item = AddRuleItem(mock: mock)
 
         #expect(item?.saveLocally == true)

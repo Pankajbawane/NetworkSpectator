@@ -19,8 +19,8 @@ struct MockTests {
 
         let mock = try Mock(rule: .hostName("example.com"), response: response, statusCode: 200)
 
-        #expect(mock.statusCode == 200)
-        #expect(mock.response != nil)
+        #expect(mock.response.statusCode == 200)
+        #expect(mock.response.responseData != nil)
         #expect(mock.rule == .hostName("example.com"))
     }
 
@@ -30,8 +30,8 @@ struct MockTests {
 
         let mock = Mock(rule: .path("/api/users"), response: data as Data?, statusCode: 404, error: nil)
 
-        #expect(mock.statusCode == 404)
-        #expect(mock.response == data)
+        #expect(mock.response.statusCode == 404)
+        #expect(mock.response.responseData == data)
     }
 
     @Test("Mock with rule and JSON")
@@ -39,7 +39,7 @@ struct MockTests {
         let response: [AnyHashable: Any] = ["message": "matched"]
         let mock = try Mock(rule: .hostName("example.com"), response: response, statusCode: 200)
 
-        #expect(mock.statusCode == 200)
+        #expect(mock.response.statusCode == 200)
         #expect(mock.rule == .hostName("example.com"))
     }
 
@@ -48,8 +48,8 @@ struct MockTests {
         let data = "Custom data".data(using: .utf8)
         let mock = Mock(rule: .path("/test"), response: data, statusCode: 201)
 
-        #expect(mock.statusCode == 201)
-        #expect(mock.response == data)
+        #expect(mock.response.statusCode == 201)
+        #expect(mock.response.responseData == data)
     }
 
     @Test("Mock with headers")
@@ -57,8 +57,8 @@ struct MockTests {
         let headers = ["Content-Type": "application/json", "X-Custom": "value"]
         let mock = Mock(rule: .hostName("example.com"), response: nil as Data?, headers: headers, statusCode: 200)
 
-        #expect(mock.headers["Content-Type"] == "application/json")
-        #expect(mock.headers["X-Custom"] == "value")
+        #expect(mock.response.headers["Content-Type"] == "application/json")
+        #expect(mock.response.headers["X-Custom"] == "value")
     }
 
     @Test("Mock with error")
@@ -66,8 +66,8 @@ struct MockTests {
         let error = NSError(domain: "test", code: -1, userInfo: nil)
         let mock = Mock(rule: .hostName("example.com"), response: nil as Data?, statusCode: 500, error: error)
 
-        #expect(mock.error != nil)
-        #expect(mock.statusCode == 500)
+        #expect(mock.response.error != nil)
+        #expect(mock.response.statusCode == 500)
     }
 
     @Test("Mock URL response generation")
@@ -90,9 +90,9 @@ struct MockTests {
         let mock2 = Mock(rule: .hostName("example.com"), response: nil as Data?, statusCode: 200)
         let mock3 = Mock(rule: .hostName("different.com"), response: nil as Data?, statusCode: 404)
 
-        // Equality is based on ID, not content
-        #expect(mock1 != mock2) // Different IDs
-        #expect(mock1 != mock3) // Different IDs
+        // Equality is based on rule and response, not ID
+        #expect(mock1 == mock2) // Same rule and response
+        #expect(mock1 != mock3) // Different rule and response
         #expect(mock1 == mock1) // Same instance
     }
 
@@ -100,14 +100,14 @@ struct MockTests {
     func testMockDefaultDelayIsZero() async throws {
         let mock = Mock(rule: .hostName("example.com"), response: nil as Data?, statusCode: 200)
 
-        #expect(mock.delay == 0)
+        #expect(mock.response.responseTime == 0)
     }
 
     @Test("Mock with custom delay")
     func testMockWithCustomDelay() async throws {
         let mock = Mock(rule: .url("https://api.example.com/slow"), response: nil as Data?, statusCode: 200, delay: 2.5)
 
-        #expect(mock.delay == 2.5)
+        #expect(mock.response.responseTime == 2.5)
     }
 
     @Test("Mock with delay and JSON response")
@@ -115,9 +115,9 @@ struct MockTests {
         let response: [AnyHashable: Any] = ["status": "ok"]
         let mock = try Mock(rule: .path("/delayed"), response: response, statusCode: 200, delay: 1.0)
 
-        #expect(mock.delay == 1.0)
-        #expect(mock.response != nil)
-        #expect(mock.statusCode == 200)
+        #expect(mock.response.responseTime == 1.0)
+        #expect(mock.response.responseData != nil)
+        #expect(mock.response.statusCode == 200)
     }
 
     @Test("Mock delay persists through Codable round-trip")
@@ -127,8 +127,8 @@ struct MockTests {
         let encoded = try JSONEncoder().encode(original)
         let decoded = try JSONDecoder().decode(Mock.self, from: encoded)
 
-        #expect(decoded.delay == 3.0)
-        #expect(decoded.statusCode == original.statusCode)
+        #expect(decoded.response.responseTime == 3.0)
+        #expect(decoded.response.statusCode == original.response.statusCode)
         #expect(decoded.id == original.id)
     }
 }
