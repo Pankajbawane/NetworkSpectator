@@ -7,12 +7,17 @@
 
 public final class Test: @unchecked Sendable {
     
-    func setupMock(for rule: MatchRule, response: HTTPResponse) {
+    static func enableTestMode() {
+        NetworkURLProtocol.logger = LogItemStoreTests()
+        NetworkInterceptor.shared.enable()
+    }
+    
+    static func setupResponse(for rule: MatchRule, response: HTTPResponse) {
         let mock = Mock(rule: rule, response: response)
         MockServer.shared.register(mock)
     }
     
-    func tearDown() {
+    static func tearDown() {
         MockServer.shared.clear()
     }
     
