@@ -38,19 +38,6 @@ public struct HTTPResponse: Sendable {
         mimeType = try container.decode(MimeType.self, forKey: .mimeType)
         self.error = nil
     }
-    
-    internal func urlResponse(_ request: URLRequest) -> HTTPURLResponse? {
-        guard let url = request.url else { return nil }
-        
-        var httpHeaders = headers
-        if mimeType != .empty {
-            httpHeaders["Content-Type"] = mimeType.raw
-        }
-        return HTTPURLResponse(url: url,
-                               statusCode: statusCode,
-                               httpVersion: nil,
-                               headerFields: httpHeaders)
-    }
 }
 
 extension HTTPResponse: Equatable {

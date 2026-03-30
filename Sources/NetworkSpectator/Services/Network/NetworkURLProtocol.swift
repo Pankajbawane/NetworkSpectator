@@ -109,7 +109,7 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
                 do {
                     try await Task.sleep(for: .seconds(mock.response.responseTime))
                     completion(mock.response.responseData,
-                               mock.response.urlResponse(urlRequest),
+                               mock.urlResponse(urlRequest),
                                mock.response.error)
                 } catch {
                     // Handle in stopLoading()

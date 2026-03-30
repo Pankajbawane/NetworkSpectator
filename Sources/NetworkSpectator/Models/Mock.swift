@@ -9,9 +9,16 @@ import Foundation
 
 /// Represents a mock HTTP response for network request interception.
 public struct Mock: Identifiable, Sendable {
+    /// Unique identifier for this mock instance.
     public let id: UUID
+
+    /// The rule used to match incoming requests against this mock (e.g., URL contains, exact match).
     public let rule: MatchRule
+
+    /// The HTTP response to return when a matching request is intercepted.
     public let response: HTTPResponse
+
+    /// Whether this mock should be persisted to local storage across sessions.
     let saveLocally: Bool
 
     /// Creates a mock with rule-based matching and JSON response.
@@ -38,6 +45,7 @@ public struct Mock: Identifiable, Sendable {
         self.init(rule: rule, response: httpResponse, saveLocally: saveLocally)
     }
     
+    /// Designated initializer that all other initializers delegate to.
     internal init(rule: MatchRule,
                   response: HTTPResponse,
                   saveLocally: Bool) {
@@ -47,11 +55,20 @@ public struct Mock: Identifiable, Sendable {
         self.saveLocally = saveLocally
     }
     
+    /// Creates a mock with a pre-built ``HTTPResponse``. The mock is not persisted to local storage.
     public init(rule: MatchRule,
                 response: HTTPResponse) {
         self.init(rule: rule, response: response, saveLocally: false)
     }
     
+    /// Creates a mock with raw `Data` as the response body.
+    /// - Parameters:
+    ///   - rule: Rule to match against the request URL.
+    ///   - response: Raw data to return as the response body, or `nil` for an empty body.
+    ///   - headers: HTTP headers to include in the response. Defaults to empty.
+    ///   - statusCode: HTTP status code for the response. Defaults to `200`.
+    ///   - error: Optional error to simulate a network failure.
+    ///   - delay: Simulated response delay in seconds. Defaults to `0`.
     public init(rule: MatchRule,
                 response: Data?,
                 headers: [String: String] = [:],
@@ -66,6 +83,15 @@ public struct Mock: Identifiable, Sendable {
         self.init(rule: rule, response: httpResponse, saveLocally: false)
     }
     
+    /// Creates a mock with a JSON dictionary as the response body.
+    /// - Parameters:
+    ///   - rule: Rule to match against the request URL.
+    ///   - response: A JSON-compatible dictionary to serialize as the response body.
+    ///   - headers: HTTP headers to include in the response. Defaults to empty.
+    ///   - statusCode: HTTP status code for the response. Defaults to `200`.
+    ///   - error: Optional error to simulate a network failure.
+    ///   - delay: Simulated response delay in seconds. Defaults to `0`.
+    /// - Throws: An error if `response` cannot be serialized to JSON.
     public init(rule: MatchRule,
                 response: [AnyHashable: Any],
                 headers: [String: String] = [:],
@@ -80,8 +106,28 @@ public struct Mock: Identifiable, Sendable {
                                     responseTime: delay)
         self.init(rule: rule, response: response, saveLocally: false)
     }
+    
+    /// Builds an `HTTPURLResponse` from this mock's response for the given request.
+    /// Automatically injects a `Content-Type` header when the response has a known MIME type.
+    /// - Parameter request: The intercepted URL request to generate a response for.
+    /// - Returns: An `HTTPURLResponse`, or `nil` if the request has no URL.
+    internal func urlResponse(_ request: URLRequest) -> HTTPURLResponse? {
+        guard let url = request.url else { return nil }
+        
+        var httpHeaders = response.headers
+        if response.mimeType != .empty {
+            httpHeaders["Content-Type"] = response.mimeType.raw
+        }
+        return HTTPURLResponse(url: url,
+                               statusCode: response.statusCode,
+                               httpVersion: nil,
+                               headerFields: httpHeaders)
+    }
 }
 
+// MARK: - Equatable & Hashable
+// Identity is based on `rule` and `response`, not `id`, so two mocks with
+// the same matching rule and response are considered equal regardless of UUID.
 extension Mock: Equatable {
     public static func == (lhs: Mock, rhs: Mock) -> Bool {
         lhs.rule == rhs.rule &&
@@ -96,5 +142,7 @@ extension Mock: Hashable {
     }
 }
 
+// MARK: - Codable
+// Enables persistence to local storage.
 extension Mock: Codable {
 }
