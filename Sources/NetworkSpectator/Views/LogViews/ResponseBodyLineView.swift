@@ -77,7 +77,7 @@ struct ResponseBodyLineView: View {
         for match in matches {
             let segment = String(match.output.0)
 
-            let kind: JSONAttributeKind = {
+            let attribute: JSONAttributeType = {
                 if segment.hasPrefix("\"") {
                     return expectValue ? .stringValue : .key
                 } else if segment == ":" {
@@ -97,9 +97,9 @@ struct ResponseBodyLineView: View {
                 }
             }()
 
-            result = result + Text(segment).foregroundColor(kind.color).font(kind.font)
+            result = result + Text(segment).foregroundColor(attribute.color).font(attribute.font)
 
-            switch kind {
+            switch attribute {
             case .colon:
                 expectValue = true
             case .comma, .stringValue, .number, .boolean, .null:
@@ -114,7 +114,7 @@ struct ResponseBodyLineView: View {
 }
 
 extension ResponseBodyLineView {
-    private enum JSONAttributeKind {
+    private enum JSONAttributeType {
         case key, stringValue, number, boolean, null, colon, bracketOrBrace, comma, whitespaceOrOther
         
         var color: Color {
