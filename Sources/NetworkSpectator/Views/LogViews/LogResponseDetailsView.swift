@@ -50,7 +50,13 @@ struct LogResponseDetailsView: View {
 
     @ViewBuilder
     private func responseBodyView() -> some View {
-        ResponseBodyLineView(responseBody: item.responseBody, mimetype: item.mimetype ?? "")
+        var mimetype = item.mimetype ?? ""
+        if mimetype.isEmpty,
+           let data = item.responseRaw,
+           let isJson = try? JSONSerialization.isValidJSONObject(data) {
+            mimetype = "application/json"
+        }
+        return ResponseBodyLineView(responseBody: item.responseBody, mimetype: mimetype)
             .frame(minHeight: 200)
             .padding(12)
             .background(Color.secondary.opacity(0.2))
