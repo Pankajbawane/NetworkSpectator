@@ -31,14 +31,14 @@ import Foundation
 /// ```
 
 public extension NetworkSpectator {
-    struct Test: @unchecked Sendable { }
+    struct Test { }
 }
 
 public extension NetworkSpectator.Test {
     
     // MARK: - Lifecycle
     
-    nonisolated(unsafe) static var isLoggingEnabled: Bool = false
+    nonisolated(unsafe) private(set) static var isLoggingEnabled: Bool = false
     
     /// Enables network interception with the test logger.
     /// Call once before your tests make network requests.
