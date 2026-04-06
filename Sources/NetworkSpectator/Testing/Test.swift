@@ -1,5 +1,5 @@
 //
-//  TestServer.swift
+//  Test.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 29/03/26.
@@ -31,16 +31,19 @@ import Foundation
 /// ```
 
 public extension NetworkSpectator {
-    final class TestServer: Sendable { }
+    struct Test: @unchecked Sendable { }
 }
 
-public extension NetworkSpectator.TestServer {
+public extension NetworkSpectator.Test {
     
     // MARK: - Lifecycle
     
+    nonisolated(unsafe) static var isLoggingEnabled: Bool = false
+    
     /// Enables network interception with the test logger.
     /// Call once before your tests make network requests.
-    static func setUp() {
+    static func setUp(logging: Bool = false) {
+        isLoggingEnabled = logging
         NetworkURLProtocol.logger = TestLogItemLogger()
         NetworkURLProtocol.mockServer = .testServer()
         NetworkInterceptor.shared.enable()
@@ -49,6 +52,7 @@ public extension NetworkSpectator.TestServer {
     /// Disables interception and removes all mocks.
     /// Call after your tests complete.
     static func tearDown() {
+        isLoggingEnabled = false
         NetworkInterceptor.shared.disable()
         NetworkURLProtocol.mockServer.clear()
         NetworkURLProtocol.mockServer = .shared
