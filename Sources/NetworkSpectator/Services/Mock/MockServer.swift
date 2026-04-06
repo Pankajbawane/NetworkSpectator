@@ -13,6 +13,7 @@ final class MockServer: Sendable {
 
     private let state: OSAllocatedUnfairLock<Set<Mock>>
     private let storage: RuleStorage<Mock>
+    private let transient: Bool
 
     static let shared: MockServer = .init()
 
@@ -21,17 +22,20 @@ final class MockServer: Sendable {
     }
 
     init(state: OSAllocatedUnfairLock<Set<Mock>> = OSAllocatedUnfairLock(initialState: []),
-         storage: RuleStorage<Mock> = RuleStorage<Mock>(key: .mockRules)) {
+         storage: RuleStorage<Mock> = RuleStorage<Mock>(key: .mockRules),
+         transient: Bool = false) {
         self.storage = storage
         self.state = state
+        self.transient = transient
     }
 
     /// Creates an empty mock server with no persisted mocks.
     /// Used by the test harness to isolate test mocks from UI mocks.
-    static func defaultServer() -> MockServer {
+    static func testServer() -> MockServer {
         MockServer(state: OSAllocatedUnfairLock(initialState: []),
                    storage: RuleStorage<Mock>(key: .mockRules,
-                                              store: EmptyStorage())
+                                              store: EmptyStorage()),
+                   transient: true
                    )
     }
 
@@ -45,9 +49,13 @@ final class MockServer: Sendable {
     }
 
     func responseIfMocked(_ urlRequest: URLRequest) -> Mock? {
-        state.withLock { mocks in
+        let mock = state.withLock { mocks in
             mocks.first { $0.method.rawValue == urlRequest.httpMethod && $0.rule.matches(urlRequest) }
         }
+        if transient, let mock {
+            remove(id: mock.id)
+        }
+        return mock
     }
 
     /// Removes registered mock.

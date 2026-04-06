@@ -1,5 +1,5 @@
 //
-//  Test.swift
+//  TestServer.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 29/03/26.
@@ -31,10 +31,10 @@ import Foundation
 /// ```
 
 public extension NetworkSpectator {
-    final class Test: Sendable { }
+    final class TestServer: Sendable { }
 }
 
-public extension NetworkSpectator.Test {
+public extension NetworkSpectator.TestServer {
     
     // MARK: - Lifecycle
     
@@ -42,7 +42,7 @@ public extension NetworkSpectator.Test {
     /// Call once before your tests make network requests.
     static func setUp() {
         NetworkURLProtocol.logger = TestLogItemLogger()
-        NetworkURLProtocol.mockServer = .defaultServer()
+        NetworkURLProtocol.mockServer = .testServer()
         NetworkInterceptor.shared.enable()
     }
     
