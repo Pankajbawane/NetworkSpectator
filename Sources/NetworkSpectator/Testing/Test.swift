@@ -65,6 +65,7 @@ public extension NetworkSpectator.Test {
     ///   - headers: Additional response headers (default empty).
     ///   - delay: Simulated network delay in seconds (default `0`).
     static func mock(
+        method: HTTPMethod,
         rule: MatchRule,
         json: [String: Any],
         statusCode: Int = 200,
@@ -80,7 +81,7 @@ public extension NetworkSpectator.Test {
             responseTime: delay,
             mimeType: .json
         )
-        NetworkURLProtocol.mockServer.register(Mock(rule: rule, response: response))
+        NetworkURLProtocol.mockServer.register(Mock(method: method, rule: rule, response: response))
     }
     
     /// Mocks a raw `Data` response for requests matching the given rule.
@@ -92,6 +93,7 @@ public extension NetworkSpectator.Test {
     ///   - headers: Additional response headers (default empty).
     ///   - delay: Simulated network delay in seconds (default `0`).
     static func mock(
+        method: HTTPMethod,
         rule: MatchRule,
         data: Data?,
         statusCode: Int = 200,
@@ -105,7 +107,7 @@ public extension NetworkSpectator.Test {
             error: nil,
             responseTime: delay
         )
-        NetworkURLProtocol.mockServer.register(Mock(rule: rule, response: response))
+        NetworkURLProtocol.mockServer.register(Mock(method: method, rule: rule, response: response))
     }
     
     /// Mocks a network failure for requests matching the given rule.
@@ -114,6 +116,7 @@ public extension NetworkSpectator.Test {
     ///   - rule: The ``MatchRule`` that determines which requests are intercepted.
     ///   - error: The error to surface (default `URLError(.notConnectedToInternet)`).
     static func mockError(
+        method: HTTPMethod,
         rule: MatchRule,
         error: Error = URLError(.notConnectedToInternet)
     ) {
@@ -123,7 +126,7 @@ public extension NetworkSpectator.Test {
             responseData: nil,
             error: error
         )
-        NetworkURLProtocol.mockServer.register(Mock(rule: rule, response: response))
+        NetworkURLProtocol.mockServer.register(Mock(method: method, rule: rule, response: response))
     }
     
     // MARK: - Mock Removal

@@ -37,8 +37,8 @@ final class LogSkipManager: @unchecked Sendable {
         persist()
     }
 
-    func register(rule: MatchRule, saveLocally: Bool = false) {
-        let skipRequest = LogSkipRequest(rule: rule, saveLocally: saveLocally)
+    func register(method: HTTPMethod, rule: MatchRule, saveLocally: Bool = false) {
+        let skipRequest = LogSkipRequest(method: method, rule: rule, saveLocally: saveLocally)
         skipRequests.insert(skipRequest)
         if saveLocally {
             persist()

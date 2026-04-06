@@ -11,6 +11,9 @@ import Foundation
 public struct Mock: Identifiable, Sendable {
     /// Unique identifier for this mock instance.
     public let id: UUID
+    
+    /// HTTP Method to match with.
+    public let method: HTTPMethod
 
     /// The rule used to match incoming requests against this mock (e.g., URL contains, exact match).
     public let rule: MatchRule
@@ -30,7 +33,8 @@ public struct Mock: Identifiable, Sendable {
     ///   - error: Optional error to return instead of a successful response.
     ///   - saveLocally: Store mock on device.
     ///   - delay: delay in response.
-    internal init(rule: MatchRule,
+    internal init(method: HTTPMethod,
+                  rule: MatchRule,
                   response: Data?,
                   headers: [String: String],
                   statusCode: Int,
@@ -42,23 +46,26 @@ public struct Mock: Identifiable, Sendable {
                                     responseData: response,
                                     error: error,
                                     responseTime: delay)
-        self.init(rule: rule, response: httpResponse, saveLocally: saveLocally)
+        self.init(method: method, rule: rule, response: httpResponse, saveLocally: saveLocally)
     }
     
     /// Designated initializer that all other initializers delegate to.
-    internal init(rule: MatchRule,
+    internal init(method: HTTPMethod,
+                  rule: MatchRule,
                   response: HTTPResponse,
                   saveLocally: Bool) {
         self.id = UUID()
+        self.method = method
         self.rule = rule
         self.response = response
         self.saveLocally = saveLocally
     }
     
     /// Creates a mock with a pre-built ``HTTPResponse``. The mock is not persisted to local storage.
-    public init(rule: MatchRule,
+    public init(method: HTTPMethod = .GET,
+                rule: MatchRule,
                 response: HTTPResponse) {
-        self.init(rule: rule, response: response, saveLocally: false)
+        self.init(method: method, rule: rule, response: response, saveLocally: false)
     }
     
     /// Creates a mock with raw `Data` as the response body.
@@ -69,7 +76,8 @@ public struct Mock: Identifiable, Sendable {
     ///   - statusCode: HTTP status code for the response. Defaults to `200`.
     ///   - error: Optional error to simulate a network failure.
     ///   - delay: Simulated response delay in seconds. Defaults to `0`.
-    public init(rule: MatchRule,
+    public init(method: HTTPMethod,
+                rule: MatchRule,
                 response: Data?,
                 headers: [String: String] = [:],
                 statusCode: Int = 200,
@@ -80,7 +88,7 @@ public struct Mock: Identifiable, Sendable {
                                         responseData: response,
                                         error: error,
                                         responseTime: delay)
-        self.init(rule: rule, response: httpResponse, saveLocally: false)
+        self.init(method: method, rule: rule, response: httpResponse, saveLocally: false)
     }
     
     /// Creates a mock with a JSON dictionary as the response body.
@@ -92,7 +100,8 @@ public struct Mock: Identifiable, Sendable {
     ///   - error: Optional error to simulate a network failure.
     ///   - delay: Simulated response delay in seconds. Defaults to `0`.
     /// - Throws: An error if `response` cannot be serialized to JSON.
-    public init(rule: MatchRule,
+    public init(method: HTTPMethod,
+                rule: MatchRule,
                 response: [AnyHashable: Any],
                 headers: [String: String] = [:],
                 statusCode: Int = 200,
@@ -104,7 +113,7 @@ public struct Mock: Identifiable, Sendable {
                                     responseData: respnseData,
                                     error: error,
                                     responseTime: delay)
-        self.init(rule: rule, response: response, saveLocally: false)
+        self.init(method: method, rule: rule, response: response, saveLocally: false)
     }
     
     /// Builds an `HTTPURLResponse` from this mock's response for the given request.

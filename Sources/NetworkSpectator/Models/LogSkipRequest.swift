@@ -13,7 +13,8 @@ public struct LogSkipRequest: Identifiable, Hashable, Codable {
     let rule: MatchRule
     let saveLocally: Bool
 
-    public init(rule: MatchRule,
+    public init(method: HTTPMethod,
+                rule: MatchRule,
                 id: UUID = UUID(),
                 saveLocally: Bool = false) {
         self.rule = rule

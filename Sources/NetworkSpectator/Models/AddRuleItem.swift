@@ -19,12 +19,14 @@ struct AddRuleItem: Identifiable {
         let isMock: Bool
         let saveLocally: Bool
         let showDelete: Bool
+        let method: HTTPMethod
 
         init(id: UUID,
              text: String,
              response: String = "",
              statusCode: String = "",
              headers: String = "",
+             method: HTTPMethod = .GET,
              rule: Rule,
              isMock: Bool,
              saveLocally: Bool = false) {
@@ -33,6 +35,7 @@ struct AddRuleItem: Identifiable {
             self.response = response
             self.statusCode = statusCode
             self.headers = headers
+            self.method = method
             self.rule = rule
             self.isMock = isMock
             self.saveLocally = saveLocally
@@ -41,6 +44,7 @@ struct AddRuleItem: Identifiable {
 
         init?(mock: Mock) {
             self.id = mock.id
+            self.method = mock.method
 
             switch mock.rule {
             case .url(let value):
@@ -69,6 +73,7 @@ struct AddRuleItem: Identifiable {
 
         init?(skipRequest: LogSkipRequest) {
             self.id = skipRequest.id
+            self.method = .GET
 
             switch skipRequest.rule {
             case .url(let value):

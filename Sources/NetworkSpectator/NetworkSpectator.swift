@@ -106,8 +106,9 @@ public struct NetworkSpectator: Sendable {
     /// from appearing in the network log.
     ///
     /// - Parameter rule: A ``MatchRule`` that identifies which requests should be excluded from logging.
-    public static func ignoreLogging(for rule: MatchRule) {
-        LogSkipManager.shared.register(rule: rule)
+    /// - Parameter method: HTTP Method to match with request.
+    public static func ignoreLogging(for method: HTTPMethod, rule: MatchRule) {
+        LogSkipManager.shared.register(method: method, rule: rule)
     }
     
     /// Removes all logging exclusion rules.

@@ -46,7 +46,7 @@ final class MockServer: Sendable {
 
     func responseIfMocked(_ urlRequest: URLRequest) -> Mock? {
         state.withLock { mocks in
-            mocks.first { $0.rule.matches(urlRequest) }
+            mocks.first { $0.method.rawValue == urlRequest.httpMethod && $0.rule.matches(urlRequest) }
         }
     }
 
