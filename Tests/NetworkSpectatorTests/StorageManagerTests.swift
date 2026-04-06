@@ -45,8 +45,8 @@ struct RuleStorageTests {
         let store = MockStorage()
         let storage = RuleStorage<Mock>(key: .mockRules, store: store)
 
-        let mock1 = Mock(rule: .url("https://api.example.com/users"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
-        let mock2 = Mock(rule: .path("/api/data"), response: "test".data(using: .utf8), headers: [:], statusCode: 404, error: nil, saveLocally: true)
+        let mock1 = Mock(method: .GET, rule: .url("https://api.example.com/users"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
+        let mock2 = Mock(method: .GET, rule: .path("/api/data"), response: "test".data(using: .utf8), headers: [:], statusCode: 404, error: nil, saveLocally: true)
 
         storage.save([mock1, mock2])
         UserDefaults.standard.synchronize()
@@ -62,8 +62,8 @@ struct RuleStorageTests {
         let store = MockStorage()
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: store)
 
-        let skip1 = LogSkipRequest(rule: .url("https://analytics.com"), saveLocally: true)
-        let skip2 = LogSkipRequest(rule: .hostName("tracking.com"), saveLocally: true)
+        let skip1 = LogSkipRequest(method: .GET, rule: .url("https://analytics.com"), saveLocally: true)
+        let skip2 = LogSkipRequest(method: .GET, rule: .hostName("tracking.com"), saveLocally: true)
 
         storage.save([skip1, skip2])
         UserDefaults.standard.synchronize()
@@ -88,7 +88,7 @@ struct RuleStorageTests {
         let store = MockStorage()
         let storage = RuleStorage<Mock>(key: .mockRules, store: store)
 
-        let mock = Mock(rule: .url("https://example.com"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
+        let mock = Mock(method: .GET, rule: .url("https://example.com"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
         storage.save([mock])
 
         #expect(storage.retrieve().count == 1)
@@ -103,10 +103,10 @@ struct RuleStorageTests {
         let store = MockStorage()
         let storage = RuleStorage<Mock>(key: .mockRules, store: store)
 
-        let mock1 = Mock(rule: .url("https://first.com"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
+        let mock1 = Mock(method: .GET, rule: .url("https://first.com"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
         storage.save([mock1])
 
-        let mock2 = Mock(rule: .url("https://second.com"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: true)
+        let mock2 = Mock(method: .GET, rule: .url("https://second.com"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: true)
         storage.save([mock2])
 
         let retrieved = storage.retrieve()
@@ -123,7 +123,7 @@ struct RuleStorageTests {
         let responseData = "{\"key\":\"value\"}".data(using: .utf8)
         let rule = MatchRule.url("https://api.example.com")
 
-        let mock = Mock(rule: rule, response: responseData, headers: headers, statusCode: 201, error: nil, saveLocally: true)
+        let mock = Mock(method: .GET, rule: rule, response: responseData, headers: headers, statusCode: 201, error: nil, saveLocally: true)
         storage.save([mock])
 
         let retrieved = storage.retrieve()
@@ -144,7 +144,7 @@ struct RuleStorageTests {
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: store)
 
         let rule = MatchRule.hostName("analytics.com")
-        let skipRequest = LogSkipRequest(rule: rule, saveLocally: true)
+        let skipRequest = LogSkipRequest(method: .GET, rule: rule, saveLocally: true)
 
         storage.save([skipRequest])
 

@@ -17,7 +17,7 @@ struct MockServerPersistenceTests {
     func testRegisterMockWithSaveLocallyPersists() async throws {
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
         let server = MockServer(storage: storage)
-        let mock = Mock(rule: .url("https://api.example.com/users"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
+        let mock = Mock(method: .GET, rule: .url("https://api.example.com/users"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
         server.register(mock)
 
         // Verify it's in memory
@@ -33,7 +33,7 @@ struct MockServerPersistenceTests {
     func testRegisterMockWithoutSaveLocallyDoesNotPersist() async throws {
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
         let server = MockServer(storage: storage)
-        let mock = Mock(rule: .url("https://api.example.com/temp"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: false)
+        let mock = Mock(method: .GET, rule: .url("https://api.example.com/temp"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: false)
         server.register(mock)
 
         // Verify it's in memory
@@ -48,7 +48,7 @@ struct MockServerPersistenceTests {
     func testRemoveMockWithSaveLocallyUpdatesStorage() async throws {
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
         let server = MockServer(storage: storage)
-        let mock = Mock(rule: .url("https://api.example.com/delete"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
+        let mock = Mock(method: .GET, rule: .url("https://api.example.com/delete"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
         server.register(mock)
 
         #expect(server.mocks.count == 1)
@@ -68,11 +68,11 @@ struct MockServerPersistenceTests {
         // First add a persistent mock
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
         let server = MockServer(storage: storage)
-        let persistentMock = Mock(rule: .url("https://api.example.com/keep"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
+        let persistentMock = Mock(method: .GET, rule: .url("https://api.example.com/keep"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
         server.register(persistentMock)
 
         // Add a non-persistent mock
-        let tempMock = Mock(rule: .url("https://api.example.com/temp"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: false)
+        let tempMock = Mock(method: .GET, rule: .url("https://api.example.com/temp"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: false)
         server.register(tempMock)
 
         #expect(server.mocks.count == 2)
@@ -90,8 +90,8 @@ struct MockServerPersistenceTests {
     func testClearRemovesAllMocksAndClearsStorage() async throws {
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
         let server = MockServer(storage: storage)
-        let mock1 = Mock(rule: .url("https://api.example.com/1"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
-        let mock2 = Mock(rule: .url("https://api.example.com/2"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: false)
+        let mock1 = Mock(method: .GET, rule: .url("https://api.example.com/1"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
+        let mock2 = Mock(method: .GET, rule: .url("https://api.example.com/2"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: false)
 
         server.register(mock1)
         server.register(mock2)
@@ -113,9 +113,9 @@ struct MockServerPersistenceTests {
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
         let server = MockServer(storage: storage)
 
-        let mock1 = Mock(rule: .url("https://api.example.com/1"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
-        let mock2 = Mock(rule: .url("https://api.example.com/2"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: true)
-        let mock3 = Mock(rule: .url("https://api.example.com/3"), response: nil as Data?, headers: [:], statusCode: 202, error: nil, saveLocally: true)
+        let mock1 = Mock(method: .GET, rule: .url("https://api.example.com/1"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
+        let mock2 = Mock(method: .GET, rule: .url("https://api.example.com/2"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: true)
+        let mock3 = Mock(method: .GET, rule: .url("https://api.example.com/3"), response: nil as Data?, headers: [:], statusCode: 202, error: nil, saveLocally: true)
 
         server.register(mock1)
         server.register(mock2)
@@ -131,10 +131,10 @@ struct MockServerPersistenceTests {
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
         let server = MockServer(storage: storage)
 
-        let persistent1 = Mock(rule: .url("https://api.example.com/p1"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
-        let temp1 = Mock(rule: .url("https://api.example.com/t1"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: false)
-        let persistent2 = Mock(rule: .url("https://api.example.com/p2"), response: nil as Data?, headers: [:], statusCode: 202, error: nil, saveLocally: true)
-        let temp2 = Mock(rule: .url("https://api.example.com/t2"), response: nil as Data?, headers: [:], statusCode: 203, error: nil, saveLocally: false)
+        let persistent1 = Mock(method: .GET, rule: .url("https://api.example.com/p1"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
+        let temp1 = Mock(method: .GET, rule: .url("https://api.example.com/t1"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: false)
+        let persistent2 = Mock(method: .GET, rule: .url("https://api.example.com/p2"), response: nil as Data?, headers: [:], statusCode: 202, error: nil, saveLocally: true)
+        let temp2 = Mock(method: .GET, rule: .url("https://api.example.com/t2"), response: nil as Data?, headers: [:], statusCode: 203, error: nil, saveLocally: false)
 
         server.register(persistent1)
         server.register(temp1)
@@ -157,7 +157,7 @@ struct MockServerPersistenceTests {
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
         let server = MockServer(storage: storage)
 
-        let mock = Mock(rule: .url("https://api.example.com/users"), response: "test".data(using: .utf8), headers: [:], statusCode: 200, error: nil, saveLocally: false)
+        let mock = Mock(method: .GET, rule: .url("https://api.example.com/users"), response: "test".data(using: .utf8), headers: [:], statusCode: 200, error: nil, saveLocally: false)
         server.register(mock)
 
         let url = URL(string: "https://api.example.com/users")!
@@ -173,7 +173,7 @@ struct MockServerPersistenceTests {
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
         let server = MockServer(storage: storage)
 
-        let mock = Mock(rule: .url("https://api.example.com/users"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: false)
+        let mock = Mock(method: .GET, rule: .url("https://api.example.com/users"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: false)
         server.register(mock)
 
         let url = URL(string: "https://api.different.com/data")!
@@ -188,8 +188,8 @@ struct MockServerPersistenceTests {
         // Save mocks directly to storage
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
 
-        let mock1 = Mock(rule: .url("https://api.example.com/1"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
-        let mock2 = Mock(rule: .url("https://api.example.com/2"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: true)
+        let mock1 = Mock(method: .GET, rule: .url("https://api.example.com/1"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
+        let mock2 = Mock(method: .GET, rule: .url("https://api.example.com/2"), response: nil as Data?, headers: [:], statusCode: 201, error: nil, saveLocally: true)
 
         storage.save([mock1, mock2])
 
@@ -205,7 +205,7 @@ struct MockServerPersistenceTests {
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
         let server = MockServer(storage: storage)
 
-        let mock = Mock(rule: .url("https://api.example.com/slow"), response: "delayed".data(using: .utf8), statusCode: 200, delay: 2.0)
+        let mock = Mock(method: .GET, rule: .url("https://api.example.com/slow"), response: "delayed".data(using: .utf8), statusCode: 200, delay: 2.0)
         server.register(mock)
 
         let url = URL(string: "https://api.example.com/slow")!
@@ -221,7 +221,7 @@ struct MockServerPersistenceTests {
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
         let server = MockServer(storage: storage)
 
-        let mock = Mock(rule: .url("https://api.example.com/delayed"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true, delay: 1.5)
+        let mock = Mock(method: .GET, rule: .url("https://api.example.com/delayed"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true, delay: 1.5)
         server.register(mock)
 
         let retrieved = storage.retrieve()
@@ -232,7 +232,7 @@ struct MockServerPersistenceTests {
     func testStoragePreservesMockProperties() async throws {
         let storage = RuleStorage<Mock>(key: .mockRules, store: MockStorage())
 
-        let original = Mock(rule: .url("https://api.example.com/data"), response: "body".data(using: .utf8), headers: [:], statusCode: 202, error: nil, saveLocally: true, delay: 0.5)
+        let original = Mock(method: .GET, rule: .url("https://api.example.com/data"), response: "body".data(using: .utf8), headers: [:], statusCode: 202, error: nil, saveLocally: true, delay: 0.5)
         storage.save([original])
 
         let retrieved = storage.retrieve()

@@ -17,7 +17,7 @@ struct SkipRequestPersistenceTests {
     func testRegisterRuleWithSaveLocallyPersists() async throws {
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         let handler = LogSkipManager(storage: storage)
-        handler.register(rule: .url("https://analytics.com/track"), saveLocally: true)
+        handler.register(method: .GET, rule: .url("https://analytics.com/track"), saveLocally: true)
 
         // Verify it's in memory
         #expect(handler.skipRequests.count == 1)
@@ -32,7 +32,7 @@ struct SkipRequestPersistenceTests {
     func testRegisterRuleWithoutSaveLocallyDoesNotPersist() async throws {
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         let handler = LogSkipManager(storage: storage)
-        handler.register(rule: .hostName("temp.com"), saveLocally: false)
+        handler.register(method: .GET, rule: .hostName("temp.com"), saveLocally: false)
 
         // Verify it's in memory
         #expect(handler.skipRequests.count == 1)
@@ -44,7 +44,7 @@ struct SkipRequestPersistenceTests {
 
     @Test("Register request object persists if saveLocally is true")
     func testRegisterRequestObjectPersists() async throws {
-        let skipRequest = LogSkipRequest(rule: .url("https://ads.com"), saveLocally: true)
+        let skipRequest = LogSkipRequest(method: .GET, rule: .url("https://ads.com"), saveLocally: true)
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         let handler = LogSkipManager(storage: storage)
         handler.register(request: skipRequest)
@@ -57,7 +57,7 @@ struct SkipRequestPersistenceTests {
 
     @Test("Remove skip request with saveLocally true updates storage")
     func testRemoveSkipRequestWithSaveLocallyUpdatesStorage() async throws {
-        let skipRequest = LogSkipRequest(rule: .url("https://tracking.com"), saveLocally: true)
+        let skipRequest = LogSkipRequest(method: .GET, rule: .url("https://tracking.com"), saveLocally: true)
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         let handler = LogSkipManager(storage: storage)
         handler.register(request: skipRequest)
@@ -77,13 +77,13 @@ struct SkipRequestPersistenceTests {
     @Test("Remove skip request with saveLocally false does not affect storage")
     func testRemoveSkipRequestWithoutSaveLocallyDoesNotAffectStorage() async throws {
         // First add a persistent skip request
-        let persistentRequest = LogSkipRequest(rule: .url("https://keep.com"), saveLocally: true)
+        let persistentRequest = LogSkipRequest(method: .GET, rule: .url("https://keep.com"), saveLocally: true)
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         let handler = LogSkipManager(storage: storage)
         handler.register(request: persistentRequest)
 
         // Add a non-persistent skip request
-        let tempRequest = LogSkipRequest(rule: .url("https://temp.com"), saveLocally: false)
+        let tempRequest = LogSkipRequest(method: .GET, rule: .url("https://temp.com"), saveLocally: false)
         handler.register(request: tempRequest)
 
         #expect(handler.skipRequests.count == 2)
@@ -101,8 +101,8 @@ struct SkipRequestPersistenceTests {
     func testClearRemovesAllAndClearsStorage() async throws {
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         let handler = LogSkipManager(storage: storage)
-        handler.register(rule: .url("https://analytics.com"), saveLocally: true)
-        handler.register(rule: .hostName("tracking.com"), saveLocally: false)
+        handler.register(method: .GET, rule: .url("https://analytics.com"), saveLocally: true)
+        handler.register(method: .GET, rule: .hostName("tracking.com"), saveLocally: false)
 
         #expect(handler.skipRequests.count == 2)
 
@@ -120,9 +120,9 @@ struct SkipRequestPersistenceTests {
     func testMultiplePersistentSkipRequestsAreSaved() async throws {
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         let handler = LogSkipManager(storage: storage)
-        handler.register(rule: .url("https://analytics.com"), saveLocally: true)
-        handler.register(rule: .hostName("tracking.com"), saveLocally: true)
-        handler.register(rule: .path("/ads"), saveLocally: true)
+        handler.register(method: .GET, rule: .url("https://analytics.com"), saveLocally: true)
+        handler.register(method: .GET, rule: .hostName("tracking.com"), saveLocally: true)
+        handler.register(method: .GET, rule: .path("/ads"), saveLocally: true)
 
         // Verify storage has all three
         let retrieved = storage.retrieve()
@@ -133,10 +133,10 @@ struct SkipRequestPersistenceTests {
     func testMixedPersistentAndNonPersistentSkipRequests() async throws {
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         let handler = LogSkipManager(storage: storage)
-        handler.register(rule: .url("https://persistent1.com"), saveLocally: true)
-        handler.register(rule: .url("https://temp1.com"), saveLocally: false)
-        handler.register(rule: .hostName("persistent2.com"), saveLocally: true)
-        handler.register(rule: .path("/temp"), saveLocally: false)
+        handler.register(method: .GET, rule: .url("https://persistent1.com"), saveLocally: true)
+        handler.register(method: .GET, rule: .url("https://temp1.com"), saveLocally: false)
+        handler.register(method: .GET, rule: .hostName("persistent2.com"), saveLocally: true)
+        handler.register(method: .GET, rule: .path("/temp"), saveLocally: false)
 
         // Verify memory has all four
         #expect(handler.skipRequests.count == 4)
@@ -151,7 +151,7 @@ struct SkipRequestPersistenceTests {
     func testShouldSkipLoggingReturnsTrue() async throws {
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         let handler = LogSkipManager(storage: storage)
-        handler.register(rule: .url("https://analytics.com/track"), saveLocally: false)
+        handler.register(method: .GET, rule: .url("https://analytics.com/track"), saveLocally: false)
 
         let url = URL(string: "https://analytics.com/track")!
         let request = URLRequest(url: url)
@@ -164,7 +164,7 @@ struct SkipRequestPersistenceTests {
     func testShouldSkipLoggingReturnsFalse() async throws {
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         let handler = LogSkipManager(storage: storage)
-        handler.register(rule: .url("https://analytics.com/track"), saveLocally: false)
+        handler.register(method: .GET, rule: .url("https://analytics.com/track"), saveLocally: false)
 
         let url = URL(string: "https://api.example.com/users")!
         let request = URLRequest(url: url)
@@ -177,15 +177,15 @@ struct SkipRequestPersistenceTests {
     func testIsEnabledReturnsTrue() async throws {
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         let handler = LogSkipManager(storage: storage)
-        handler.register(rule: .url("https://analytics.com"), saveLocally: false)
+        handler.register(method: .GET, rule: .url("https://analytics.com"), saveLocally: false)
         #expect(handler.isEnabled == true)
     }
 
     @Test("Persisted skip requests can be retrieved from storage")
     func testPersistedSkipRequestsCanBeRetrievedFromStorage() async throws {
         // Save skip requests directly to storage
-        let skip1 = LogSkipRequest(rule: .url("https://analytics.com"), saveLocally: true)
-        let skip2 = LogSkipRequest(rule: .hostName("tracking.com"), saveLocally: true)
+        let skip1 = LogSkipRequest(method: .GET, rule: .url("https://analytics.com"), saveLocally: true)
+        let skip2 = LogSkipRequest(method: .GET, rule: .hostName("tracking.com"), saveLocally: true)
 
         let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         storage.save([skip1, skip2])

@@ -76,7 +76,7 @@ public struct Mock: Identifiable, Sendable {
     ///   - statusCode: HTTP status code for the response. Defaults to `200`.
     ///   - error: Optional error to simulate a network failure.
     ///   - delay: Simulated response delay in seconds. Defaults to `0`.
-    public init(method: HTTPMethod,
+    public init(method: HTTPMethod = .GET,
                 rule: MatchRule,
                 response: Data?,
                 headers: [String: String] = [:],
@@ -100,7 +100,7 @@ public struct Mock: Identifiable, Sendable {
     ///   - error: Optional error to simulate a network failure.
     ///   - delay: Simulated response delay in seconds. Defaults to `0`.
     /// - Throws: An error if `response` cannot be serialized to JSON.
-    public init(method: HTTPMethod,
+    public init(method: HTTPMethod = .GET,
                 rule: MatchRule,
                 response: [AnyHashable: Any],
                 headers: [String: String] = [:],
