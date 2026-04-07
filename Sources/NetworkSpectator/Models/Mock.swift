@@ -23,6 +23,9 @@ public struct Mock: Identifiable, Sendable {
 
     /// Whether this mock should be persisted to local storage across sessions.
     let saveLocally: Bool
+    
+    /// Mock deregisters when consumed.
+    let oneShot: Bool
 
     /// Creates a mock with rule-based matching and JSON response.
     /// - Parameters:
@@ -40,7 +43,8 @@ public struct Mock: Identifiable, Sendable {
                   statusCode: Int,
                   error: Error?,
                   saveLocally: Bool,
-                  delay: Double = 0) {
+                  delay: Double = 0,
+                  oneShot: Bool = false) {
         let httpResponse = HTTPResponse(headers: headers,
                                     statusCode: statusCode,
                                     responseData: response,
@@ -53,12 +57,14 @@ public struct Mock: Identifiable, Sendable {
     internal init(method: HTTPMethod,
                   rule: MatchRule,
                   response: HTTPResponse,
-                  saveLocally: Bool) {
+                  saveLocally: Bool = false,
+                  oneShot: Bool = false) {
         self.id = UUID()
         self.method = method
         self.rule = rule
         self.response = response
         self.saveLocally = saveLocally
+        self.oneShot = oneShot
     }
     
     /// Creates a mock with a pre-built ``HTTPResponse``. The mock is not persisted to local storage.

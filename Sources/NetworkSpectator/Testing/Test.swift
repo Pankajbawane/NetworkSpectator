@@ -93,7 +93,10 @@ public class TestServer: @unchecked Sendable {
             responseTime: delay,
             mimeType: .json
         )
-        NetworkURLProtocol.mockServer.register(Mock(method: method, rule: rule, response: response))
+        NetworkURLProtocol.mockServer.register(Mock(method: method,
+                                                    rule: rule,
+                                                    response: response,
+                                                    oneShot: true))
     }
     
     /// Registers a mocked raw-data response for requests that match the given method and rule.
@@ -120,7 +123,10 @@ public class TestServer: @unchecked Sendable {
             error: nil,
             responseTime: delay
         )
-        NetworkURLProtocol.mockServer.register(Mock(method: method, rule: rule, response: response))
+        NetworkURLProtocol.mockServer.register(Mock(method: method,
+                                                    rule: rule,
+                                                    response: response,
+                                                    oneShot: true))
     }
     
     /// Registers a mocked network failure for requests that match the given method and rule.
@@ -140,7 +146,10 @@ public class TestServer: @unchecked Sendable {
             responseData: nil,
             error: error
         )
-        NetworkURLProtocol.mockServer.register(Mock(method: method, rule: rule, response: response))
+        NetworkURLProtocol.mockServer.register(Mock(method: method,
+                                                    rule: rule,
+                                                    response: response,
+                                                    oneShot: true))
     }
     
     // MARK: - Mock Removal

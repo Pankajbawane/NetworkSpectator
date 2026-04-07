@@ -13,8 +13,7 @@ final class MockServer: Sendable {
 
     private let state: OSAllocatedUnfairLock<Set<Mock>>
     private let storage: RuleStorage<Mock>
-    private let transient: Bool
-
+    
     static let shared: MockServer = .init()
 
     var mocks: Set<Mock> {
@@ -22,11 +21,9 @@ final class MockServer: Sendable {
     }
 
     init(state: OSAllocatedUnfairLock<Set<Mock>> = OSAllocatedUnfairLock(initialState: []),
-         storage: RuleStorage<Mock> = RuleStorage<Mock>(key: .mockRules),
-         transient: Bool = false) {
+         storage: RuleStorage<Mock> = RuleStorage<Mock>(key: .mockRules)) {
         self.storage = storage
         self.state = state
-        self.transient = transient
     }
 
     /// Creates an empty mock server with no persisted mocks.
@@ -34,8 +31,7 @@ final class MockServer: Sendable {
     static let testServer: MockServer = {
         MockServer(state: OSAllocatedUnfairLock(initialState: []),
                    storage: RuleStorage<Mock>(key: .mockRules,
-                                              store: EmptyStorage()),
-                   transient: true
+                                              store: EmptyStorage())
                    )
     }()
 
@@ -52,7 +48,7 @@ final class MockServer: Sendable {
         let mock = state.withLock { mocks in
             mocks.first { $0.method.rawValue == urlRequest.httpMethod && $0.rule.matches(urlRequest) }
         }
-        if transient, let mock {
+        if let mock, mock.oneShot {
             remove(id: mock.id)
         }
         return mock
