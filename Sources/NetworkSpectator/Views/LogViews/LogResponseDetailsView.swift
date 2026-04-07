@@ -10,6 +10,7 @@ import SwiftUI
 struct LogResponseDetailsView: View {
 
     let item: LogItem
+    @Environment(\.colorScheme) private var colorScheme: ColorScheme
 
     private var isLoading: Bool {
         item.finishTime == nil
@@ -56,10 +57,11 @@ struct LogResponseDetailsView: View {
            let isJson = try? JSONSerialization.isValidJSONObject(data) {
             mimetype = "application/json"
         }
+        let background: Color = colorScheme == .dark ? Color.black.opacity(0.4) : .secondary.opacity(0.2)
         return ResponseBodyLineView(responseBody: item.responseBody, mimetype: mimetype)
             .frame(minHeight: 200)
             .padding(12)
-            .background(Color.secondary.opacity(0.2))
+            .background(background)
             .cornerRadius(8)
     }
 

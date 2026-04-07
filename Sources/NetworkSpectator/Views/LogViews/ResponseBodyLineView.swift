@@ -12,7 +12,8 @@ struct ResponseBodyLineView: View {
     private let isJSON: Bool
 
     @State private var isProcessing = true
-    @State private var texts: [Text] = []
+    @State private var texts: [(number: Text, line: Text)] = []
+    @Environment(\.colorScheme) private var colorScheme: ColorScheme
     
     private static let jsonLineRegex = /"[^"]*"|-?[\d.eE+-]+|[\[\]{}:,]|(?:true|false|null)|\s+|\S+/
     
@@ -35,8 +36,13 @@ struct ResponseBodyLineView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List(Array(texts.enumerated()), id: \.offset) { index, line in
-                    line
-                        .textSelection(.enabled)
+                    HStack(alignment: .firstTextBaseline) {
+                        line.number
+                            .textSelection(.disabled)
+                        
+                        line.line
+                            .textSelection(.enabled)
+                    }
                         .listRowInsets(EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8))
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
@@ -54,16 +60,22 @@ struct ResponseBodyLineView: View {
     private func processContent() async {
         // Process on background task to avoid blocking UI
         let formattedTexts = await Task(priority: .userInitiated) {
+            let textFont: Font
+            #if os(iOS)
+            textFont = .caption.monospaced()
+            #else
+            textFont = .callout.monospaced()
+            #endif
             let lines = responseBody.components(separatedBy: .newlines)
-            var texts: [Text] = []
+            var texts: [(Text, Text)] = []
             texts.reserveCapacity(lines.count + 1)
             for (i, string) in lines.enumerated() {
                 let lineNumber: Text = Text("\(i + 1)".padding(toLength: 4,
                                                                withPad: " ",
-                                                               startingAt: 0)).foregroundColor(.secondary.opacity(0.8)).font(.callout.monospaced())
+                                                               startingAt: 0)).foregroundColor(.secondary.opacity(0.8)).font(textFont)
                 
                 let text = isJSON ? styledSegments(from: string) : Text(string)
-                texts.append(lineNumber + text)
+                texts.append((lineNumber, text))
             }
             return texts
         }.value
@@ -82,7 +94,7 @@ struct ResponseBodyLineView: View {
             let segment = String(match.output)
             let attribute = JSONAttributeType(segment: segment, expectingValue: expectValue)
 
-            result = result + Text(segment).foregroundColor(attribute.color).font(attribute.font)
+            result = result + Text(segment).foregroundColor(attribute.color(colorScheme)).font(attribute.font)
 
             if let next = attribute.expectsValueNext {
                 expectValue = next
@@ -125,11 +137,11 @@ extension ResponseBodyLineView {
             }
         }
         
-        var color: Color {
+        func color(_ scheme: ColorScheme) -> Color {
             switch self {
             case .key: return Color(red: 191/255.0, green: 133/255.0, blue: 85/255.0)
             case .stringValue: return Color(red: 252/255.0, green: 106/255.0, blue: 93/255.0)
-            case .number: return Color.yellow
+            case .number: return scheme == .dark ? Color.yellow : Color.blue
             case .boolean, .null: return Color(red: 252/255.0, green: 95/255.0, blue: 163/255.0)
             case .colon, .bracketOrBrace, .comma: return .primary
             case .whitespaceOrOther: return .secondary
@@ -137,11 +149,17 @@ extension ResponseBodyLineView {
         }
         
         var font: Font {
+            let textFont: Font
+            #if os(iOS)
+            textFont = .caption.monospaced()
+            #else
+            textFont = .callout.monospaced()
+            #endif
             switch self {
             case .colon, .bracketOrBrace, .comma:
-                return .callout.monospaced().bold()
+                return textFont.bold()
             default:
-                return .callout.monospaced()
+                return textFont
             }
         }
         
