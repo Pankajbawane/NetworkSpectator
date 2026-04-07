@@ -1,5 +1,5 @@
 //
-//  ResponseBodyLineView.swift
+//  JSONBodyLineView.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 20/02/26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ResponseBodyLineView: View {
+struct JSONBodyLineView: View {
     private let responseBody: String
     private let isJSON: Bool
 
@@ -105,7 +105,7 @@ struct ResponseBodyLineView: View {
     }
 }
 
-extension ResponseBodyLineView {
+extension JSONBodyLineView {
     private enum JSONAttributeType {
         case key
         case stringValue

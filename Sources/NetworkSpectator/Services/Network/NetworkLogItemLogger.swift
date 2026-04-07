@@ -14,7 +14,7 @@ protocol NetworkItemLogger: Sendable {
 struct UIItemLogger: NetworkItemLogger {
     func logging(_ item: LogItem) {
         DebugPrint.log(item)
-        Task {
+        Task(priority: .userInitiated) {
             await NetworkLogStore.shared.add(item)
         }
     }

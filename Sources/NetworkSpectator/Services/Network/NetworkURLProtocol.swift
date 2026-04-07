@@ -105,7 +105,7 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         // If the request is mocked using match rules, return mocked response.
         if let mock {
             let urlRequest = thisRequest as URLRequest
-            mockTask = Task {
+            mockTask = Task(priority: .userInitiated) {
                 do {
                     try await Task.sleep(for: .seconds(mock.response.responseTime))
                     completion(mock.response.responseData,

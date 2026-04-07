@@ -54,11 +54,11 @@ struct LogResponseDetailsView: View {
         var mimetype = item.mimetype ?? ""
         if mimetype.isEmpty,
            let data = item.responseRaw,
-           let isJson = try? JSONSerialization.isValidJSONObject(data) {
+           let isJson = try? JSONSerialization.isValidJSONObject(data), isJson {
             mimetype = "application/json"
         }
-        let background: Color = colorScheme == .dark ? Color.black.opacity(0.4) : .secondary.opacity(0.2)
-        return ResponseBodyLineView(responseBody: item.responseBody, mimetype: mimetype)
+        let background: Color = colorScheme == .dark ? Color.black.opacity(0.2) : .secondary.opacity(0.2)
+        return JSONBodyLineView(responseBody: item.responseBody, mimetype: mimetype)
             .frame(minHeight: 200)
             .padding(12)
             .background(background)
