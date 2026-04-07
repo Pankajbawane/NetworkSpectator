@@ -128,6 +128,6 @@ public struct NetworkSpectator: Sendable {
         DebugPrint.shared.update(isEnabled)
     }
     
-    /// Access 'test' to write mocks in test targets.
+    /// Provides access to testing utilities for configuring mocks in test targets.
     static let test: TestServer = .init()
 }
