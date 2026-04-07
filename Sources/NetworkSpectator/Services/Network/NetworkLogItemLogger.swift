@@ -21,10 +21,10 @@ struct UIItemLogger: NetworkItemLogger {
 }
 
 struct TestItemLogger: NetworkItemLogger {
+    let loggingEnabled: Bool
+
     func logging(_ item: LogItem) {
-        guard NetworkSpectator.test.isLoggingEnabled else {
-            return
-        }
+        guard loggingEnabled else { return }
         Task {
             await TestLogStore.shared.add(item)
         }

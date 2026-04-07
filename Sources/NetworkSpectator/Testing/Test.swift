@@ -17,8 +17,8 @@ import Foundation
 /// // One time setup in Tests.
 /// NetworkSpectator.test.setUp()
 ///
-/// // Register a mock response.
-/// NetworkSpectator.test.setResponse(
+/// server.setResponse(
+///     method: .GET,
 ///     rule: .path("/api/users"),
 ///     json: ["name": "pankaj"],
 ///     statusCode: 200
@@ -37,20 +37,25 @@ public class TestServer: @unchecked Sendable {
     private(set) var isLoggingEnabled: Bool = false
     private var setupComplete: Bool = false
     
-    /// Enables network interception with the test logger.
-    /// Call once before your tests make network requests.
+    /// Enables request interception for test execution.
+    ///
+    /// Call this once before the code under test creates network requests.
+    /// When `logging` is `true`, intercepted requests are also recorded by the
+    /// test logger.
     func setUp(logging: Bool = false) {
         guard !setupComplete else { return }
         defer { setupComplete = true }
         isLoggingEnabled = logging
-        NetworkURLProtocol.logger = TestItemLogger()
+        NetworkURLProtocol.logger = TestItemLogger(loggingEnabled: logging)
         NetworkURLProtocol.mockServer = .testServer
         NetworkURLProtocol.mockServer.clear()
         NetworkInterceptor.shared.enable()
     }
     
-    /// Disables interception and removes all mocks.
-    /// Call after your tests complete.
+    /// Disables request interception and clears all registered test mocks.
+    ///
+    /// Call this after each test, or from shared teardown code, to restore the
+    /// default interceptor configuration.
      func tearDown() {
         guard setupComplete else { return }
         defer { setupComplete = false }
@@ -62,9 +67,10 @@ public class TestServer: @unchecked Sendable {
     
     // MARK: - Mock Registration
     
-    /// Mocks a JSON response for requests matching the given rule.
+    /// Registers a mocked JSON response for requests that match the given method and rule.
     ///
     /// - Parameters:
+    ///   - method: The HTTP method that the intercepted request must use.
     ///   - rule: The ``MatchRule`` that determines which requests are intercepted.
     ///   - json: A JSON-serializable dictionary returned as the response body.
     ///   - statusCode: HTTP status code (default `200`).
@@ -90,9 +96,10 @@ public class TestServer: @unchecked Sendable {
         NetworkURLProtocol.mockServer.register(Mock(method: method, rule: rule, response: response))
     }
     
-    /// Mocks a raw `Data` response for requests matching the given rule.
+    /// Registers a mocked raw-data response for requests that match the given method and rule.
     ///
     /// - Parameters:
+    ///   - method: The HTTP method that the intercepted request must use.
     ///   - rule: The ``MatchRule`` that determines which requests are intercepted.
     ///   - data: Raw bytes returned as the response body.
     ///   - statusCode: HTTP status code (default `200`).
@@ -116,9 +123,10 @@ public class TestServer: @unchecked Sendable {
         NetworkURLProtocol.mockServer.register(Mock(method: method, rule: rule, response: response))
     }
     
-    /// Mocks a network failure for requests matching the given rule.
+    /// Registers a mocked network failure for requests that match the given method and rule.
     ///
     /// - Parameters:
+    ///   - method: The HTTP method that the intercepted request must use.
     ///   - rule: The ``MatchRule`` that determines which requests are intercepted.
     ///   - error: The error to surface (default `URLError(.notConnectedToInternet)`).
     func setErrorResponse(
@@ -137,7 +145,7 @@ public class TestServer: @unchecked Sendable {
     
     // MARK: - Mock Removal
     
-    /// Removes all registered mocks.
+    /// Removes every mock currently registered with the test server.
     func removeAllMocks() {
         NetworkURLProtocol.mockServer.clear()
     }
