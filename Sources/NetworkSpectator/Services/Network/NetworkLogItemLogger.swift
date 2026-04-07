@@ -25,8 +25,6 @@ struct TestItemLogger: NetworkItemLogger {
 
     func logging(_ item: LogItem) {
         guard loggingEnabled else { return }
-        Task {
-            await TestLogStore.shared.add(item)
-        }
+        // Implement logging.
     }
 }
