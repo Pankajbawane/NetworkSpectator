@@ -34,6 +34,7 @@ struct AddRuleItemView: View {
     @State private var statusCode: String = ""
     @State private var headers: String = ""
     @State private var rule: Rule = .url
+    @State private var method: HTTPMethod = .GET
     @State private var showErrorAlert: Bool = false
     @State private var errorMessage: String = ""
     @State private var delay: String = ""
@@ -46,6 +47,7 @@ struct AddRuleItemView: View {
         self.onSave = onSave
 
         if let item = item {
+            _method = State(initialValue: item.method)
             _text = State(initialValue: item.text)
             _response = State(initialValue: item.response)
             _statusCode = State(initialValue: item.statusCode)
@@ -59,6 +61,17 @@ struct AddRuleItemView: View {
         NavigationStack {
             Form {
                 Section {
+                    Picker("Method", selection: $method) {
+                        ForEach(HTTPMethod.allCases) { method in
+                            Text(method.rawValue).tag(method)
+                        }
+                    }
+                    #if os(iOS)
+                    .pickerStyle(.menu)
+                    #else
+                    .pickerStyle(.inline)
+                    #endif
+                    
                     Picker("Rule Type", selection: $rule) {
                         ForEach(Rule.allCases) { rule in
                             Text(rule.title).tag(rule)
@@ -222,7 +235,7 @@ struct AddRuleItemView: View {
                                 if editingItem.isMock {
                                     MockServer.shared.remove(id: editingItem.id)
                                 } else {
-                                    SkipRequestForLoggingHandler.shared.remove(id: editingItem.id)
+                                    LogSkipManager.shared.remove(id: editingItem.id)
                                 }
                                 dismiss()
                             }
@@ -294,7 +307,7 @@ struct AddRuleItemView: View {
             if isMock {
                 MockServer.shared.remove(id: existingItem.id)
             } else {
-                SkipRequestForLoggingHandler.shared.remove(id: existingItem.id)
+                LogSkipManager.shared.remove(id: existingItem.id)
             }
         }
 
@@ -303,12 +316,15 @@ struct AddRuleItemView: View {
                 let responseData = try HTTPInputConverter.jsonData(from: response)
                 let statuscode = try HTTPInputConverter.statusCode(from: statusCode)
                 let headersData = try HTTPInputConverter.headers(from: headers)
-                let mock = Mock(rule: matchRule,
-                                response: responseData,
-                                headers: headersData,
-                                statusCode: statuscode,
-                                saveLocally: saveLocally,
-                                delay: Double(delay) ?? 0)
+                let response = HTTPResponse(headers: headersData,
+                                            statusCode: statuscode,
+                                            responseData: responseData,
+                                            error: nil,
+                                            responseTime: Double(delay) ?? 0)
+                let mock = Mock(method: method,
+                                rule: matchRule,
+                                response: response,
+                                saveLocally: saveLocally)
                 MockServer.shared.register(mock)
                 
                 // Call onSave callback if provided
@@ -321,8 +337,8 @@ struct AddRuleItemView: View {
                 return
             }
         } else {
-            let skipRequest = SkipRequestForLogging(rule: matchRule, saveLocally: saveLocally)
-            SkipRequestForLoggingHandler.shared.register(request: skipRequest)
+            let skipRequest = LogSkipRequest(method: method, rule: matchRule, saveLocally: saveLocally)
+            LogSkipManager.shared.register(request: skipRequest)
 
             // Call onSave callback if provided
             if let onSave = onSave {

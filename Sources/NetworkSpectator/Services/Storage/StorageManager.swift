@@ -14,7 +14,7 @@ enum StorageKey: String {
     case historyPreference = "NETWORKSPECTATOR_HISTORY_PREFERENCE"
 }
 
-protocol Storeable {
+protocol Storeable: Sendable {
     func set(_ value: Any?, forKey defaultName: String)
     func data(forKey defaultName: String) -> Data?
     func removeObject(forKey defaultName: String)
@@ -25,7 +25,7 @@ protocol Storeable {
 extension UserDefaults: Storeable { }
 
 /// Simple storage manager for persisting rules to UserDefaults
-struct RuleStorage<T: Codable> {
+struct RuleStorage<T: Codable>: Sendable {
 
     private let key: StorageKey
     private let store: Storeable

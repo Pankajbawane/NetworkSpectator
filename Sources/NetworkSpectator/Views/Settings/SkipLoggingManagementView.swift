@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SkipLoggingManagementView: View {
 
-    @State private var skipLogging: [SkipRequestForLogging] = []
+    @State private var skipLogging: [LogSkipRequest] = []
     @State private var showAddSkipSheet = false
     @State private var editingSkipItem: AddRuleItem?
 
@@ -66,7 +66,7 @@ struct SkipLoggingManagementView: View {
         }
     }
 
-    private func skipLoggingItemRow(_ item: SkipRequestForLogging) -> some View {
+    private func skipLoggingItemRow(_ item: LogSkipRequest) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.title3)
@@ -91,7 +91,7 @@ struct SkipLoggingManagementView: View {
         .padding(.vertical, 8)
         .contentShape(Rectangle())
         .onTapGesture {
-            if let skipRequest = SkipRequestForLoggingHandler.shared.skipRequests.first(where: { $0.id == item.id }),
+            if let skipRequest = LogSkipManager.shared.skipRequests.first(where: { $0.id == item.id }),
                let ruleItem = AddRuleItem(skipRequest: skipRequest) {
                 editingSkipItem = ruleItem
             }
@@ -109,7 +109,7 @@ struct SkipLoggingManagementView: View {
 
     private func loadData() {
         withAnimation {
-            skipLogging = SkipRequestForLoggingHandler.shared.skipRequests.map { $0 }
+            skipLogging = LogSkipManager.shared.skipRequests.map { $0 }
         }
         onDataChanged?()
     }
@@ -120,7 +120,7 @@ struct SkipLoggingManagementView: View {
         withAnimation {
             skipLogging.remove(atOffsets: indexSet)
         }
-        SkipRequestForLoggingHandler.shared.remove(id: id)
+        LogSkipManager.shared.remove(id: id)
         onDataChanged?()
     }
 }

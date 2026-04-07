@@ -60,7 +60,7 @@ struct AddRuleItemTests {
     @Test("Init from Mock with .url rule succeeds")
     func testInitFromMockURLRule() {
         let noData: Data? = nil
-        let mock = Mock(rule: .url("https://example.com"), response: noData)
+        let mock = Mock(method: .GET, rule: .url("https://example.com"), response: noData)
         let item = AddRuleItem(mock: mock)
 
         #expect(item != nil)
@@ -73,7 +73,7 @@ struct AddRuleItemTests {
     @Test("Init from Mock with .path rule succeeds")
     func testInitFromMockPathRule() {
         let noData: Data? = nil
-        let mock = Mock(rule: .path("/api/users"), response: noData)
+        let mock = Mock(method: .GET, rule: .path("/api/users"), response: noData)
         let item = AddRuleItem(mock: mock)
 
         #expect(item != nil)
@@ -84,7 +84,7 @@ struct AddRuleItemTests {
     @Test("Init from Mock with .endPath rule succeeds")
     func testInitFromMockEndPathRule() {
         let noData: Data? = nil
-        let mock = Mock(rule: .endPath("users"), response: noData)
+        let mock = Mock(method: .GET, rule: .endPath("users"), response: noData)
         let item = AddRuleItem(mock: mock)
 
         #expect(item != nil)
@@ -95,7 +95,7 @@ struct AddRuleItemTests {
     @Test("Init from Mock with .subPath rule maps to pathComponent")
     func testInitFromMockSubPathRule() {
         let noData: Data? = nil
-        let mock = Mock(rule: .subPath("api"), response: noData)
+        let mock = Mock(method: .GET, rule: .subPath("api"), response: noData)
         let item = AddRuleItem(mock: mock)
 
         #expect(item != nil)
@@ -107,6 +107,7 @@ struct AddRuleItemTests {
     func testInitFromMockPopulatesFields() {
         let responseData = "{\"key\": \"value\"}".data(using: .utf8)
         let mock = Mock(
+            method: .GET,
             rule: .url("https://example.com"),
             response: responseData,
             headers: ["Content-Type": "application/json"],
@@ -123,7 +124,7 @@ struct AddRuleItemTests {
     @Test("Init from Mock preserves saveLocally")
     func testInitFromMockSaveLocally() {
         let noData: Data? = nil
-        let mock = Mock(rule: .url("https://example.com"), response: noData, saveLocally: true)
+        let mock = Mock(method: .GET, rule: .url("https://example.com"), response: noData, headers: [:], statusCode: 200, error: nil, saveLocally: true)
         let item = AddRuleItem(mock: mock)
 
         #expect(item?.saveLocally == true)
@@ -134,7 +135,7 @@ struct AddRuleItemTests {
     @Test("Init from Mock with .hostName returns nil")
     func testInitFromMockHostNameReturnsNil() {
         let noData: Data? = nil
-        let mock = Mock(rule: .hostName("example.com"), response: noData)
+        let mock = Mock(method: .GET, rule: .hostName("example.com"), response: noData)
         let item = AddRuleItem(mock: mock)
         #expect(item == nil)
     }
@@ -142,7 +143,7 @@ struct AddRuleItemTests {
     @Test("Init from Mock with .regex returns nil")
     func testInitFromMockRegexReturnsNil() {
         let noData: Data? = nil
-        let mock = Mock(rule: .regex(".*"), response: noData)
+        let mock = Mock(method: .GET, rule: .regex(".*"), response: noData)
         let item = AddRuleItem(mock: mock)
         #expect(item == nil)
     }
@@ -150,7 +151,7 @@ struct AddRuleItemTests {
     @Test("Init from Mock with .queryParameter returns nil")
     func testInitFromMockQueryParameterReturnsNil() {
         let noData: Data? = nil
-        let mock = Mock(rule: .queryParameter(key: "id", value: "1"), response: noData)
+        let mock = Mock(method: .GET, rule: .queryParameter(key: "id", value: "1"), response: noData)
         let item = AddRuleItem(mock: mock)
         #expect(item == nil)
     }
@@ -159,7 +160,7 @@ struct AddRuleItemTests {
     func testInitFromMockURLRequestReturnsNil() {
         let noData: Data? = nil
         let request = URLRequest(url: URL(string: "https://example.com")!)
-        let mock = Mock(rule: .urlRequest(request), response: noData)
+        let mock = Mock(method: .GET, rule: .urlRequest(request), response: noData)
         let item = AddRuleItem(mock: mock)
         #expect(item == nil)
     }
@@ -168,7 +169,7 @@ struct AddRuleItemTests {
 
     @Test("Init from SkipRequest with .url rule succeeds")
     func testInitFromSkipRequestURLRule() {
-        let skip = SkipRequestForLogging(rule: .url("https://example.com"))
+        let skip = LogSkipRequest(method: .GET, rule: .url("https://example.com"))
         let item = AddRuleItem(skipRequest: skip)
 
         #expect(item != nil)
@@ -180,7 +181,7 @@ struct AddRuleItemTests {
 
     @Test("Init from SkipRequest with .path rule succeeds")
     func testInitFromSkipRequestPathRule() {
-        let skip = SkipRequestForLogging(rule: .path("/api"))
+        let skip = LogSkipRequest(method: .GET, rule: .path("/api"))
         let item = AddRuleItem(skipRequest: skip)
 
         #expect(item != nil)
@@ -190,7 +191,7 @@ struct AddRuleItemTests {
 
     @Test("Init from SkipRequest with .endPath rule succeeds")
     func testInitFromSkipRequestEndPathRule() {
-        let skip = SkipRequestForLogging(rule: .endPath("users"))
+        let skip = LogSkipRequest(method: .GET, rule: .endPath("users"))
         let item = AddRuleItem(skipRequest: skip)
 
         #expect(item != nil)
@@ -200,7 +201,7 @@ struct AddRuleItemTests {
 
     @Test("Init from SkipRequest with .subPath rule maps to pathComponent")
     func testInitFromSkipRequestSubPathRule() {
-        let skip = SkipRequestForLogging(rule: .subPath("api"))
+        let skip = LogSkipRequest(method: .GET, rule: .subPath("api"))
         let item = AddRuleItem(skipRequest: skip)
 
         #expect(item != nil)
@@ -210,7 +211,7 @@ struct AddRuleItemTests {
 
     @Test("Init from SkipRequest has empty response fields")
     func testInitFromSkipRequestEmptyResponseFields() {
-        let skip = SkipRequestForLogging(rule: .url("https://example.com"))
+        let skip = LogSkipRequest(method: .GET, rule: .url("https://example.com"))
         let item = AddRuleItem(skipRequest: skip)
 
         #expect(item?.response == "")
@@ -220,7 +221,7 @@ struct AddRuleItemTests {
 
     @Test("Init from SkipRequest preserves saveLocally")
     func testInitFromSkipRequestSaveLocally() {
-        let skip = SkipRequestForLogging(rule: .url("https://example.com"), saveLocally: true)
+        let skip = LogSkipRequest(method: .GET, rule: .url("https://example.com"), saveLocally: true)
         let item = AddRuleItem(skipRequest: skip)
 
         #expect(item?.saveLocally == true)
@@ -230,21 +231,21 @@ struct AddRuleItemTests {
 
     @Test("Init from SkipRequest with .hostName returns nil")
     func testInitFromSkipRequestHostNameReturnsNil() {
-        let skip = SkipRequestForLogging(rule: .hostName("example.com"))
+        let skip = LogSkipRequest(method: .GET, rule: .hostName("example.com"))
         let item = AddRuleItem(skipRequest: skip)
         #expect(item == nil)
     }
 
     @Test("Init from SkipRequest with .regex returns nil")
     func testInitFromSkipRequestRegexReturnsNil() {
-        let skip = SkipRequestForLogging(rule: .regex(".*"))
+        let skip = LogSkipRequest(method: .GET, rule: .regex(".*"))
         let item = AddRuleItem(skipRequest: skip)
         #expect(item == nil)
     }
 
     @Test("Init from SkipRequest with .queryParameter returns nil")
     func testInitFromSkipRequestQueryParameterReturnsNil() {
-        let skip = SkipRequestForLogging(rule: .queryParameter(key: "id", value: "1"))
+        let skip = LogSkipRequest(method: .GET, rule: .queryParameter(key: "id", value: "1"))
         let item = AddRuleItem(skipRequest: skip)
         #expect(item == nil)
     }

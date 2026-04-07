@@ -116,7 +116,7 @@ struct MonitorPreferenceStorageTests {
         let preferenceStorage = PreferenceStorage(preference: .monitoring, store: store)
         let ruleStorage = RuleStorage<Mock>(key: .mockRules, store: store)
 
-        let mock = Mock(rule: .url("https://example.com"), response: nil as Data?, statusCode: 200, saveLocally: true)
+        let mock = Mock(method: .GET, rule: .url("https://example.com"), response: nil as Data?, headers: [:], statusCode: 200, error: nil, saveLocally: true)
         ruleStorage.save([mock])
 
         preferenceStorage.save(true)

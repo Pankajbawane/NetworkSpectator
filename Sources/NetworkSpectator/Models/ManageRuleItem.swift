@@ -21,7 +21,7 @@ struct ManageRuleItem: Identifiable {
         text = mock.rule.ruleName
     }
     
-    init(skipRequest: SkipRequestForLogging) {
+    init(skipRequest: LogSkipRequest) {
         id = skipRequest.id
         text = skipRequest.rule.ruleName
     }

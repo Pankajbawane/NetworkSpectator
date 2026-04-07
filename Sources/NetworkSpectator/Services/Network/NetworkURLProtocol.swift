@@ -15,6 +15,22 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     private let protectedLog: OSAllocatedUnfairLock<LogItem>
     private static let taskCacheKey = "NETWORKSPECTATOR_TRACK_CACHED_TASK_KEY"
     
+    private static let _logger = OSAllocatedUnfairLock<any NetworkItemLogger>(
+        initialState: UIItemLogger()
+    )
+    static var logger: any NetworkItemLogger {
+        get { _logger.withLock { $0 } }
+        set { _logger.withLock { $0 = newValue } }
+    }
+    
+    private static let _mockServer = OSAllocatedUnfairLock<MockServer>(
+        initialState: .shared
+    )
+    static var mockServer: MockServer {
+        get { _mockServer.withLock { $0 } }
+        set { _mockServer.withLock { $0 = newValue } }
+    }
+    
     override init(request: URLRequest, cachedResponse: CachedURLResponse?, client: (any URLProtocolClient)?) {
         // Capture the HTTP body if it's provided
         let urlRequest = Self.captureHTTPBodyIfNeeded(request)
@@ -30,8 +46,8 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         }
 
         // If the request is ignored for logging using match rules, don't intercept
-        if SkipRequestForLoggingHandler.shared.isEnabled,
-           SkipRequestForLoggingHandler.shared.shouldSkipLogging(request) {
+        if LogSkipManager.shared.isEnabled,
+           LogSkipManager.shared.shouldSkipLogging(request) {
             return false
         }
 
@@ -56,7 +72,7 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         URLProtocol.setProperty(true, forKey: Self.taskCacheKey, in: thisRequest)
         
         // If the request is mocked.
-        let mock = MockServer.shared.responseIfMocked(request)
+        let mock = Self.mockServer.responseIfMocked(request)
 
         // Log the request including headers and body (if any)
         let requestLog = protectedLog.withLock { log in
@@ -91,8 +107,10 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
             let urlRequest = thisRequest as URLRequest
             mockTask = Task {
                 do {
-                    try await Task.sleep(for: .seconds(mock.delay))
-                    completion(mock.response, mock.urlResponse(urlRequest), mock.error)
+                    try await Task.sleep(for: .seconds(mock.response.responseTime))
+                    completion(mock.response.responseData,
+                               mock.urlResponse(urlRequest),
+                               mock.response.error)
                 } catch {
                     // Handle in stopLoading()
                 }
@@ -164,10 +182,7 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         return data
     }
     
-    private func logging(_ item: LogItem) {
-        DebugPrint.log(item)
-        Task {
-            await NetworkLogStore.shared.add(item)
-        }
+    func logging(_ item: LogItem) {
+        Self.logger.logging(item)
     }
 }

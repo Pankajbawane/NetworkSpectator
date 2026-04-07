@@ -27,8 +27,6 @@ extension FileManager: FileStoreable {
     }
 }
 
-
-
 /// File-based key-value storage for log history.
 /// Each key (timestamp range string) maps to a separate JSON file containing an array of LogItems.
 struct LogHistoryStorage {

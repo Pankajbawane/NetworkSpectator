@@ -56,8 +56,7 @@ final class NetworkLogContainer: ObservableObject, Sendable {
         if setupMode == .none {
             setupMode = .started
         }
-        URLProtocol.registerClass(NetworkURLProtocol.self)
-        URLSessionConfiguration.enableNetworkMonitoring()
+        NetworkInterceptor.shared.enable()
         startObservingUpdates()
         isLoggingEnabled = true
         DebugPrint.log("NETWORK SPECTATOR: Logging initiated.")
@@ -71,8 +70,7 @@ final class NetworkLogContainer: ObservableObject, Sendable {
             return
         }
         Task { await LogHistoryManager.shared.finalizeAndStopObserving() }
-        URLProtocol.unregisterClass(NetworkURLProtocol.self)
-        URLSessionConfiguration.disableNetworkMonitoring()
+        NetworkInterceptor.shared.disable()
         stop()
         isLoggingEnabled = false
         DebugPrint.log("NETWORK SPECTATOR: Monitoring stopped.")

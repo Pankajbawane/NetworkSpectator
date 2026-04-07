@@ -116,7 +116,7 @@ struct LogDetailsContainerView: View {
                                    text: item.url,
                                    rule: .url,
                                    isMock: false)
-            let skip = SkipRequestForLoggingHandler.shared.skipRequests.first(where:  { $0.id == item.id })
+            let skip = LogSkipManager.shared.skipRequests.first(where:  { $0.id == item.id })
             if let skip, let item = AddRuleItem(skipRequest: skip) {
                 rule = item
             }

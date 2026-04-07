@@ -15,9 +15,9 @@ struct SkipRequestPersistenceTests {
 
     @Test("Register rule with saveLocally true persists to storage")
     func testRegisterRuleWithSaveLocallyPersists() async throws {
-        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules, store: MockStorage())
-        let handler = SkipRequestForLoggingHandler(storage: storage)
-        handler.register(rule: .url("https://analytics.com/track"), saveLocally: true)
+        let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
+        let handler = LogSkipManager(storage: storage)
+        handler.register(method: .GET, rule: .url("https://analytics.com/track"), saveLocally: true)
 
         // Verify it's in memory
         #expect(handler.skipRequests.count == 1)
@@ -30,9 +30,9 @@ struct SkipRequestPersistenceTests {
 
     @Test("Register rule with saveLocally false does not persist")
     func testRegisterRuleWithoutSaveLocallyDoesNotPersist() async throws {
-        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules, store: MockStorage())
-        let handler = SkipRequestForLoggingHandler(storage: storage)
-        handler.register(rule: .hostName("temp.com"), saveLocally: false)
+        let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
+        let handler = LogSkipManager(storage: storage)
+        handler.register(method: .GET, rule: .hostName("temp.com"), saveLocally: false)
 
         // Verify it's in memory
         #expect(handler.skipRequests.count == 1)
@@ -44,9 +44,9 @@ struct SkipRequestPersistenceTests {
 
     @Test("Register request object persists if saveLocally is true")
     func testRegisterRequestObjectPersists() async throws {
-        let skipRequest = SkipRequestForLogging(rule: .url("https://ads.com"), saveLocally: true)
-        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules, store: MockStorage())
-        let handler = SkipRequestForLoggingHandler(storage: storage)
+        let skipRequest = LogSkipRequest(method: .GET, rule: .url("https://ads.com"), saveLocally: true)
+        let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
+        let handler = LogSkipManager(storage: storage)
         handler.register(request: skipRequest)
 
         // Verify it's persisted to storage
@@ -57,9 +57,9 @@ struct SkipRequestPersistenceTests {
 
     @Test("Remove skip request with saveLocally true updates storage")
     func testRemoveSkipRequestWithSaveLocallyUpdatesStorage() async throws {
-        let skipRequest = SkipRequestForLogging(rule: .url("https://tracking.com"), saveLocally: true)
-        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules, store: MockStorage())
-        let handler = SkipRequestForLoggingHandler(storage: storage)
+        let skipRequest = LogSkipRequest(method: .GET, rule: .url("https://tracking.com"), saveLocally: true)
+        let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
+        let handler = LogSkipManager(storage: storage)
         handler.register(request: skipRequest)
 
         #expect(handler.skipRequests.count == 1)
@@ -77,13 +77,13 @@ struct SkipRequestPersistenceTests {
     @Test("Remove skip request with saveLocally false does not affect storage")
     func testRemoveSkipRequestWithoutSaveLocallyDoesNotAffectStorage() async throws {
         // First add a persistent skip request
-        let persistentRequest = SkipRequestForLogging(rule: .url("https://keep.com"), saveLocally: true)
-        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules, store: MockStorage())
-        let handler = SkipRequestForLoggingHandler(storage: storage)
+        let persistentRequest = LogSkipRequest(method: .GET, rule: .url("https://keep.com"), saveLocally: true)
+        let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
+        let handler = LogSkipManager(storage: storage)
         handler.register(request: persistentRequest)
 
         // Add a non-persistent skip request
-        let tempRequest = SkipRequestForLogging(rule: .url("https://temp.com"), saveLocally: false)
+        let tempRequest = LogSkipRequest(method: .GET, rule: .url("https://temp.com"), saveLocally: false)
         handler.register(request: tempRequest)
 
         #expect(handler.skipRequests.count == 2)
@@ -99,10 +99,10 @@ struct SkipRequestPersistenceTests {
 
     @Test("Clear removes all skip requests and clears storage")
     func testClearRemovesAllAndClearsStorage() async throws {
-        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules, store: MockStorage())
-        let handler = SkipRequestForLoggingHandler(storage: storage)
-        handler.register(rule: .url("https://analytics.com"), saveLocally: true)
-        handler.register(rule: .hostName("tracking.com"), saveLocally: false)
+        let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
+        let handler = LogSkipManager(storage: storage)
+        handler.register(method: .GET, rule: .url("https://analytics.com"), saveLocally: true)
+        handler.register(method: .GET, rule: .hostName("tracking.com"), saveLocally: false)
 
         #expect(handler.skipRequests.count == 2)
 
@@ -118,11 +118,11 @@ struct SkipRequestPersistenceTests {
 
     @Test("Multiple persistent skip requests are all saved")
     func testMultiplePersistentSkipRequestsAreSaved() async throws {
-        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules, store: MockStorage())
-        let handler = SkipRequestForLoggingHandler(storage: storage)
-        handler.register(rule: .url("https://analytics.com"), saveLocally: true)
-        handler.register(rule: .hostName("tracking.com"), saveLocally: true)
-        handler.register(rule: .path("/ads"), saveLocally: true)
+        let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
+        let handler = LogSkipManager(storage: storage)
+        handler.register(method: .GET, rule: .url("https://analytics.com"), saveLocally: true)
+        handler.register(method: .GET, rule: .hostName("tracking.com"), saveLocally: true)
+        handler.register(method: .GET, rule: .path("/ads"), saveLocally: true)
 
         // Verify storage has all three
         let retrieved = storage.retrieve()
@@ -131,12 +131,12 @@ struct SkipRequestPersistenceTests {
 
     @Test("Mixed persistent and non-persistent skip requests only persist the correct ones")
     func testMixedPersistentAndNonPersistentSkipRequests() async throws {
-        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules, store: MockStorage())
-        let handler = SkipRequestForLoggingHandler(storage: storage)
-        handler.register(rule: .url("https://persistent1.com"), saveLocally: true)
-        handler.register(rule: .url("https://temp1.com"), saveLocally: false)
-        handler.register(rule: .hostName("persistent2.com"), saveLocally: true)
-        handler.register(rule: .path("/temp"), saveLocally: false)
+        let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
+        let handler = LogSkipManager(storage: storage)
+        handler.register(method: .GET, rule: .url("https://persistent1.com"), saveLocally: true)
+        handler.register(method: .GET, rule: .url("https://temp1.com"), saveLocally: false)
+        handler.register(method: .GET, rule: .hostName("persistent2.com"), saveLocally: true)
+        handler.register(method: .GET, rule: .path("/temp"), saveLocally: false)
 
         // Verify memory has all four
         #expect(handler.skipRequests.count == 4)
@@ -149,9 +149,9 @@ struct SkipRequestPersistenceTests {
 
     @Test("ShouldSkipLogging returns true for matching request")
     func testShouldSkipLoggingReturnsTrue() async throws {
-        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules, store: MockStorage())
-        let handler = SkipRequestForLoggingHandler(storage: storage)
-        handler.register(rule: .url("https://analytics.com/track"), saveLocally: false)
+        let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
+        let handler = LogSkipManager(storage: storage)
+        handler.register(method: .GET, rule: .url("https://analytics.com/track"), saveLocally: false)
 
         let url = URL(string: "https://analytics.com/track")!
         let request = URLRequest(url: url)
@@ -162,9 +162,9 @@ struct SkipRequestPersistenceTests {
 
     @Test("ShouldSkipLogging returns false for non-matching request")
     func testShouldSkipLoggingReturnsFalse() async throws {
-        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules, store: MockStorage())
-        let handler = SkipRequestForLoggingHandler(storage: storage)
-        handler.register(rule: .url("https://analytics.com/track"), saveLocally: false)
+        let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
+        let handler = LogSkipManager(storage: storage)
+        handler.register(method: .GET, rule: .url("https://analytics.com/track"), saveLocally: false)
 
         let url = URL(string: "https://api.example.com/users")!
         let request = URLRequest(url: url)
@@ -175,19 +175,19 @@ struct SkipRequestPersistenceTests {
 
     @Test("IsEnabled returns true when skip requests exist")
     func testIsEnabledReturnsTrue() async throws {
-        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules, store: MockStorage())
-        let handler = SkipRequestForLoggingHandler(storage: storage)
-        handler.register(rule: .url("https://analytics.com"), saveLocally: false)
+        let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
+        let handler = LogSkipManager(storage: storage)
+        handler.register(method: .GET, rule: .url("https://analytics.com"), saveLocally: false)
         #expect(handler.isEnabled == true)
     }
 
     @Test("Persisted skip requests can be retrieved from storage")
     func testPersistedSkipRequestsCanBeRetrievedFromStorage() async throws {
         // Save skip requests directly to storage
-        let skip1 = SkipRequestForLogging(rule: .url("https://analytics.com"), saveLocally: true)
-        let skip2 = SkipRequestForLogging(rule: .hostName("tracking.com"), saveLocally: true)
+        let skip1 = LogSkipRequest(method: .GET, rule: .url("https://analytics.com"), saveLocally: true)
+        let skip2 = LogSkipRequest(method: .GET, rule: .hostName("tracking.com"), saveLocally: true)
 
-        let storage = RuleStorage<SkipRequestForLogging>(key: .skipRules, store: MockStorage())
+        let storage = RuleStorage<LogSkipRequest>(key: .skipRules, store: MockStorage())
         storage.save([skip1, skip2])
 
         // Verify storage has the skip requests (in real scenario these would be loaded on app restart)
