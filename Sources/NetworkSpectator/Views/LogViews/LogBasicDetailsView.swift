@@ -86,7 +86,7 @@ struct LogBasicDetailsView: View {
 
             Text(row.value)
                 .textSelection(.enabled)
-                .font(.system(.body, design: row.title == "URL" ? .monospaced : .default))
+                .font(.system(.body, design: .monospaced))
                 .foregroundColor(row.valueColor ?? .primary)
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)

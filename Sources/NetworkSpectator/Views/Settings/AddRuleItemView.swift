@@ -26,6 +26,7 @@ struct AddRuleItemView: View {
     let title: String
     let item: AddRuleItem?
     let onSave: (() -> Void)?
+    private let methods: [HTTPMethod] = [.GET, .POST, .PUT, .DELETE, .PATCH]
     
     @State private var saveLocally: Bool = false
     @Environment(\.dismiss) private var dismiss
@@ -62,7 +63,7 @@ struct AddRuleItemView: View {
             Form {
                 Section {
                     Picker("Method", selection: $method) {
-                        ForEach(HTTPMethod.allCases) { method in
+                        ForEach(methods) { method in
                             Text(method.rawValue).tag(method)
                         }
                     }
@@ -71,7 +72,14 @@ struct AddRuleItemView: View {
                     #else
                     .pickerStyle(.inline)
                     #endif
-                    
+                } header: {
+                    Text("HTTP Method")
+                } footer: {
+                    Text("Select HTTP Method")
+                        .font(.caption)
+                }
+                
+                Section {
                     Picker("Rule Type", selection: $rule) {
                         ForEach(Rule.allCases) { rule in
                             Text(rule.title).tag(rule)
