@@ -19,8 +19,8 @@ struct SkipLoggingManagementView: View {
         List {
             if skipLogging.isEmpty {
                     emptyState(
-                        icon: "eye.slash",
-                        title: "No Skip Rules",
+                        icon: "text.badge.minus",
+                        title: "No Skip Logging Rules",
                         message: "Add rules to exclude certain requests from being logged"
                     )
             } else {

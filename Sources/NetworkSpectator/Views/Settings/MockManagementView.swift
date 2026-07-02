@@ -19,7 +19,7 @@ struct MockManagementView: View {
         List {
             if mocks.isEmpty {
                     emptyState(
-                        icon: "doc.text.image",
+                        icon: "theatermasks",
                         title: "No Mocks",
                         message: "Add a mock to intercept network requests and return custom responses"
                     )

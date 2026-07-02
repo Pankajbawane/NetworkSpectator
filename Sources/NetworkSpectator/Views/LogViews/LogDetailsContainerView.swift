@@ -130,7 +130,7 @@ struct LogDetailsContainerView: View {
                 if !isHistoricLogs {
                     // CTA to register mock.
                     Button(action: { showAddMockSheet = true }) {
-                        Label("Mock", systemImage: "network.slash")
+                        Label("Mock", systemImage: item.isMocked ? "theatermasks.fill" : "theatermasks")
                             .font(.caption)
                             .fontWeight(.bold)
                             .padding(7)
@@ -140,7 +140,7 @@ struct LogDetailsContainerView: View {
                     
                     // CTA to ignore requests from logging.
                     Button(action: { showAddSkipSheet = true }) {
-                        Label("Skip Log", systemImage: "eye.slash")
+                        Label("Skip Log", systemImage: "text.badge.minus")
                             .font(.caption)
                             .fontWeight(.bold)
                             .padding(7)

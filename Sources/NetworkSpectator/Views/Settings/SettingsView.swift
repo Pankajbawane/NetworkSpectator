@@ -165,7 +165,7 @@ struct SettingsView: View {
         Section {
             NavigationLink(value: SettingsRoute.mockManagement) {
                 HStack(spacing: 12) {
-                    Image(systemName: "rectangle.stack.fill")
+                    Image(systemName: mockCount == 0 ? "theatermasks" : "theatermasks.fill")
                         .font(.title3)
                         .foregroundStyle(.green)
                         .frame(width: 28)
@@ -215,7 +215,7 @@ struct SettingsView: View {
         Section {
             NavigationLink(value: SettingsRoute.skipLogging) {
                 HStack(spacing: 12) {
-                    Image(systemName: "eye.slash.fill")
+                    Image(systemName: "text.badge.minus")
                         .font(.title3)
                         .foregroundStyle(.orange)
                         .frame(width: 28)
