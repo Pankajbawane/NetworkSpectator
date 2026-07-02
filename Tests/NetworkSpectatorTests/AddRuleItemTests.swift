@@ -170,7 +170,7 @@ struct AddRuleItemTests {
     @Test("Init from SkipRequest with .url rule succeeds")
     func testInitFromSkipRequestURLRule() {
         let skip = LoggingExclusionRule(method: .GET, rule: .url("https://example.com"))
-        let item = AddRuleItem(skipRequest: skip)
+        let item = AddRuleItem(exclusion: skip)
 
         #expect(item != nil)
         #expect(item?.text == "https://example.com")
@@ -182,7 +182,7 @@ struct AddRuleItemTests {
     @Test("Init from SkipRequest with .path rule succeeds")
     func testInitFromSkipRequestPathRule() {
         let skip = LoggingExclusionRule(method: .GET, rule: .path("/api"))
-        let item = AddRuleItem(skipRequest: skip)
+        let item = AddRuleItem(exclusion: skip)
 
         #expect(item != nil)
         #expect(item?.text == "/api")
@@ -192,7 +192,7 @@ struct AddRuleItemTests {
     @Test("Init from SkipRequest with .endPath rule succeeds")
     func testInitFromSkipRequestEndPathRule() {
         let skip = LoggingExclusionRule(method: .GET, rule: .endPath("users"))
-        let item = AddRuleItem(skipRequest: skip)
+        let item = AddRuleItem(exclusion: skip)
 
         #expect(item != nil)
         #expect(item?.text == "users")
@@ -202,7 +202,7 @@ struct AddRuleItemTests {
     @Test("Init from SkipRequest with .subPath rule maps to pathComponent")
     func testInitFromSkipRequestSubPathRule() {
         let skip = LoggingExclusionRule(method: .GET, rule: .subPath("api"))
-        let item = AddRuleItem(skipRequest: skip)
+        let item = AddRuleItem(exclusion: skip)
 
         #expect(item != nil)
         #expect(item?.text == "api")
@@ -212,7 +212,7 @@ struct AddRuleItemTests {
     @Test("Init from SkipRequest has empty response fields")
     func testInitFromSkipRequestEmptyResponseFields() {
         let skip = LoggingExclusionRule(method: .GET, rule: .url("https://example.com"))
-        let item = AddRuleItem(skipRequest: skip)
+        let item = AddRuleItem(exclusion: skip)
 
         #expect(item?.response == "")
         #expect(item?.statusCode == "")
@@ -222,7 +222,7 @@ struct AddRuleItemTests {
     @Test("Init from SkipRequest preserves saveLocally")
     func testInitFromSkipRequestSaveLocally() {
         let skip = LoggingExclusionRule(method: .GET, rule: .url("https://example.com"), saveLocally: true)
-        let item = AddRuleItem(skipRequest: skip)
+        let item = AddRuleItem(exclusion: skip)
 
         #expect(item?.saveLocally == true)
     }
@@ -232,21 +232,21 @@ struct AddRuleItemTests {
     @Test("Init from SkipRequest with .hostName returns nil")
     func testInitFromSkipRequestHostNameReturnsNil() {
         let skip = LoggingExclusionRule(method: .GET, rule: .hostName("example.com"))
-        let item = AddRuleItem(skipRequest: skip)
+        let item = AddRuleItem(exclusion: skip)
         #expect(item == nil)
     }
 
     @Test("Init from SkipRequest with .regex returns nil")
     func testInitFromSkipRequestRegexReturnsNil() {
         let skip = LoggingExclusionRule(method: .GET, rule: .regex(".*"))
-        let item = AddRuleItem(skipRequest: skip)
+        let item = AddRuleItem(exclusion: skip)
         #expect(item == nil)
     }
 
     @Test("Init from SkipRequest with .queryParameter returns nil")
     func testInitFromSkipRequestQueryParameterReturnsNil() {
         let skip = LoggingExclusionRule(method: .GET, rule: .queryParameter(key: "id", value: "1"))
-        let item = AddRuleItem(skipRequest: skip)
+        let item = AddRuleItem(exclusion: skip)
         #expect(item == nil)
     }
 }
