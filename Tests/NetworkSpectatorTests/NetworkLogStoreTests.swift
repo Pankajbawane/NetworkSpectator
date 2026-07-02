@@ -11,7 +11,7 @@ import Foundation
 
 // MARK: - NetworkLogStore Tests
 // Tests use the shared singleton and clean up via stop() between tests.
-// Since stop() is fileprivate, tests exercise add, snapshot, itemCount, and batchUpdates.
+// Tests exercise add, snapshot, itemCount, and update streaming.
 @Suite("NetworkLogStore Tests", .serialized)
 struct NetworkLogStoreTests {
 
@@ -33,6 +33,7 @@ struct NetworkLogStoreTests {
 
     @Test("Adding an item makes it available in snapshot")
     func testAddAndSnapshot() async {
+        await store.start()
         let item = makeItem()
         await store.add(item)
 
@@ -42,20 +43,21 @@ struct NetworkLogStoreTests {
 
     @Test("Adding multiple items increases count")
     func testAddMultipleItems() async {
-        let initialCount = await store.itemCount
+        await store.start()
 
         await store.add(makeItem())
         await store.add(makeItem())
         await store.add(makeItem())
 
         let newCount = await store.itemCount
-        #expect(newCount >= initialCount + 3)
+        #expect(newCount == 3)
     }
 
     // MARK: - Update Existing Item
 
     @Test("Adding item with same ID updates instead of duplicating")
     func testUpdateExistingItem() async {
+        await store.start()
         let id = UUID()
 
         let initial = makeItem(id: id, statusCode: 0, isLoading: true)
@@ -83,9 +85,10 @@ struct NetworkLogStoreTests {
 
     // MARK: - Batch Updates Stream
 
-    @Test("batchUpdates stream receives items after add")
-    func testBatchUpdatesStream() async {
-        let stream = await store.batchUpdates()
+    @Test("updates stream receives appended item after add")
+    func testUpdatesStream() async {
+        await store.start()
+        let stream = await store.updates()
 
         let item = makeItem()
         await store.add(item)
@@ -94,20 +97,27 @@ struct NetworkLogStoreTests {
         try? await Task.sleep(for: .milliseconds(200))
 
         // Collect the first batch
-        var receivedBatch: NetworkLogStore.ItemUpdate?
+        var receivedBatch: [NetworkLogUpdate]?
         for await batch in stream {
             receivedBatch = batch
             break
         }
 
         #expect(receivedBatch != nil)
-        #expect(receivedBatch?.items.contains(where: { $0.id == item.id }) == true)
+        let containsAppendedItem = receivedBatch?.contains { update in
+            if case .append(let appendedItem) = update {
+                return appendedItem.id == item.id
+            }
+            return false
+        }
+        #expect(containsAppendedItem == true)
     }
 
     // MARK: - Snapshot Contains Correct Data
 
     @Test("Snapshot returns items with correct data")
     func testSnapshotReturnsCorrectData() async {
+        await store.start()
         let item = makeItem(url: "https://snapshot-test.com/data", method: "POST", statusCode: 201)
         await store.add(item)
 

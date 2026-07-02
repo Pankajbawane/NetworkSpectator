@@ -95,10 +95,12 @@ struct SettingsView: View {
                 PreferenceStorage(preference: .monitoring).save(true)
             }
             preferenceStorage.save(value)
-            if value {
-                store.enableInternally()
-            } else {
-                store.disable()
+            Task {
+                if value {
+                    await store.enableInternally()
+                } else {
+                    await store.disable()
+                }
             }
         }
     }

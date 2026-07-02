@@ -103,7 +103,7 @@ struct EmptyStateView: View {
             // Delay enable so the bounce + green state is visible before the view transitions
             Task {
                 try? await Task.sleep(for: .milliseconds(600))
-                monitor.enableInternally()
+                await monitor.enableInternally()
                 if monitor.setupMode == .onDemand {
                     PreferenceStorage(preference: .monitoring).save(true)
                 }

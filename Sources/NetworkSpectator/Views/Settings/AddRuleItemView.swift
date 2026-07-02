@@ -21,6 +21,14 @@ struct AddRuleItemView: View {
             rawValue
         }
     }
+    
+    enum Focus: Hashable {
+        case rule
+        case response
+        case statuscode
+        case headers
+        case none
+    }
 
     let isMock: Bool
     let title: String
@@ -40,6 +48,7 @@ struct AddRuleItemView: View {
     @State private var errorMessage: String = ""
     @State private var delay: String = ""
     @State private var showDeleteAlert: Bool = false
+    @FocusState private var focus: Focus?
 
     init(isMock: Bool, title: String, item: AddRuleItem? = nil, onSave: (() -> Void)? = nil) {
         self.isMock = isMock
@@ -105,6 +114,8 @@ struct AddRuleItemView: View {
                             .foregroundStyle(.secondary)
                         #endif
                         TextEditor(text: $text)
+                            .scrollDismissesKeyboard(.automatic)
+                            .focused($focus, equals: .rule)
                             .font(.body)
                             .autocorrectionDisabled()
                         #if os(iOS)
@@ -136,6 +147,8 @@ struct AddRuleItemView: View {
                                     .foregroundStyle(.primary)
 
                                 TextEditor(text: $response)
+                                    .scrollDismissesKeyboard(.automatic)
+                                    .focused($focus, equals: .response)
                                     .font(.system(.body, design: .monospaced))
                                     .autocorrectionDisabled()
                                 #if os(iOS)
@@ -160,10 +173,13 @@ struct AddRuleItemView: View {
 
                                 #if os(iOS)
                                 TextField("200", text: $statusCode)
+                                    .scrollDismissesKeyboard(.automatic)
+                                    .focused($focus, equals: .statuscode)
                                     .keyboardType(.numberPad)
                                     .textFieldStyle(.roundedBorder)
                                 #else
                                 TextField("200", text: $statusCode)
+                                    .focused($focus, equals: .statuscode)
                                     .textFieldStyle(.roundedBorder)
                                     .frame(maxWidth: 150)
                                 #endif
@@ -177,6 +193,8 @@ struct AddRuleItemView: View {
                                     .foregroundStyle(.primary)
 
                                 TextEditor(text: $headers)
+                                    .scrollDismissesKeyboard(.automatic)
+                                    .focused($focus, equals: .headers)
                                     .font(.system(.callout, design: .monospaced))
                                     .autocorrectionDisabled()
                                 #if os(iOS)
