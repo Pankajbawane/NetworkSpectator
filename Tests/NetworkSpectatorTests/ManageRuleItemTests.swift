@@ -23,8 +23,8 @@ struct ManageRuleItemTests {
 
     @Test("Init from SkipRequestForLogging uses skip request id and rule name")
     func testInitFromSkipRequest() async throws {
-        let skipRequest = LogSkipRequest(method: .GET, rule: .hostName("analytics.com"), saveLocally: false)
-        let item = ManageRuleItem(skipRequest: skipRequest)
+        let skipRequest = LoggingExclusionRule(method: .GET, rule: .hostName("analytics.com"), saveLocally: false)
+        let item = ManageRuleItem(exclusion: skipRequest)
 
         #expect(item.id == skipRequest.id)
         #expect(item.text == skipRequest.rule.ruleName)

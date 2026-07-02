@@ -10,7 +10,7 @@ import SwiftUI
 struct SettingsView: View {
 
     @State private var mockCount: Int = 0
-    @State private var skipLoggingCount: Int = 0
+    @State private var exclusionCount: Int = 0
     @State private var toggleMonitoring: Bool = false
     @State private var togglePersistence: Bool = false
     @State private var refreshID = UUID()
@@ -27,7 +27,7 @@ struct SettingsView: View {
             insightSection
             historySection
             mockManagementSection
-            skipLoggingManagementSection
+            exclusionLoggingManagementSection
         }
         #if os(iOS)
         .listStyle(.insetGrouped)
@@ -42,8 +42,8 @@ struct SettingsView: View {
                 LogHistoryView()
             case .mockManagement:
                 MockManagementView(onDataChanged: { refreshID = UUID() })
-            case .skipLogging:
-                SkipLoggingManagementView(onDataChanged: { refreshID = UUID() })
+            case .exclusionLogging:
+                ManageLoggingExclusionView(onDataChanged: { refreshID = UUID() })
             }
         }
         .navigationTitle("Tools")
@@ -209,11 +209,11 @@ struct SettingsView: View {
         }
     }
     
-    // MARK: - Skip Rules Management Section
+    // MARK: - Exclusion Rules Management Section
     
-    private var skipLoggingManagementSection: some View {
+    private var exclusionLoggingManagementSection: some View {
         Section {
-            NavigationLink(value: SettingsRoute.skipLogging) {
+            NavigationLink(value: SettingsRoute.exclusionLogging) {
                 HStack(spacing: 12) {
                     Image(systemName: "text.badge.minus")
                         .font(.title3)
@@ -221,10 +221,10 @@ struct SettingsView: View {
                         .frame(width: 28)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Skip Logging Rules")
+                        Text("Logging Exclusion Rules")
                             .font(.body)
-                        if skipLoggingCount > 0 {
-                            Text("\(skipLoggingCount) active rule\(skipLoggingCount == 1 ? "" : "s")")
+                        if exclusionCount > 0 {
+                            Text("\(exclusionCount) active rule\(exclusionCount == 1 ? "" : "s")")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         } else {
@@ -236,8 +236,8 @@ struct SettingsView: View {
 
                     Spacer()
 
-                    if skipLoggingCount > 0 {
-                        Text("\(skipLoggingCount)")
+                    if exclusionCount > 0 {
+                        Text("\(exclusionCount)")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
@@ -253,7 +253,7 @@ struct SettingsView: View {
         } header: {
             
         } footer: {
-            Text("Configure skip rules for network requests")
+            Text("Configure logging exclusion rules")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -263,7 +263,7 @@ struct SettingsView: View {
 
     private func loadCounts() {
         mockCount = MockServer.shared.mocks.count
-        skipLoggingCount = LogSkipManager.shared.skipRequests.count
+        exclusionCount = LoggingExclusionManager.shared.rules.count
     }
 
     private func loadMonitoringState() {
@@ -277,6 +277,6 @@ extension SettingsView {
         case insights
         case history
         case mockManagement
-        case skipLogging
+        case exclusionLogging
     }
 }

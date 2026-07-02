@@ -27,7 +27,7 @@ Designed for developers debugging network calls during development and QA teams 
   - Tabbed detail view: Overview, Request, Headers, and Response
   - Smart response rendering — pretty-printed JSON, inline image previews, and plain text
   - Copy any request or response data to clipboard
-  - Create a mock or skip rule directly from a captured request
+  - Create a mock response or logging exclusion directly from a captured request
 
 - **Export in multiple formats**
   - **CSV** — bulk or single request export for spreadsheets and analysis
@@ -42,10 +42,10 @@ Designed for developers debugging network calls during development and QA teams 
   - **UI-based mocking** — let QA testers create and manage mocks on the fly without Xcode
   - **Persist mocks** across app sessions with local storage
 
-- **Skip request logging**
+- **Logging exclusions**
   - Exclude noisy or sensitive requests using the same flexible matching rules
-  - Configure skip rules programmatically or from the UI
-  - Persist rules across app launches
+  - Configure logging exclusions programmatically or from the UI
+  - Persist exclusion rules across app launches
 
 - **Insights dashboard**
   - Summary cards: total requests, success rate, and unique hosts
@@ -148,20 +148,24 @@ presentAsSheet(networkVC)
 Customize NetworkSpectator behavior with the configuration methods:
 
 ```swift
-// Enable or disable printing logs to the debug console
-NetworkSpectator.debugLogsPrint(isEnabled: Bool)
+// Enable or disable diagnostic output in the Xcode console
+NetworkSpectator.setDebugConsoleLogging(true)
 
 // Register a mock response
-NetworkSpectator.registerMock(for mock: Mock)
+NetworkSpectator.registerMock(for: mock)
 
 // Remove all registered mocks
-NetworkSpectator.stopMocking()
+NetworkSpectator.clearMocks()
 
-// Skip logging for specific requests
-NetworkSpectator.ignoreLogging(for rule: MatchRule)
+// Exclude matching requests from the captured request log
+let exclusion = LoggingExclusionRule(method: .GET, rule: .hostName("analytics.example.com"))
+NetworkSpectator.excludeFromLogging(for: exclusion)
 
-// Remove all skip logging rules
-NetworkSpectator.stopIgnoringLog()
+// Remove all logging exclusions
+NetworkSpectator.clearLoggingExclusions()
+
+// Remove all registered mocks and logging exclusions
+NetworkSpectator.resetConfiguration()
 ```
 
 ### On-Demand Monitoring

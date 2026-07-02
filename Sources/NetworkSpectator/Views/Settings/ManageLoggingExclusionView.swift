@@ -1,5 +1,5 @@
 //
-//  SkipLoggingManagementView.swift
+//  ManageLoggingExclusionView.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 27/02/26.
@@ -7,28 +7,28 @@
 
 import SwiftUI
 
-struct SkipLoggingManagementView: View {
+struct ManageLoggingExclusionView: View {
 
-    @State private var skipLogging: [LogSkipRequest] = []
-    @State private var showAddSkipSheet = false
-    @State private var editingSkipItem: AddRuleItem?
+    @State private var rules: [LoggingExclusionRule] = []
+    @State private var showAddRuleSheet = false
+    @State private var itemBeingUpdated: AddRuleItem?
 
     var onDataChanged: (() -> Void)?
 
     var body: some View {
         List {
-            if skipLogging.isEmpty {
+            if rules.isEmpty {
                     emptyState(
                         icon: "text.badge.minus",
-                        title: "No Skip Logging Rules",
+                        title: "No Exclusion Rules",
                         message: "Add rules to exclude certain requests from being logged"
                     )
             } else {
-                ForEach(skipLogging) { item in
-                    skipLoggingItemRow(item)
+                ForEach(rules) { item in
+                    exclusionItemRow(item)
                 }
                 .onDelete { indexSet in
-                    deleteSkipLogging(at: indexSet)
+                    deleteExclusion(at: indexSet)
                 }
             }
         }
@@ -37,28 +37,28 @@ struct SkipLoggingManagementView: View {
         #else
         .listStyle(.inset)
         #endif
-        .navigationTitle("Skip Logging Rules")
+        .navigationTitle("Logging Exclusion Rules")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    showAddSkipSheet = true
+                    showAddRuleSheet = true
                 } label: {
                     Image(systemName: "plus")
                 }
-                .accessibilityLabel("Add Skip Rule")
+                .accessibilityLabel("Add Exclusion Rule")
             }
         }
         .onAppear {
             loadData()
         }
-        .sheet(isPresented: $showAddSkipSheet) {
-            AddRuleItemView(isMock: false, title: "Skip Logging")
+        .sheet(isPresented: $showAddRuleSheet) {
+            AddRuleItemView(isMock: false, title: "Logging Exclusion")
                 .onDisappear {
                     loadData()
                 }
         }
-        .sheet(item: $editingSkipItem) { item in
-            AddRuleItemView(isMock: false, title: "Edit Skip Rule", item: item) {
+        .sheet(item: $itemBeingUpdated) { item in
+            AddRuleItemView(isMock: false, title: "Edit Exclusion Rule", item: item) {
                 loadData()
             }.onDisappear {
                 loadData()
@@ -66,7 +66,7 @@ struct SkipLoggingManagementView: View {
         }
     }
 
-    private func skipLoggingItemRow(_ item: LogSkipRequest) -> some View {
+    private func exclusionItemRow(_ item: LoggingExclusionRule) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.title3)
@@ -91,15 +91,15 @@ struct SkipLoggingManagementView: View {
         .padding(.vertical, 8)
         .contentShape(Rectangle())
         .onTapGesture {
-            if let skipRequest = LogSkipManager.shared.skipRequests.first(where: { $0.id == item.id }),
-               let ruleItem = AddRuleItem(skipRequest: skipRequest) {
-                editingSkipItem = ruleItem
+            if let item = LoggingExclusionManager.shared.rules.first(where: { $0.id == item.id }),
+               let ruleItem = AddRuleItem(exclusion: item) {
+                itemBeingUpdated = ruleItem
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
-                if let index = skipLogging.firstIndex(where: { $0.id == item.id }) {
-                    deleteSkipLogging(at: IndexSet(integer: index))
+                if let index = rules.firstIndex(where: { $0.id == item.id }) {
+                    deleteExclusion(at: IndexSet(integer: index))
                 }
             } label: {
                 Label("Delete", systemImage: "trash")
@@ -109,18 +109,18 @@ struct SkipLoggingManagementView: View {
 
     private func loadData() {
         withAnimation {
-            skipLogging = LogSkipManager.shared.skipRequests.map { $0 }
+            rules = LoggingExclusionManager.shared.rules.map { $0 }
         }
         onDataChanged?()
     }
 
-    private func deleteSkipLogging(at indexSet: IndexSet) {
+    private func deleteExclusion(at indexSet: IndexSet) {
         guard let index = indexSet.first else { return }
-        let id = skipLogging[index].id
+        let id = rules[index].id
         withAnimation {
-            skipLogging.remove(atOffsets: indexSet)
+            rules.remove(atOffsets: indexSet)
         }
-        LogSkipManager.shared.remove(id: id)
+        LoggingExclusionManager.shared.remove(id: id)
         onDataChanged?()
     }
 }
