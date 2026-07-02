@@ -15,12 +15,13 @@ struct SettingsView: View {
     @State private var togglePersistence: Bool = false
     @State private var refreshID = UUID()
     @ObservedObject private var store = NetworkLogContainer.shared
+    @ObservedObject private var monitor = NetworkLogMonitor.shared
     
     let preferenceStorage = PreferenceStorage(preference: .monitoring)
 
     var body: some View {
         List {
-            if store.setupMode != .started {
+            if monitor.setupMode != .started {
                 monitoringManagementSection
             }
             insightSection
@@ -62,9 +63,9 @@ struct SettingsView: View {
             Toggle(isOn: $toggleMonitoring) {
                 VStack {
                     HStack(spacing: 12) {
-                        Image(systemName: store.isLoggingEnabled ? "network" : "network.slash")
+                        Image(systemName: monitor.isLoggingEnabled ? "network" : "network.slash")
                             .font(.title3)
-                            .foregroundStyle(store.isLoggingEnabled ? .blue : .secondary)
+                            .foregroundStyle(monitor.isLoggingEnabled ? .blue : .secondary)
                             .frame(width: 28)
                         
                         Text("Network Monitoring")
@@ -76,13 +77,13 @@ struct SettingsView: View {
             .toggleStyle(SwitchToggleStyle())
             
         } header: {
-            Text("Monitoring is \(store.isLoggingEnabled ? "enabled" : "disabled")")
+            Text("Monitoring is \(monitor.isLoggingEnabled ? "enabled" : "disabled")")
                 .font(.subheadline)
                 .monospaced(true)
                 .fontWeight(.semibold)
                 .foregroundStyle(.secondary)
         } footer: {
-                if store.setupMode == .none || store.setupMode == .uiInitiated {
+                if monitor.setupMode == .none || monitor.setupMode == .uiInitiated {
                     VStack {
                         Text("Use NetworkSpectator.start(onDemand:) early in your app's lifecycle to enable on-demand monitoring. It allows this preference to persists across launches and monitoring begins automatically on app launch.")
                             .font(.footnote)
@@ -91,15 +92,15 @@ struct SettingsView: View {
                 }
         }
         .onChange(of: toggleMonitoring) { value in
-            if store.setupMode == .onDemand {
+            if monitor.setupMode == .onDemand {
                 PreferenceStorage(preference: .monitoring).save(true)
             }
             preferenceStorage.save(value)
             Task {
                 if value {
-                    await store.enableInternally()
+                    await monitor.enableInternally()
                 } else {
-                    await store.disable()
+                    await monitor.disable()
                 }
             }
         }
@@ -266,7 +267,7 @@ struct SettingsView: View {
     }
 
     private func loadMonitoringState() {
-        toggleMonitoring = store.isLoggingEnabled
+        toggleMonitoring = monitor.isLoggingEnabled
     }
 }
 

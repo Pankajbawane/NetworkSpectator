@@ -19,68 +19,20 @@ final class NetworkLogContainer: ObservableObject, Sendable {
     /// Items on the MainActor to update on UI layer.
     @Published private(set) var items: [LogItem] = []
     
-    private(set) var indexByID: [UUID: Int] = [:]
+    private var indexByID: [UUID: Int] = [:]
     
     /// Task to observe item updates from the store actor.
     private var itemUpdateTask: Task<Void, Never>?
     
-    /// Safeguard against redundant activations. Avoids multiple calls to start/stop monitoring.
-    @Published private(set) var isLoggingEnabled: Bool = false
-    
-    /// Tracks how monitoring was initialized, programmatically or UI.
-    private(set) var setupMode: SetupMode = .none
-
     init(logStore: any NetworkLogStoring = NetworkLogStore.shared) {
         self.logStore = logStore
     }
     
-    /// When Monitoring state to be handled by UI on demand.
-    func enableOnDemand() async {
-        setupMode = .onDemand
-        // if preference was stored.
-        if PreferenceStorage(preference: .monitoring).retrieve() {
-            await enable()
+    func latestItem(for id: UUID) -> LogItem? {
+        guard let index = indexByID[id], items.indices.contains(index) else {
+            return nil
         }
-    }
-    
-    /// When enabled only with UI.
-    func enableInternally() async {
-        if setupMode == .none {
-            setupMode = .uiInitiated
-        }
-        await enable()
-    }
-    
-    /// Enables monitoring and logging. 'isLoggingEnabled' flag avoids redundant invocation.
-    func enable() async {
-        guard !isLoggingEnabled else {
-            DebugPrint.log("NETWORK SPECTATOR: Monitoring was already active.")
-            return
-        }
-        if setupMode == .none {
-            setupMode = .started
-        }
-        await logStore.start()
-        reset()
-        startObservingUpdates()
-        NetworkInterceptor.shared.enable()
-        isLoggingEnabled = true
-        DebugPrint.log("NETWORK SPECTATOR: Logging initiated.")
-        await LogHistoryManager.shared.startObserving()
-    }
-    
-    /// Disables monitoring and logging. 'isLoggingEnabled' flag avoids redundant invocation.
-    func disable() async {
-        guard isLoggingEnabled else {
-            DebugPrint.log("NETWORK SPECTATOR: Monitoring was inactive.")
-            return
-        }
-        NetworkInterceptor.shared.disable()
-        await logStore.deactivate()
-        await LogHistoryManager.shared.finalizeAndStopObserving()
-        await stop()
-        isLoggingEnabled = false
-        DebugPrint.log("NETWORK SPECTATOR: Monitoring stopped.")
+        return items[index]
     }
     
     /// Starts observing batched updates from the network log store for UI updates.
@@ -124,6 +76,20 @@ final class NetworkLogContainer: ObservableObject, Sendable {
         indexByID = updatedIndices
     }
     
+    func startProjectingUpdates() {
+        reset()
+        startObservingUpdates()
+    }
+    
+    func stopProjectingUpdates() {
+        stopObservingUpdates()
+        reset()
+    }
+    
+    func resetProjection() {
+        reset()
+    }
+    
     private func reset() {
         itemUpdateTask?.cancel()
         itemUpdateTask = nil
@@ -132,35 +98,9 @@ final class NetworkLogContainer: ObservableObject, Sendable {
     }
     
     /// Cancels ongoing observation of network log updates.
-    private func stop() async {
+    private func stopObservingUpdates() {
         // Cancel observation immediately to prevent batches arriving after stop is called.
         itemUpdateTask?.cancel()
         itemUpdateTask = nil
-        await logStore.stop()
-        reset()
-    }
-    
-    /// Clears current list of items. This does not stop the monitoring.
-    func clear() async {
-        await logStore.deactivate()
-        await LogHistoryManager.shared.finalizeAndStopObserving()
-        reset()
-        await logStore.start()
-        startObservingUpdates()
-        await LogHistoryManager.shared.startObserving()
-    }
-}
-
-extension NetworkLogContainer {
-    /// How the monitoring was initialized.
-    enum SetupMode {
-        /// Not yet initialized — user opened the UI without calling start().
-        case none
-        /// NetworkSpectator.start() was called (always-on monitoring).
-        case started
-        /// NetworkSpectator.start(onDemand: true) was called.
-        case onDemand
-        /// Started through UI.
-        case uiInitiated
     }
 }

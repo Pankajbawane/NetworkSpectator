@@ -16,8 +16,8 @@ struct LogDetailsContainerView: View {
     /// For live sessions, return the latest version from the store.
     /// For historic logs, return the snapshot passed in.
     private var item: LogItem {
-        if !isHistoricLogs, let index = store.indexByID[initialItem.id] {
-            return store.items[index]
+        if !isHistoricLogs, let latestItem = store.latestItem(for: initialItem.id) {
+            return latestItem
         }
         return initialItem
     }

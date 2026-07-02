@@ -46,6 +46,14 @@ private final class NetworkLogSessionState: @unchecked Sendable {
 protocol NetworkLogStoring: Sendable {
     func start() async
     func deactivate() async
+    
+    /// Returns a stream of future batched delta updates.
+    ///
+    /// This stream does not replay the current store contents to new subscribers.
+    /// Consumers that need a complete live projection must subscribe before the
+    /// session starts, then apply every emitted delta in order. A late subscriber
+    /// should call `snapshot()` first or it may receive `.update(index:)` events
+    /// for items it never saw appended.
     func updates() async -> AsyncStream<[NetworkLogUpdate]>
     func stop() async
 }
@@ -97,8 +105,11 @@ internal actor NetworkLogStore: NetworkLogStoring {
         flushBuffer()
     }
 
-    /// Creates a new `AsyncStream` subscription that delivers batched delta updates.
-    /// Multiple subscribers are supported; each receives all future batches independently.
+    /// Creates a new `AsyncStream` subscription that delivers future batched delta updates.
+    ///
+    /// No initial snapshot is emitted. Subscribers are expected to start observing
+    /// before `start()` begins a new session, or to rebuild their initial state
+    /// from `snapshot()` before consuming this stream.
     func updates() -> AsyncStream<[NetworkLogUpdate]> {
         let subscriberID = UUID()
         let (stream, continuation) = AsyncStream<[NetworkLogUpdate]>.makeStream()

@@ -11,14 +11,15 @@ struct EmptyStateView: View {
 
     let isSearchActive: Bool
     let searchText: String
-    @ObservedObject var monitor = NetworkLogContainer.shared
+    @ObservedObject var logContainer = NetworkLogContainer.shared
+    @ObservedObject var monitor = NetworkLogMonitor.shared
 
     @State private var rotationAngle: Double = 0
     @State private var gearRotation: Double = 0
     @State private var isTapped: Bool = false
 
     private var viewState: ViewState {
-        if !monitor.isLoggingEnabled, monitor.items.isEmpty {
+        if !monitor.isLoggingEnabled, logContainer.items.isEmpty {
             return .disabledLogging
         }
         if isSearchActive {
