@@ -43,7 +43,7 @@ struct LogDetailsContainerView: View {
     @State private var isExporting: Bool = false
     @State private var showExportFormatPicker = false
     @State private var showAddMockSheet = false
-    @State private var showAddSkipSheet = false
+    @State private var showAddExclusionSheet = false
 
     enum ExportFormat: String, CaseIterable, Identifiable {
         case text = "Text"
@@ -111,17 +111,17 @@ struct LogDetailsContainerView: View {
                 showAlertRuleAdded = true
             }
         }
-        .sheet(isPresented: $showAddSkipSheet) {
+        .sheet(isPresented: $showAddExclusionSheet) {
             var rule = AddRuleItem(id: item.id,
                                    text: item.url,
                                    rule: .url,
                                    isMock: false)
-            let skip = LoggingExclusionManager.shared.skipRequests.first(where:  { $0.id == item.id })
-            if let skip, let item = AddRuleItem(skipRequest: skip) {
+            let exclusion = LoggingExclusionManager.shared.rules.first(where:  { $0.id == item.id })
+            if let exclusion, let item = AddRuleItem(exclusion: exclusion) {
                 rule = item
             }
             
-            return AddRuleItemView(isMock: false, title: "Skip Logging", item: rule) {
+            return AddRuleItemView(isMock: false, title: "Exclude Logging", item: rule) {
                 showAlertRuleAdded = true
             }
         }
@@ -139,13 +139,13 @@ struct LogDetailsContainerView: View {
                     .accessibilityLabel("Mock")
                     
                     // CTA to ignore requests from logging.
-                    Button(action: { showAddSkipSheet = true }) {
-                        Label("Skip Log", systemImage: "text.badge.minus")
+                    Button(action: { showAddExclusionSheet = true }) {
+                        Label("Exclude Logging", systemImage: "text.badge.minus")
                             .font(.caption)
                             .fontWeight(.bold)
                             .padding(7)
                     }
-                    .accessibilityLabel("Skip Logging")
+                    .accessibilityLabel("Exclude Logging")
                 }
                 
                 Button(action: { showExportFormatPicker = true }) {

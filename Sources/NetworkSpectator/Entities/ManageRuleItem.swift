@@ -21,8 +21,8 @@ struct ManageRuleItem: Identifiable {
         text = mock.rule.ruleName
     }
     
-    init(skipRequest: LoggingExclusionRule) {
-        id = skipRequest.id
-        text = skipRequest.rule.ruleName
+    init(exclusion: LoggingExclusionRule) {
+        id = exclusion.id
+        text = exclusion.rule.ruleName
     }
 }

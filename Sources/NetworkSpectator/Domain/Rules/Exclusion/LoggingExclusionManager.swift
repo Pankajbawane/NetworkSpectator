@@ -11,21 +11,21 @@ final class LoggingExclusionManager: @unchecked Sendable {
 
     static let shared: LoggingExclusionManager = .init()
 
-    var skipRequests: Set<LoggingExclusionRule> = []
+    var rules: Set<LoggingExclusionRule> = []
     private let storage: RuleStorage<LoggingExclusionRule>
 
     var isEnabled: Bool {
-        !skipRequests.isEmpty
+        !rules.isEmpty
     }
 
-    init(storage: RuleStorage<LoggingExclusionRule> = RuleStorage<LoggingExclusionRule>(key: .skipRules)) {
+    init(storage: RuleStorage<LoggingExclusionRule> = RuleStorage<LoggingExclusionRule>(key: .exclusionRules)) {
         self.storage = storage
-        skipRequests = Set(storage.retrieve())
+        rules = Set(storage.retrieve())
     }
 
     func remove(id: UUID) {
-        if let item = skipRequests.first(where: { $0.id == id }) {
-            skipRequests.remove(item)
+        if let item = rules.first(where: { $0.id == id }) {
+            rules.remove(item)
             if item.saveLocally {
                 persist()
             }
@@ -33,32 +33,32 @@ final class LoggingExclusionManager: @unchecked Sendable {
     }
 
     func clear() {
-        skipRequests.removeAll()
+        rules.removeAll()
         persist()
     }
 
     func register(method: HTTPMethod, rule: MatchRule, saveLocally: Bool = false) {
-        let skipRequest = LoggingExclusionRule(method: method, rule: rule, saveLocally: saveLocally)
-        skipRequests.insert(skipRequest)
+        let exclude = LoggingExclusionRule(method: method, rule: rule, saveLocally: saveLocally)
+        rules.insert(exclude)
         if saveLocally {
             persist()
         }
     }
 
     func register(request: LoggingExclusionRule) {
-        skipRequests.insert(request)
+        rules.insert(request)
         if request.saveLocally {
             persist()
         }
     }
 
-    func shouldSkipLogging(_ urlRequest: URLRequest) -> Bool {
-        return skipRequests.contains { $0.shouldIgnore(urlRequest) }
+    func shouldExcludeLogging(_ urlRequest: URLRequest) -> Bool {
+        return rules.contains { $0.shouldIgnore(urlRequest) }
     }
 
-    /// Persists skip requests marked with saveLocally to storage
+    /// Persists excluded requests marked with saveLocally to storage
     private func persist() {
-        let requestsToSave = skipRequests.filter { $0.saveLocally }
+        let requestsToSave = rules.filter { $0.saveLocally }
         storage.save(Array(requestsToSave))
     }
 }

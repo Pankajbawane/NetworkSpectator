@@ -71,11 +71,11 @@ struct AddRuleItem: Identifiable {
             self.showDelete = true
         }
 
-        init?(skipRequest: LoggingExclusionRule) {
-            self.id = skipRequest.id
+        init?(exclusion: LoggingExclusionRule) {
+            self.id = exclusion.id
             self.method = .GET
 
-            switch skipRequest.rule {
+            switch exclusion.rule {
             case .url(let value):
                 self.text = value
                 self.rule = .url
@@ -96,7 +96,7 @@ struct AddRuleItem: Identifiable {
             self.statusCode = ""
             self.headers = ""
             self.isMock = false
-            self.saveLocally = skipRequest.saveLocally
+            self.saveLocally = exclusion.saveLocally
             self.showDelete = true
         }
     }

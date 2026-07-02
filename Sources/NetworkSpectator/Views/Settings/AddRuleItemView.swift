@@ -363,8 +363,8 @@ struct AddRuleItemView: View {
                 return
             }
         } else {
-            let skipRequest = LoggingExclusionRule(method: method, rule: matchRule, saveLocally: saveLocally)
-            LoggingExclusionManager.shared.register(request: skipRequest)
+            let exclusion = LoggingExclusionRule(method: method, rule: matchRule, saveLocally: saveLocally)
+            LoggingExclusionManager.shared.register(request: exclusion)
 
             // Call onSave callback if provided
             if let onSave = onSave {
