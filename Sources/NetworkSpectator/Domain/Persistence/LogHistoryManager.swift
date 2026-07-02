@@ -173,13 +173,6 @@ actor LogHistoryManager {
     private nonisolated func observeAppLifecycle() {
         #if canImport(UIKit)
         NotificationCenter.default.addObserver(
-            forName: UIApplication.didEnterBackgroundNotification,
-            object: nil,
-            queue: nil
-        ) { _ in
-            Task { await self.finalizeSession() }
-        }
-        NotificationCenter.default.addObserver(
             forName: UIApplication.willTerminateNotification,
             object: nil,
             queue: nil

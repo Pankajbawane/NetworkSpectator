@@ -84,8 +84,8 @@ final class NetworkLogMonitor: ObservableObject, Sendable {
     
     private func startSession() async {
         await logStore.start()
-        NetworkInterceptor.shared.enable()
         await LogHistoryManager.shared.startObserving()
+        NetworkInterceptor.shared.enable()
     }
     
     private func stopSession() async {
