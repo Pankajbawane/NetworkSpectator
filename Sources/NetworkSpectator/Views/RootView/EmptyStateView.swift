@@ -11,14 +11,15 @@ struct EmptyStateView: View {
 
     let isSearchActive: Bool
     let searchText: String
-    @ObservedObject var monitor = NetworkLogContainer.shared
+    @ObservedObject var logContainer = NetworkLogContainer.shared
+    @ObservedObject var monitor = NetworkLogMonitor.shared
 
     @State private var rotationAngle: Double = 0
     @State private var gearRotation: Double = 0
     @State private var isTapped: Bool = false
 
     private var viewState: ViewState {
-        if !monitor.isLoggingEnabled, monitor.items.isEmpty {
+        if !monitor.isLoggingEnabled, logContainer.items.isEmpty {
             return .disabledLogging
         }
         if isSearchActive {
@@ -103,7 +104,7 @@ struct EmptyStateView: View {
             // Delay enable so the bounce + green state is visible before the view transitions
             Task {
                 try? await Task.sleep(for: .milliseconds(600))
-                monitor.enableInternally()
+                await monitor.enableInternally()
                 if monitor.setupMode == .onDemand {
                     PreferenceStorage(preference: .monitoring).save(true)
                 }

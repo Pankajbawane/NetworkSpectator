@@ -97,7 +97,7 @@ struct RootContentView: View {
         })
         .alert("Clear All Requests", isPresented: $showClearAlert) {
             Button("Clear", role: .destructive) {
-                NetworkLogContainer.shared.clear()
+                Task { await NetworkLogMonitor.shared.clear() }
             }
             Button("Cancel", role: .cancel) {}
         } message: {

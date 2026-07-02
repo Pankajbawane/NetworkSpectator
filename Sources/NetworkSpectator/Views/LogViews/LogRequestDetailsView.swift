@@ -10,6 +10,7 @@ import SwiftUI
 struct LogRequestDetailsView: View {
 
     let item: LogItem
+    @Environment(\.colorScheme) private var colorScheme: ColorScheme
 
     var body: some View {
         ScrollView(.vertical) {
@@ -19,12 +20,10 @@ struct LogRequestDetailsView: View {
                                title: "No Request Body",
                                message: "This request doesn't contain a body")
                 } else {
-                    responseMetadata()
+                    requestMetadata()
                     
-                    Text(item.requestBody)
-                        .font(.system(.caption, design: .monospaced))
+                    requestBodyView()
                         .textSelection(.enabled)
-                        .padding(12)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.secondary.opacity(0.2))
                         .cornerRadius(8)
@@ -45,7 +44,7 @@ struct LogRequestDetailsView: View {
     }
     
     @ViewBuilder
-    private func responseMetadata() -> some View {
+    private func requestMetadata() -> some View {
         HStack(spacing: 12) {
             Label("json", systemImage: "doc.text")
                 .font(.caption)
@@ -63,6 +62,17 @@ struct LogRequestDetailsView: View {
             
             copyable(value: item.requestBody)
         }
+    }
+    
+    @ViewBuilder
+    private func requestBodyView() -> some View {
+        let mimetype = "application/json"
+        let background: Color = colorScheme == .dark ? Color.black.opacity(0.4) : .secondary.opacity(0.2)
+        return JSONBodyLineView(responseBody: item.requestBody, mimetype: mimetype)
+            .frame(minHeight: 200)
+            .padding(12)
+            .background(background)
+            .cornerRadius(8)
     }
     
     private var byteCountFormatted: String {

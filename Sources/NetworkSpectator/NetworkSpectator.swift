@@ -65,9 +65,9 @@ public struct NetworkSpectator: Sendable {
     public static func start(onDemand: Bool = false) {
         Task {
             if onDemand {
-                await NetworkLogContainer.shared.enableOnDemand()
+                await NetworkLogMonitor.shared.enableOnDemand()
             } else {
-                await NetworkLogContainer.shared.enable()
+                await NetworkLogMonitor.shared.enable()
             }
         }
     }
@@ -77,7 +77,7 @@ public struct NetworkSpectator: Sendable {
     /// Calling this method is not required if ``start(onDemand:)`` was never invoked.
     public static func stop() {
         Task {
-            await NetworkLogContainer.shared.disable()
+            await NetworkLogMonitor.shared.disable()
             MockServer.shared.clear()
             LogSkipManager.shared.clear()
         }

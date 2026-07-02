@@ -16,8 +16,8 @@ struct LogDetailsContainerView: View {
     /// For live sessions, return the latest version from the store.
     /// For historic logs, return the snapshot passed in.
     private var item: LogItem {
-        if !isHistoricLogs, let index = store.indexByID[initialItem.id] {
-            return store.items[index]
+        if !isHistoricLogs, let latestItem = store.latestItem(for: initialItem.id) {
+            return latestItem
         }
         return initialItem
     }
@@ -130,7 +130,7 @@ struct LogDetailsContainerView: View {
                 if !isHistoricLogs {
                     // CTA to register mock.
                     Button(action: { showAddMockSheet = true }) {
-                        Label("Mock", systemImage: "network.slash")
+                        Label("Mock", systemImage: item.isMocked ? "theatermasks.fill" : "theatermasks")
                             .font(.caption)
                             .fontWeight(.bold)
                             .padding(7)
@@ -140,7 +140,7 @@ struct LogDetailsContainerView: View {
                     
                     // CTA to ignore requests from logging.
                     Button(action: { showAddSkipSheet = true }) {
-                        Label("Skip Log", systemImage: "eye.slash")
+                        Label("Skip Log", systemImage: "text.badge.minus")
                             .font(.caption)
                             .fontWeight(.bold)
                             .padding(7)

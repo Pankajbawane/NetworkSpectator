@@ -89,7 +89,7 @@ actor LogHistoryManager {
 
         // Observe batched updates from the network log store, debouncing writes.
         observeTask = Task {
-            for await _ in await NetworkLogStore.shared.batchUpdates() {
+            for await _ in await NetworkLogStore.shared.updates() {
                 guard !Task.isCancelled else { break }
                 schedulePersist()
             }
@@ -172,13 +172,6 @@ actor LogHistoryManager {
 
     private nonisolated func observeAppLifecycle() {
         #if canImport(UIKit)
-        NotificationCenter.default.addObserver(
-            forName: UIApplication.didEnterBackgroundNotification,
-            object: nil,
-            queue: nil
-        ) { _ in
-            Task { await self.finalizeSession() }
-        }
         NotificationCenter.default.addObserver(
             forName: UIApplication.willTerminateNotification,
             object: nil,

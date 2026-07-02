@@ -13,9 +13,10 @@ protocol NetworkItemLogger: Sendable {
 
 struct UIItemLogger: NetworkItemLogger {
     func logging(_ item: LogItem) {
+        guard let session = NetworkLogStore.shared.currentSession() else { return }
         DebugPrint.log(item)
-        Task {
-            await NetworkLogStore.shared.add(item)
+        Task(priority: .userInitiated) {
+            await NetworkLogStore.shared.add(item, session: session)
         }
     }
 }
