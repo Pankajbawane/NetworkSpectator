@@ -64,11 +64,9 @@ struct LogRequestDetailsView: View {
         }
     }
     
-    @ViewBuilder
     private func requestBodyView() -> some View {
-        let mimetype = "application/json"
         let background: Color = colorScheme == .dark ? Color.black.opacity(0.4) : .secondary.opacity(0.2)
-        return JSONBodyLineView(responseBody: item.requestBody, mimetype: mimetype)
+        return JSONBodyLineView(responseBody: item.requestBody, mimetype: "application/json")
             .frame(minHeight: 200)
             .padding(12)
             .background(background)

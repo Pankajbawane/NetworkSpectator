@@ -49,12 +49,11 @@ struct LogResponseDetailsView: View {
         item.mimetype?.contains("image") ?? false
     }
 
-    @ViewBuilder
     private func responseBodyView() -> some View {
         var mimetype = item.mimetype ?? ""
         if mimetype.isEmpty,
            let data = item.responseRaw,
-           let isJson = try? JSONSerialization.isValidJSONObject(data), isJson {
+           JSONSerialization.isValidJSONObject(data) {
             mimetype = "application/json"
         }
         let background: Color = colorScheme == .dark ? Color.black.opacity(0.2) : .secondary.opacity(0.2)
