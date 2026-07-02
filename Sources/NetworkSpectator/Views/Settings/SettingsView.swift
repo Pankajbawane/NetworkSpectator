@@ -221,7 +221,7 @@ struct SettingsView: View {
                         .frame(width: 28)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Skip Logging Rules")
+                        Text("Logging Exclusion Rules")
                             .font(.body)
                         if skipLoggingCount > 0 {
                             Text("\(skipLoggingCount) active rule\(skipLoggingCount == 1 ? "" : "s")")

@@ -20,7 +20,7 @@ struct SkipLoggingManagementView: View {
             if skipLogging.isEmpty {
                     emptyState(
                         icon: "text.badge.minus",
-                        title: "No Skip Logging Rules",
+                        title: "No Exclusion Rules",
                         message: "Add rules to exclude certain requests from being logged"
                     )
             } else {
@@ -37,7 +37,7 @@ struct SkipLoggingManagementView: View {
         #else
         .listStyle(.inset)
         #endif
-        .navigationTitle("Skip Logging Rules")
+        .navigationTitle("Logging Exclusion Rules")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
