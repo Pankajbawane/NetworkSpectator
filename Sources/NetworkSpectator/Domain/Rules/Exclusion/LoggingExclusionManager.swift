@@ -1,5 +1,5 @@
 //
-//  LogSkipManager.swift
+//  LoggingExclusionManager.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 09/02/26.
@@ -7,18 +7,18 @@
 
 import Foundation
 
-final class LogSkipManager: @unchecked Sendable {
+final class LoggingExclusionManager: @unchecked Sendable {
 
-    static let shared: LogSkipManager = .init()
+    static let shared: LoggingExclusionManager = .init()
 
-    var skipRequests: Set<LogSkipRequest> = []
-    private let storage: RuleStorage<LogSkipRequest>
+    var skipRequests: Set<LoggingExclusionRule> = []
+    private let storage: RuleStorage<LoggingExclusionRule>
 
     var isEnabled: Bool {
         !skipRequests.isEmpty
     }
 
-    init(storage: RuleStorage<LogSkipRequest> = RuleStorage<LogSkipRequest>(key: .skipRules)) {
+    init(storage: RuleStorage<LoggingExclusionRule> = RuleStorage<LoggingExclusionRule>(key: .skipRules)) {
         self.storage = storage
         skipRequests = Set(storage.retrieve())
     }
@@ -38,14 +38,14 @@ final class LogSkipManager: @unchecked Sendable {
     }
 
     func register(method: HTTPMethod, rule: MatchRule, saveLocally: Bool = false) {
-        let skipRequest = LogSkipRequest(method: method, rule: rule, saveLocally: saveLocally)
+        let skipRequest = LoggingExclusionRule(method: method, rule: rule, saveLocally: saveLocally)
         skipRequests.insert(skipRequest)
         if saveLocally {
             persist()
         }
     }
 
-    func register(request: LogSkipRequest) {
+    func register(request: LoggingExclusionRule) {
         skipRequests.insert(request)
         if request.saveLocally {
             persist()

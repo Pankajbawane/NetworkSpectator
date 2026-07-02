@@ -1,5 +1,5 @@
 //
-//  LogSkipRequest.swift
+//  LoggingExclusionRule.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 15/12/25.
@@ -7,18 +7,18 @@
 
 import Foundation
 
-public struct LogSkipRequest: Identifiable, Hashable, Codable {
+public struct LoggingExclusionRule: Identifiable, Hashable, Codable {
 
-    public let id: UUID
-    let rule: MatchRule
-    let saveLocally: Bool
+    public var id: UUID = UUID()
+    public let method: HTTPMethod
+    public let rule: MatchRule
+    public let saveLocally: Bool
 
     public init(method: HTTPMethod,
                 rule: MatchRule,
-                id: UUID = UUID(),
                 saveLocally: Bool = false) {
+        self.method = method
         self.rule = rule
-        self.id = id
         self.saveLocally = saveLocally
     }
 
@@ -30,7 +30,7 @@ public struct LogSkipRequest: Identifiable, Hashable, Codable {
         hasher.combine(id)
     }
     
-    public static func == (lhs: LogSkipRequest, rhs: LogSkipRequest) -> Bool {
+    public static func == (lhs: LoggingExclusionRule, rhs: LoggingExclusionRule) -> Bool {
         lhs.id == rhs.id
     }
 }

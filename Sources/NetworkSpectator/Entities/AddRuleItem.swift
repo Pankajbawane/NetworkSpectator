@@ -71,7 +71,7 @@ struct AddRuleItem: Identifiable {
             self.showDelete = true
         }
 
-        init?(skipRequest: LogSkipRequest) {
+        init?(skipRequest: LoggingExclusionRule) {
             self.id = skipRequest.id
             self.method = .GET
 

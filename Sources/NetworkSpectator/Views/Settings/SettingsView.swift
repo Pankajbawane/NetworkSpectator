@@ -263,7 +263,7 @@ struct SettingsView: View {
 
     private func loadCounts() {
         mockCount = MockServer.shared.mocks.count
-        skipLoggingCount = LogSkipManager.shared.skipRequests.count
+        skipLoggingCount = LoggingExclusionManager.shared.skipRequests.count
     }
 
     private func loadMonitoringState() {
