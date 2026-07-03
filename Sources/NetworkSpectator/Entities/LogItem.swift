@@ -38,6 +38,8 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
     
     // If request is mocked
     let mockId: UUID?
+    
+    var metrics: [NetworkLogMetrics] = []
 
     // MARK: - Derived
     var host: String {
@@ -113,7 +115,8 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         finishTime: Date? = nil,
         responseTime: TimeInterval = 0,
         isLoading: Bool = true,
-        mockId: UUID? = nil
+        mockId: UUID? = nil,
+        metrics: [NetworkLogMetrics] = []
     ) {
         self.id = id
         self.startTime = startTime
@@ -132,6 +135,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         self.responseTime = responseTime
         self.isLoading = isLoading
         self.mockId = mockId
+        self.metrics = metrics
     }
 }
 
@@ -154,7 +158,8 @@ extension LogItem {
                        method: method,
                        headers: headers,
                        requestBodyRaw: requestBodyRaw,
-                       mockId: mockId)
+                       mockId: mockId,
+                       metrics: metrics)
     }
 
     /// Returns a new LogItem by attaching response information to an existing request LogItem.
@@ -197,8 +202,16 @@ extension LogItem {
             finishTime: finish,
             responseTime: elapsed,
             isLoading: false,
-            mockId: mockId
+            mockId: mockId,
+            metrics: metrics
         )
+    }
+    
+    /// Returns a new LogItem by attaching URL session task metrics.
+    func withMetrics(_ metrics: [NetworkLogMetrics]) -> LogItem {
+        var updated = self
+        updated.metrics = metrics
+        return updated
     }
 }
 
