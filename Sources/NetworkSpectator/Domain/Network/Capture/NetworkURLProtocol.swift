@@ -10,7 +10,9 @@ import os
 
 final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     
-    private var sessionTask: URLSessionDataTask?
+    private weak var session: URLSession?
+    private weak var sessionTask: URLSessionDataTask?
+    private weak var sessionDelegate: SessionDelegate?
     private var mockTask: Task<Void, Never>?
     private let protectedLog: OSAllocatedUnfairLock<LogItem>
     private static let taskCacheKey = "NETWORKSPECTATOR_TRACK_CACHED_TASK_KEY"
@@ -118,8 +120,14 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
             return
         }
         
+        let delegate = SessionDelegate { [weak self] metrics in
+            self?.updateLog(with: metrics)
+        }
+        sessionDelegate = delegate
+        
         let config = URLSessionConfiguration.default
-        let session = URLSession(configuration: config, delegate: nil, delegateQueue: nil)
+        let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
+        self.session = session
 
         sessionTask = session.dataTask(with: thisRequest as URLRequest) { data, response, error in
             completion(data, response, error)
@@ -138,6 +146,9 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         }
         sessionTask?.cancel()
         sessionTask = nil
+        session?.invalidateAndCancel()
+        session = nil
+        sessionDelegate = nil
         mockTask?.cancel()
         mockTask = nil
     }
@@ -184,5 +195,27 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     
     func logging(_ item: LogItem) {
         Self.logger.logging(item)
+    }
+    
+    private func updateLog(with metrics: [NetworkLogMetrics]) {
+        let metricsLog = protectedLog.withLock { log in
+            log = log.withMetrics(metrics)
+            return log
+        }
+        logging(metricsLog)
+    }
+}
+
+private final class SessionDelegate: NSObject, URLSessionTaskDelegate {
+    private let didCollectMetrics: @Sendable ([NetworkLogMetrics]) -> Void
+    
+    init(didCollectMetrics: @escaping @Sendable ([NetworkLogMetrics]) -> Void) {
+        self.didCollectMetrics = didCollectMetrics
+    }
+    
+    func urlSession(_ session: URLSession,
+                    task: URLSessionTask,
+                    didFinishCollecting metrics: URLSessionTaskMetrics) {
+        didCollectMetrics(metrics.transactionMetrics.map(NetworkLogMetrics.init))
     }
 }
