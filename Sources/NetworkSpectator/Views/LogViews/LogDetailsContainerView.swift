@@ -33,6 +33,7 @@ struct LogDetailsContainerView: View {
         case request = "Request"
         case headers = "Headers"
         case response = "Response"
+        case metrics = "Metrics"
         var id: String { rawValue }
     }
 
@@ -59,6 +60,7 @@ struct LogDetailsContainerView: View {
             tabs.append(.request)
         }
         tabs.append(contentsOf: [.headers, .response])
+        tabs.append(.metrics)
         return tabs
     }
 
@@ -204,6 +206,8 @@ struct LogDetailsContainerView: View {
             LogHeadersDetailsView(item: item)
         case .response:
             LogResponseDetailsView(item: item)
+        case .metrics:
+            LogMetricsView(item: item)
         }
     }
 
