@@ -8,6 +8,12 @@
 import Foundation
 
 struct NetworkLogMetrics: Codable, Equatable, Hashable, Sendable {
+    let redirectCount: Int
+    let responseInterval: DateInterval
+    let transactions: [NetworkTransaction]
+}
+
+struct NetworkTransaction: Codable, Equatable, Hashable, Sendable {
     
     let fetchStartDate: Date?
     let domainLookupStartDate: Date?
@@ -43,7 +49,7 @@ struct NetworkLogMetrics: Codable, Equatable, Hashable, Sendable {
     let negotiatedTLSCipherSuite: TLSCipherSuite?
 }
 
-extension NetworkLogMetrics {
+extension NetworkTransaction {
     init(_ metric: URLSessionTaskTransactionMetrics) {
         fetchStartDate = metric.fetchStartDate
         domainLookupStartDate = metric.domainLookupStartDate

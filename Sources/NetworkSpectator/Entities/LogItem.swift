@@ -12,8 +12,10 @@ import Foundation
 struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
     // Identity & timing
     let id: UUID
-    let startTime: Date
     let url: String
+    private let logStartTime: Date
+    private var logFinishTime: Date?
+    private var logInterval: TimeInterval
 
     // Request
     let method: String
@@ -21,25 +23,24 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
     let requestBodyRaw: Data?
 
     // Response
-    let statusCode: Int
-    let responseHeaders: [String: String]
-    let mimetype: String?
-    let textEncodingName: String?
+    private(set) var statusCode: Int
+    private(set) var responseHeaders: [String: String]
+    private(set) var mimetype: String?
+    private(set) var textEncodingName: String?
 
     // Raw response data (for binary content like images)
-    let responseRaw: Data?
+    private(set) var responseRaw: Data?
 
     // Error & state
-    let errorDescription: String?
-    let errorLocalizedDescription: String?
-    let finishTime: Date?
-    let responseTime: TimeInterval
-    let isLoading: Bool
+    private(set) var errorDescription: String?
+    private(set) var errorLocalizedDescription: String?
+    private(set) var isLoading: Bool
     
     // If request is mocked
-    let mockId: UUID?
+    private(set) var mockId: UUID?
     
-    var metrics: [NetworkLogMetrics] = []
+    // Network metrics
+    private(set) var metrics: NetworkLogMetrics?
 
     // MARK: - Derived
     var host: String {
@@ -68,6 +69,20 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
     
      var responseBody: String {
         Self.prettyPrintedBody(responseRaw)
+    }
+    
+    // Helper timeline properties.
+    // When network metrics unavailable, fallbacks to logging timings.
+    var startTime: Date {
+        metrics?.responseInterval.start ?? logStartTime
+    }
+    
+    var finishTime: Date? {
+        metrics?.responseInterval.end ?? logFinishTime
+    }
+    
+    var responseTime: TimeInterval {
+        metrics?.responseInterval.duration ?? logInterval
     }
     
     var isMocked: Bool { mockId != nil }
@@ -105,7 +120,6 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         headers: [String: String] = [:],
         requestBodyRaw: Data? = nil,
         statusCode: Int = 0,
-        responseBody: String = "",
         responseHeaders: [String: String] = [:],
         mimetype: String? = nil,
         textEncodingName: String? = nil,
@@ -116,10 +130,10 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         responseTime: TimeInterval = 0,
         isLoading: Bool = true,
         mockId: UUID? = nil,
-        metrics: [NetworkLogMetrics] = []
+        metrics: NetworkLogMetrics? = nil
     ) {
         self.id = id
-        self.startTime = startTime
+        self.logStartTime = startTime
         self.url = url
         self.method = method
         self.headers = headers
@@ -131,8 +145,8 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         self.responseRaw = responseRaw
         self.errorDescription = errorDescription
         self.errorLocalizedDescription = errorLocalizedDescription
-        self.finishTime = finishTime
-        self.responseTime = responseTime
+        self.logFinishTime = finishTime
+        self.logInterval = responseTime
         self.isLoading = isLoading
         self.mockId = mockId
         self.metrics = metrics
@@ -142,76 +156,53 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
 // MARK: - Convinience Object Factory Methods.
 extension LogItem {
     /// Create a LogItem initialized with request information.
-    static func fromRequest(_ request: URLRequest, _ mockId: UUID? = nil) -> LogItem {
+    init(_ request: URLRequest, _ mockId: UUID? = nil) {
         let urlString = request.url?.absoluteString ?? ""
         let method = request.httpMethod ?? ""
         let headers = request.allHTTPHeaderFields ?? [:]
         let body = request.httpBody
-        return LogItem(url: urlString, method: method, headers: headers, requestBodyRaw: body, mockId: mockId)
+        self.init(url: urlString, method: method, headers: headers, requestBodyRaw: body, mockId: mockId)
     }
     
     /// Update log item if the mock ID if the request was mocked.
-    func withMockID(_ mockId: UUID? = nil) -> LogItem {
-        return LogItem(id: id,
-                       startTime: startTime,
-                       url: url,
-                       method: method,
-                       headers: headers,
-                       requestBodyRaw: requestBodyRaw,
-                       mockId: mockId,
-                       metrics: metrics)
+    mutating func updateMockID(_ mockId: UUID? = nil) {
+        self.mockId = mockId
     }
 
-    /// Returns a new LogItem by attaching response information to an existing request LogItem.
-    func withResponse(response: URLResponse?, data: Data?, error: Error?) -> LogItem {
+    /// Attaches response information to this log item.
+    mutating func updateResponse(response: URLResponse?, data: Data?, error: Error?) {
         let finish = Date()
-        var statusCode = 0
-        var responseHeaders = [String: String]()
-        var mimetype: String?
-        var textEncodingName: String?
+        var responseStatusCode = 0
+        var headers = [String: String]()
+        var responseMimetype: String?
+        var responseTextEncodingName: String?
 
         if let http = response as? HTTPURLResponse {
-            statusCode = http.statusCode
-            responseHeaders = http.allHeaderFields.reduce(into: [String: String]()) { partial, pair in
+            responseStatusCode = http.statusCode
+            headers = http.allHeaderFields.reduce(into: [String: String]()) { partial, pair in
                 let key = String(describing: pair.key)
                 let value = String(describing: pair.value)
                 partial[key] = value
             }
-            mimetype = http.mimeType
-            textEncodingName = http.textEncodingName
+            responseMimetype = http.mimeType
+            responseTextEncodingName = http.textEncodingName
         }
 
-        let responseBody = Self.prettyPrintedBody(data)
-        let elapsed = finish.timeIntervalSince(startTime)
-
-        return LogItem(
-            id: id,
-            startTime: startTime,
-            url: url,
-            method: method,
-            headers: headers,
-            requestBodyRaw: requestBodyRaw,
-            statusCode: statusCode,
-            responseBody: responseBody,
-            responseHeaders: responseHeaders,
-            mimetype: mimetype,
-            textEncodingName: textEncodingName,
-            responseRaw: data,
-            errorDescription: error.map { String(describing: $0) },
-            errorLocalizedDescription: (error as? NSError).flatMap { $0.localizedDescription },
-            finishTime: finish,
-            responseTime: elapsed,
-            isLoading: false,
-            mockId: mockId,
-            metrics: metrics
-        )
+        statusCode = responseStatusCode
+        responseHeaders = headers
+        mimetype = responseMimetype
+        textEncodingName = responseTextEncodingName
+        responseRaw = data
+        errorDescription = error.map { String(describing: $0) }
+        errorLocalizedDescription = (error as? NSError).flatMap { $0.localizedDescription }
+        logFinishTime = finish
+        logInterval = finish.timeIntervalSince(logStartTime)
+        isLoading = false
     }
     
-    /// Returns a new LogItem by attaching URL session task metrics.
-    func withMetrics(_ metrics: [NetworkLogMetrics]) -> LogItem {
-        var updated = self
-        updated.metrics = metrics
-        return updated
+    /// Attaches URL session task metrics to this log item.
+    mutating func updateMetrics(_ metrics: NetworkLogMetrics) {
+        self.metrics = metrics
     }
 }
 
