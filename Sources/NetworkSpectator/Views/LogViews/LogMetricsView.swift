@@ -18,21 +18,21 @@ struct LogMetricsView: View {
 
     var body: some View {
         ScrollView(.vertical) {
-            if viewModel.metrics.isEmpty {
-                emptyState(icon: "timer",
-                           title: "No Metrics Available",
-                           message: "URLSession has not reported timing metrics for this request yet.")
-            } else {
-                VStack(alignment: .leading, spacing: 16) {
-                    summarySection
+            VStack(alignment: .leading, spacing: 16) {
+                summarySection
 
+                if viewModel.metrics == nil {
+                    emptyState(icon: "timer",
+                               title: "No Metrics Available",
+                               message: "URLSession has not reported detailed timing metrics for this request.")
+                } else {
                     ForEach(viewModel.transactions) { transaction in
                         transactionSection(transaction)
                     }
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 16)
             }
+            .padding(.horizontal)
+            .padding(.bottom, 16)
         }
     }
 
@@ -81,11 +81,6 @@ struct LogMetricsView: View {
 
     private func transactionHeader(_ transaction: LogMetricsViewModel.Transaction) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: transaction.icon)
-                .font(.subheadline)
-                .foregroundColor(transaction.color)
-                .frame(width: 18)
-
             VStack(alignment: .leading, spacing: 2) {
                 Text("Transaction \(transaction.index)")
                     .font(.subheadline)
@@ -99,14 +94,20 @@ struct LogMetricsView: View {
 
             Spacer()
 
-            Text(transaction.fetchType)
-                .font(.caption2)
-                .fontWeight(.semibold)
-                .foregroundColor(transaction.color)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(transaction.color.opacity(0.15))
-                .cornerRadius(8)
+            HStack(spacing: 5){
+                Image(systemName: transaction.icon)
+                    .font(.subheadline)
+                    .foregroundColor(transaction.color)
+                    .frame(width: 18)
+                Text(transaction.fetchType)
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(transaction.color)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(transaction.color.opacity(0.15))
+            .cornerRadius(8)
         }
     }
 
@@ -286,31 +287,32 @@ struct LogMetricsView: View {
 }
 
 private struct LogMetricsViewModel {
-    let metrics: [NetworkLogMetrics]
+    let metrics: NetworkLogMetrics?
     let summaryTiles: [SummaryTile]
     let transactions: [Transaction]
 
     init(item: LogItem) {
         metrics = item.metrics
         summaryTiles = Self.makeSummaryTiles(for: item)
-        transactions = Self.makeTransactions(from: item.metrics)
+        transactions = Self.makeTransactions(from: item.metrics?.transactions ?? [])
     }
 
     private static func makeSummaryTiles(for item: LogItem) -> [SummaryTile] {
-        let metrics = item.metrics
-        let totalDuration = Self.totalDuration(for: item)
+        let metrics = item.metrics?.transactions ?? []
+        let totalDuration = item.metrics?.responseInterval.duration ?? item.responseTime
         let requestBytes = metrics.compactMap(\.countOfRequestBodyBytesSent).reduce(0, +)
         let responseBytes = metrics.compactMap(\.countOfResponseBodyBytesReceived).reduce(0, +)
 
         return [
-            SummaryTile(title: "Transactions", value: "\(metrics.count)", icon: "arrow.triangle.branch"),
+            SummaryTile(title: "Redirections", value: "\(item.metrics?.redirectCount ?? 0)", icon: "arrow.triangle.branch"),
             SummaryTile(title: "Total time", value: formatDuration(totalDuration), icon: "timer"),
             SummaryTile(title: "Sent", value: formatBytes(requestBytes), icon: "arrow.up"),
-            SummaryTile(title: "Received", value: formatBytes(responseBytes), icon: "arrow.down")
+            SummaryTile(title: "Received", value: formatBytes(responseBytes), icon: "arrow.down"),
+            SummaryTile(title: "Transactions", value: "\(metrics.count)", icon: "arrow.trianglehead.swap"),
         ]
     }
 
-    private static func makeTransactions(from metrics: [NetworkLogMetrics]) -> [Transaction] {
+    private static func makeTransactions(from metrics: [NetworkTransaction]) -> [Transaction] {
         metrics.reversed().enumerated().map { offset, metric in
             Transaction(index: metrics.count - offset,
                         metric: metric,
@@ -321,22 +323,14 @@ private struct LogMetricsViewModel {
         }
     }
 
-    private static func totalDuration(for item: LogItem) -> TimeInterval? {
-        let metrics = item.metrics
-        guard let start = metrics.compactMap(\.fetchStartDate).min(),
-              let end = metrics.compactMap(\.responseEndDate).max() else {
-            return item.finishTime.map { $0.timeIntervalSince(item.startTime) }
-        }
-        return end.timeIntervalSince(start)
-    }
 
-    private static func makeTimeline(for metric: NetworkLogMetrics) -> Timeline {
+    private static func makeTimeline(for metric: NetworkTransaction) -> Timeline {
         let phases = makeTimelinePhases(for: metric)
         let total = timelineTotal(for: metric, phases: phases)
         return Timeline(phases: phases, total: total, formattedTotal: formatDuration(total))
     }
 
-    private static func makeTimelinePhases(for metric: NetworkLogMetrics) -> [TimelinePhase] {
+    private static func makeTimelinePhases(for metric: NetworkTransaction) -> [TimelinePhase] {
         var phases = [TimelinePhase]()
         let baseDate = metric.fetchStartDate
 
@@ -370,7 +364,7 @@ private struct LogMetricsViewModel {
                                     color: color))
     }
 
-    private static func timelineTotal(for metric: NetworkLogMetrics, phases: [TimelinePhase]) -> TimeInterval {
+    private static func timelineTotal(for metric: NetworkTransaction, phases: [TimelinePhase]) -> TimeInterval {
         if let fetchStartDate = metric.fetchStartDate,
            let responseEndDate = metric.responseEndDate {
             return max(responseEndDate.timeIntervalSince(fetchStartDate), 0)
@@ -378,7 +372,7 @@ private struct LogMetricsViewModel {
         return phases.map { $0.offset + $0.duration }.max() ?? 0
     }
 
-    private static func makeTransferRows(for metric: NetworkLogMetrics) -> [MetricRow] {
+    private static func makeTransferRows(for metric: NetworkTransaction) -> [MetricRow] {
         [
             MetricRow(title: "Request headers sent", value: formatBytes(metric.countOfRequestHeaderBytesSent)),
             MetricRow(title: "Request body sent", value: formatBytes(metric.countOfRequestBodyBytesSent)),
@@ -389,7 +383,7 @@ private struct LogMetricsViewModel {
         ]
     }
 
-    private static func makeConnectionRows(for metric: NetworkLogMetrics) -> [MetricRow] {
+    private static func makeConnectionRows(for metric: NetworkTransaction) -> [MetricRow] {
         [
             MetricRow(title: "Protocol", value: metric.networkProtocolName ?? "Unavailable"),
             MetricRow(title: "Remote address", value: endpoint(address: metric.remoteAddress, port: metric.remotePort)),
@@ -404,7 +398,7 @@ private struct LogMetricsViewModel {
         ]
     }
 
-    private static func makeTLSRows(for metric: NetworkLogMetrics) -> [MetricRow]? {
+    private static func makeTLSRows(for metric: NetworkTransaction) -> [MetricRow]? {
         guard metric.secureConnectionStartDate != nil ||
               metric.negotiatedTLSProtocolVersion != nil ||
               metric.negotiatedTLSCipherSuite != nil else {
@@ -478,7 +472,7 @@ private struct LogMetricsViewModel {
         let tlsRows: [MetricRow]?
 
         init(index: Int,
-             metric: NetworkLogMetrics,
+             metric: NetworkTransaction,
              timeline: Timeline,
              transferRows: [MetricRow],
              connectionRows: [MetricRow],
@@ -495,7 +489,7 @@ private struct LogMetricsViewModel {
             self.tlsRows = tlsRows
         }
 
-        private static func subtitle(for metric: NetworkLogMetrics) -> String {
+        private static func subtitle(for metric: NetworkTransaction) -> String {
             let protocolName = metric.networkProtocolName ?? "unknown protocol"
             let endpoint = LogMetricsViewModel.endpoint(address: metric.remoteAddress, port: metric.remotePort)
             return endpoint == "Unavailable" ? protocolName : "\(protocolName) • \(endpoint)"
