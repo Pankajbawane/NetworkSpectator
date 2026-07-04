@@ -145,7 +145,12 @@ struct LogItemTests {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = #"{"name": "John"}"#.data(using: .utf8)
 
-        let item = LogItem.fromRequest(request)
+        let item = LogItem(
+            url: request.url?.absoluteString ?? "",
+            method: request.httpMethod ?? "",
+            headers: request.allHTTPHeaderFields ?? [:],
+            requestBodyRaw: request.httpBody
+        )
 
         #expect(item.url == "https://example.com/api/users")
         #expect(item.method == "POST")
@@ -161,7 +166,8 @@ struct LogItemTests {
         let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json"])
         let data = #"{"result": "success"}"#.data(using: .utf8)
 
-        let finishedItem = startItem.withResponse(response: response, data: data, error: nil)
+        var finishedItem = startItem
+        finishedItem.updateResponse(response: response, data: data, error: nil)
 
         #expect(finishedItem.statusCode == 200)
         #expect(finishedItem.isLoading == false)
@@ -175,7 +181,8 @@ struct LogItemTests {
         let startItem = LogItem(url: "https://example.com/api/users")
         let error = NSError(domain: "test", code: -1, userInfo: [NSLocalizedDescriptionKey: "Connection failed"])
 
-        let finishedItem = startItem.withResponse(response: nil, data: nil, error: error)
+        var finishedItem = startItem
+        finishedItem.updateResponse(response: nil, data: nil, error: error)
 
         #expect(finishedItem.errorDescription != nil)
         #expect(finishedItem.errorLocalizedDescription == "Connection failed")
@@ -206,7 +213,8 @@ struct LogItemTests {
         let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)
         let data = "response body".data(using: .utf8)
 
-        let finishedItem = startItem.withResponse(response: response, data: data, error: nil)
+        var finishedItem = startItem
+        finishedItem.updateResponse(response: response, data: data, error: nil)
 
         #expect(finishedItem.mockId == mockId)
         #expect(finishedItem.isMocked == true)
@@ -226,7 +234,8 @@ struct LogItemTests {
         )
         
 
-        let updated = item.withMockID(mockId)
+        var updated = item
+        updated.updateMockID(mockId)
 
         #expect(updated.mockId == mockId)
         #expect(updated.id == item.id)
@@ -240,7 +249,8 @@ struct LogItemTests {
     @Test("withMockID with nil clears mock ID")
     func testWithMockIDNilClearsMockID() async throws {
         let item = LogItem(url: "https://example.com", mockId: UUID())
-        let updated = item.withMockID(nil)
+        var updated = item
+        updated.updateMockID(nil)
         #expect(updated.mockId == nil)
         #expect(updated.isMocked == false)
     }
@@ -248,7 +258,8 @@ struct LogItemTests {
     @Test("withMockID default parameter is nil")
     func testWithMockIDDefaultParamIsNil() async throws {
         let item = LogItem(url: "https://example.com", mockId: UUID())
-        let updated = item.withMockID()
+        var updated = item
+        updated.updateMockID()
         #expect(updated.mockId == nil)
     }
 
@@ -367,7 +378,13 @@ struct LogItemTests {
     func testFromRequestWithMockId() async throws {
         let mockId = UUID()
         let request = URLRequest(url: URL(string: "https://example.com")!)
-        let item = LogItem.fromRequest(request, mockId)
+        let item = LogItem(
+            url: request.url?.absoluteString ?? "",
+            method: request.httpMethod ?? "",
+            headers: request.allHTTPHeaderFields ?? [:],
+            requestBodyRaw: request.httpBody,
+            mockId: mockId
+        )
         #expect(item.mockId == mockId)
         #expect(item.isMocked == true)
     }
@@ -375,8 +392,52 @@ struct LogItemTests {
     @Test("fromRequest without mockId has nil mockId")
     func testFromRequestWithoutMockId() async throws {
         let request = URLRequest(url: URL(string: "https://example.com")!)
-        let item = LogItem.fromRequest(request)
+        let item = LogItem(
+            url: request.url?.absoluteString ?? "",
+            method: request.httpMethod ?? "",
+            headers: request.allHTTPHeaderFields ?? [:],
+            requestBodyRaw: request.httpBody
+        )
         #expect(item.mockId == nil)
         #expect(item.isMocked == false)
+    }
+    
+    @Test("timing uses metrics when available")
+    func testTimingUsesMetricsWhenAvailable() async throws {
+        let logStart = Date(timeIntervalSince1970: 100)
+        let logFinish = Date(timeIntervalSince1970: 102)
+        let metricStart = Date(timeIntervalSince1970: 110)
+        let metrics = NetworkLogMetrics(
+            redirectCount: 0,
+            responseInterval: DateInterval(start: metricStart, duration: 3),
+            transactions: []
+        )
+        let item = LogItem(
+            startTime: logStart,
+            url: "https://example.com",
+            finishTime: logFinish,
+            responseTime: 2,
+            metrics: metrics
+        )
+        
+        #expect(item.startTime == metricStart)
+        #expect(item.finishTime == Date(timeIntervalSince1970: 113))
+        #expect(item.responseTime == 3)
+    }
+    
+    @Test("timing falls back to log timestamps without metrics")
+    func testTimingFallsBackToLogTimestampsWithoutMetrics() async throws {
+        let start = Date(timeIntervalSince1970: 100)
+        let finish = Date(timeIntervalSince1970: 102.5)
+        let item = LogItem(
+            startTime: start,
+            url: "https://example.com",
+            finishTime: finish,
+            responseTime: 2.5
+        )
+        
+        #expect(item.startTime == start)
+        #expect(item.finishTime == finish)
+        #expect(item.responseTime == 2.5)
     }
 }
