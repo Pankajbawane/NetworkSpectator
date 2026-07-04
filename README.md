@@ -26,9 +26,9 @@ Designed for developers debugging network calls during development and QA teams 
 
 - **Detailed request inspection**
   - Tabbed detail view: Overview, Request, Headers, Response and Metrics
-  - Metrics view with summary, redirects, transaction count, bytes sent and bytes received
-  - Timeline phases for DNS, TCP, TLS, request, waiting, and download timing
-  - Transfer, connection, and TLS details including byte counts, endpoints, protocol, network flags, TLS version, and cipher suite
+  - Metrics view with summary, redirects, transactions and data transfers
+  - Timeline phases for DNS, TCP, TLS, request, waiting and download timing
+  - Connection details including protocol, TLS version, and cipher suite
   - Smart response rendering — pretty-printed JSON, inline image previews, and plain text
   - Copy any request or response data to clipboard
   - Create a mock response or logging exclusion directly from a captured request
