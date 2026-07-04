@@ -36,7 +36,7 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     override init(request: URLRequest, cachedResponse: CachedURLResponse?, client: (any URLProtocolClient)?) {
         // Capture the HTTP body if it's provided
         let urlRequest = Self.captureHTTPBodyIfNeeded(request)
-        protectedLog = OSAllocatedUnfairLock(initialState: LogItem.fromRequest(urlRequest))
+        protectedLog = OSAllocatedUnfairLock(initialState: LogItem(urlRequest))
         super.init(request: request, cachedResponse: cachedResponse, client: client)
         
     }
@@ -78,7 +78,7 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
 
         // Log the request including headers and body (if any)
         let requestLog = protectedLog.withLock { log in
-            log = log.withMockID(mock?.id)
+            log.updateMockID(mock?.id)
             return log
         }
         logging(requestLog)
@@ -86,7 +86,7 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         let completion: @Sendable (Data?, URLResponse?, Error?) -> Void = { [weak self] data, response, error in
             guard let self else { return }
             let responseLog = self.protectedLog.withLock { log in
-                log = log.withResponse(response: response, data: data, error: error)
+                log.updateResponse(response: response, data: data, error: error)
                 return log
             }
             self.logging(responseLog)
@@ -139,7 +139,8 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     override func stopLoading() {
         let cancelledLog: LogItem? = protectedLog.withLock { log in
             guard log.finishTime == nil else { return nil }
-            return log.withResponse(response: nil, data: nil, error: URLError(.cancelled))
+            log.updateResponse(response: nil, data: nil, error: URLError(.cancelled))
+            return log
         }
         if let cancelledLog {
             logging(cancelledLog)
@@ -197,9 +198,9 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         Self.logger.logging(item)
     }
     
-    private func updateLog(with metrics: [NetworkLogMetrics]) {
+    private func updateLog(with metrics: NetworkLogMetrics) {
         let metricsLog = protectedLog.withLock { log in
-            log = log.withMetrics(metrics)
+            log.updateMetrics(metrics)
             return log
         }
         logging(metricsLog)
@@ -207,15 +208,19 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
 }
 
 private final class SessionDelegate: NSObject, URLSessionTaskDelegate {
-    private let didCollectMetrics: @Sendable ([NetworkLogMetrics]) -> Void
+    private let didCollectMetrics: @Sendable (NetworkLogMetrics) -> Void
     
-    init(didCollectMetrics: @escaping @Sendable ([NetworkLogMetrics]) -> Void) {
+    init(didCollectMetrics: @escaping @Sendable (NetworkLogMetrics) -> Void) {
         self.didCollectMetrics = didCollectMetrics
     }
     
     func urlSession(_ session: URLSession,
                     task: URLSessionTask,
                     didFinishCollecting metrics: URLSessionTaskMetrics) {
-        didCollectMetrics(metrics.transactionMetrics.map(NetworkLogMetrics.init))
+        let transactions = metrics.transactionMetrics.map(NetworkTransaction.init)
+        let logMetrics = NetworkLogMetrics(redirectCount: metrics.redirectCount,
+                                           responseInterval: metrics.taskInterval,
+                                           transactions: transactions)
+        didCollectMetrics(logMetrics)
     }
 }
