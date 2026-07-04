@@ -8,15 +8,8 @@
 import Foundation
 import SwiftUI
 
-@MainActor
 struct LogMetricsViewModel {
     private static let unavailableValue = "Unavailable"
-    private static let byteFormatter: ByteCountFormatter = {
-        let formatter = ByteCountFormatter()
-        formatter.allowedUnits = [.useBytes, .useKB, .useMB, .useGB]
-        formatter.countStyle = .binary
-        return formatter
-    }()
     
     let metrics: NetworkLogMetrics?
     let summaryTiles: [SummaryTile]
@@ -29,26 +22,22 @@ struct LogMetricsViewModel {
     }
 
     private static func makeSummaryTiles(for item: LogItem) -> [SummaryTile] {
-        guard let metrics = item.metrics else {
-            return [
-                SummaryTile(title: "Redirections", value: unavailableValue, icon: "arrow.triangle.branch"),
-                SummaryTile(title: "Total time", value: formatDuration(item.responseTime), icon: "timer"),
-                SummaryTile(title: "Sent", value: unavailableValue, icon: "arrow.up"),
-                SummaryTile(title: "Received", value: unavailableValue, icon: "arrow.down"),
-                SummaryTile(title: "Transactions", value: unavailableValue, icon: "arrow.trianglehead.swap")
-            ]
-        }
-        
-        let transactions = metrics.transactions
+        let metrics = item.metrics
+        let transactions = metrics?.transactions ?? []
         let requestBytes = transactions.compactMap(\.countOfRequestBodyBytesSent).reduce(0, +)
         let responseBytes = transactions.compactMap(\.countOfResponseBodyBytesReceived).reduce(0, +)
+        
+        let redirectionsValue = metrics.map { "\($0.redirectCount)" } ?? unavailableValue
+        let sentValue = metrics == nil ? unavailableValue : formatBytes(requestBytes)
+        let receivedValue = metrics == nil ? unavailableValue : formatBytes(responseBytes)
+        let transactionsValue = metrics == nil ? unavailableValue : "\(transactions.count)"
 
         return [
-            SummaryTile(title: "Redirections", value: "\(metrics.redirectCount)", icon: "arrow.triangle.branch"),
+            SummaryTile(title: "Redirections", value: redirectionsValue, icon: "arrow.triangle.branch"),
             SummaryTile(title: "Total time", value: formatDuration(item.responseTime), icon: "timer"),
-            SummaryTile(title: "Sent", value: formatBytes(requestBytes), icon: "arrow.up"),
-            SummaryTile(title: "Received", value: formatBytes(responseBytes), icon: "arrow.down"),
-            SummaryTile(title: "Transactions", value: "\(transactions.count)", icon: "arrow.trianglehead.swap")
+            SummaryTile(title: "Sent", value: sentValue, icon: "arrow.up"),
+            SummaryTile(title: "Received", value: receivedValue, icon: "arrow.down"),
+            SummaryTile(title: "Transactions", value: transactionsValue, icon: "arrow.trianglehead.swap")
         ]
     }
 
@@ -175,7 +164,10 @@ struct LogMetricsViewModel {
     }
 
     private static func formatBytes(_ bytes: Int64) -> String {
-        byteFormatter.string(fromByteCount: bytes)
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useBytes, .useKB, .useMB, .useGB]
+        formatter.countStyle = .binary
+        return formatter.string(fromByteCount: bytes)
     }
 
     private static func formatBool(_ value: Bool?) -> String {
@@ -196,7 +188,6 @@ struct LogMetricsViewModel {
         let icon: String
     }
 
-    @MainActor
     struct Transaction: Identifiable {
         let id: Int
         let index: Int

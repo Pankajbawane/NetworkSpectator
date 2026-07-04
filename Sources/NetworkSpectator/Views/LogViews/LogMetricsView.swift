@@ -8,11 +8,9 @@
 import SwiftUI
 
 struct LogMetricsView: View {
-    let item: LogItem
     private let viewModel: LogMetricsViewModel
     
     init(item: LogItem) {
-        self.item = item
         viewModel = LogMetricsViewModel(item: item)
     }
 
@@ -94,7 +92,7 @@ struct LogMetricsView: View {
 
             Spacer()
 
-            HStack(spacing: 5){
+            HStack(spacing: 5) {
                 Image(systemName: transaction.icon)
                     .font(.subheadline)
                     .foregroundColor(transaction.color)
@@ -207,10 +205,10 @@ struct LogMetricsView: View {
 
     private func metricTable(_ rows: [LogMetricsViewModel.MetricRow]) -> some View {
         VStack(spacing: 0) {
-            ForEach(rows) { row in
+            ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
                 metricRow(row)
 
-                if row.id != rows.last?.id {
+                if index < rows.count - 1 {
                     divider()
                 }
             }
