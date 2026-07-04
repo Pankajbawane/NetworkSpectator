@@ -11,8 +11,9 @@ struct EmptyStateView: View {
 
     let isSearchActive: Bool
     let searchText: String
-    @ObservedObject var logContainer = NetworkLogContainer.shared
-    @ObservedObject var monitor = NetworkLogMonitor.shared
+
+    @ObservedObject private var logContainer = NetworkLogContainer.shared
+    @ObservedObject private var monitor = NetworkLogMonitor.shared
 
     @State private var rotationAngle: Double = 0
     @State private var gearRotation: Double = 0
@@ -26,6 +27,10 @@ struct EmptyStateView: View {
             return .search
         }
         return .emptyData
+    }
+
+    private var message: String {
+        viewState.message(searchText: searchText)
     }
 
     var body: some View {
@@ -57,7 +62,7 @@ struct EmptyStateView: View {
                     .monospaced(true)
                     .foregroundStyle(.primary)
 
-                Text(viewState.message)
+                Text(message)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -69,7 +74,7 @@ struct EmptyStateView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white.opacity(viewState == .disabledLogging ? 0.15 : 0.3))
+        .background(backgroundColor.opacity(viewState == .disabledLogging ? 0.15 : 0.3))
         .overlay(alignment: .bottom) {
             if !monitor.isLoggingEnabled && (monitor.setupMode == .none || monitor.setupMode == .uiInitiated) {
                 HStack {
@@ -96,19 +101,10 @@ struct EmptyStateView: View {
     }
     
     @ViewBuilder
-    var enableLoggingButton: some View {
+    private var enableLoggingButton: some View {
         let tintColor: Color = isTapped ? .green : .blue
         Button {
-            guard !isTapped else { return }
-            isTapped = true
-            // Delay enable so the bounce + green state is visible before the view transitions
-            Task {
-                try? await Task.sleep(for: .milliseconds(600))
-                await monitor.enableInternally()
-                if monitor.setupMode == .onDemand {
-                    PreferenceStorage(preference: .monitoring).save(true)
-                }
-            }
+            enableLogging()
         } label: {
             Text(isTapped ? "Enabled Monitoring" : "Enable Monitoring")
                 .font(.body)
@@ -154,6 +150,29 @@ struct EmptyStateView: View {
             gearRotation = 0
         }
     }
+
+    private var backgroundColor: Color {
+        #if os(iOS)
+        return Color(uiColor: .systemBackground)
+        #elseif os(macOS)
+        return Color(nsColor: .windowBackgroundColor)
+        #else
+        return Color.primary.opacity(0.05)
+        #endif
+    }
+
+    private func enableLogging() {
+        guard !isTapped else { return }
+        isTapped = true
+
+        Task {
+            try? await Task.sleep(for: .milliseconds(600))
+            await monitor.enableInternally()
+            if monitor.setupMode == .onDemand {
+                PreferenceStorage(preference: .monitoring).save(true)
+            }
+        }
+    }
 }
 
 extension EmptyStateView {
@@ -184,12 +203,16 @@ extension EmptyStateView {
             }
         }
         
-        var message: String {
+        func message(searchText: String) -> String {
             switch self {
             case .emptyData:
                 return "Network requests will appear here as your app makes HTTP calls. Start using your app to see network activity."
             case .search:
-                return "No requests matched. Try adjusting your search or filters."
+                let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmedSearchText.isEmpty else {
+                    return "No requests matched. Try adjusting your search or filters."
+                }
+                return "No requests matched \"\(trimmedSearchText)\". Try adjusting your search or filters."
             case .disabledLogging:
                 return "Tap below to start capturing network activity for this session. Monitoring preferences can be accessed via Tools > Network Monitor."
             }
