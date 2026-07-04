@@ -7,13 +7,14 @@
 [![Build](https://github.com/Pankajbawane/NetworkSpectator/actions/workflows/ci.yml/badge.svg)](https://github.com/Pankajbawane/NetworkSpectator/actions/workflows/ci.yml)
 
 NetworkSpectator is a Swift network debugging library that intercepts, inspects, and logs HTTP/HTTPS request and response in your iOS or macOS app in real time.
-Browse captured API traffic in a native SwiftUI interface, export logs and create mock API responses programmatically or through a built-in UI.
+Browse captured API traffic in a native SwiftUI interface, view network request metrics, export logs and create mock API responses programmatically or through a built-in UI.
 Designed for developers debugging network calls during development and QA teams validating app behavior without backend dependencies or developer intervention.
 
 ## Features
 
 - **Real-time network monitoring**
   - Capture URL, method, status code, response time, headers, request body, and response body
+  - Network metrics including redirects, transaction timing, transfer sizes, connection details, and TLS information
   - Live updates with in-progress indicators for pending requests
   - Start immediately or use **on-demand mode** to enable monitoring from the UI when needed
   - Color-coded list view with method badges, status indicators, and response metrics
@@ -24,7 +25,10 @@ Designed for developers debugging network calls during development and QA teams 
   - Full-text URL search across all captured requests
 
 - **Detailed request inspection**
-  - Tabbed detail view: Overview, Request, Headers, and Response
+  - Tabbed detail view: Overview, Request, Headers, Response and Metrics
+  - Metrics view with summary, redirects, transaction count, bytes sent and bytes received
+  - Timeline phases for DNS, TCP, TLS, request, waiting, and download timing
+  - Transfer, connection, and TLS details including byte counts, endpoints, protocol, network flags, TLS version, and cipher suite
   - Smart response rendering — pretty-printed JSON, inline image previews, and plain text
   - Copy any request or response data to clipboard
   - Create a mock response or logging exclusion directly from a captured request
