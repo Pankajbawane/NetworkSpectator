@@ -17,13 +17,13 @@ struct LogMetricsView: View {
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 16) {
-                summarySection
-
                 if viewModel.metrics == nil {
                     emptyState(icon: "timer",
                                title: "No Metrics Available",
                                message: "URLSession has not reported detailed timing metrics for this request.")
                 } else {
+                    summarySection
+                    
                     ForEach(viewModel.transactions) { transaction in
                         transactionSection(transaction)
                     }
