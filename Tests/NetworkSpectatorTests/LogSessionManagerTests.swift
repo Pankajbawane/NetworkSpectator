@@ -51,8 +51,8 @@ struct LogSessionManagerTests {
             headers: ["Content-Type": "application/json"],
             requestBodyRaw: nil,
             statusCode: statusCode,
-            responseBody: isLoading ? "" : "{\"ok\":true}",
             responseHeaders: isLoading ? [:] : ["Content-Type": "application/json"],
+            responseRaw: isLoading ? nil : "{\"ok\":true}".data(using: .utf8),
             finishTime: finishTime,
             responseTime: finishTime.map { $0.timeIntervalSince(startTime) } ?? 0,
             isLoading: isLoading
@@ -215,7 +215,7 @@ struct LogSessionManagerTests {
             url: loadingItem.url,
             method: "GET",
             statusCode: 200,
-            responseBody: "{\"ok\":true}",
+            responseRaw: "{\"ok\":true}".data(using: .utf8),
             finishTime: finishTime,
             responseTime: 5.0,
             isLoading: false

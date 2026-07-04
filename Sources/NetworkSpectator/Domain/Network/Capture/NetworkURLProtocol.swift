@@ -10,7 +10,9 @@ import os
 
 final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     
-    private var sessionTask: URLSessionDataTask?
+    private weak var session: URLSession?
+    private weak var sessionTask: URLSessionDataTask?
+    private weak var sessionDelegate: SessionDelegate?
     private var mockTask: Task<Void, Never>?
     private let protectedLog: OSAllocatedUnfairLock<LogItem>
     private static let taskCacheKey = "NETWORKSPECTATOR_TRACK_CACHED_TASK_KEY"
@@ -34,7 +36,7 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     override init(request: URLRequest, cachedResponse: CachedURLResponse?, client: (any URLProtocolClient)?) {
         // Capture the HTTP body if it's provided
         let urlRequest = Self.captureHTTPBodyIfNeeded(request)
-        protectedLog = OSAllocatedUnfairLock(initialState: LogItem.fromRequest(urlRequest))
+        protectedLog = OSAllocatedUnfairLock(initialState: LogItem(urlRequest))
         super.init(request: request, cachedResponse: cachedResponse, client: client)
         
     }
@@ -76,7 +78,7 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
 
         // Log the request including headers and body (if any)
         let requestLog = protectedLog.withLock { log in
-            log = log.withMockID(mock?.id)
+            log.updateMockID(mock?.id)
             return log
         }
         logging(requestLog)
@@ -84,7 +86,7 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         let completion: @Sendable (Data?, URLResponse?, Error?) -> Void = { [weak self] data, response, error in
             guard let self else { return }
             let responseLog = self.protectedLog.withLock { log in
-                log = log.withResponse(response: response, data: data, error: error)
+                log.updateResponse(response: response, data: data, error: error)
                 return log
             }
             self.logging(responseLog)
@@ -118,8 +120,14 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
             return
         }
         
+        let delegate = SessionDelegate { [weak self] metrics in
+            self?.updateLog(with: metrics)
+        }
+        sessionDelegate = delegate
+        
         let config = URLSessionConfiguration.default
-        let session = URLSession(configuration: config, delegate: nil, delegateQueue: nil)
+        let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
+        self.session = session
 
         sessionTask = session.dataTask(with: thisRequest as URLRequest) { data, response, error in
             completion(data, response, error)
@@ -131,13 +139,17 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     override func stopLoading() {
         let cancelledLog: LogItem? = protectedLog.withLock { log in
             guard log.finishTime == nil else { return nil }
-            return log.withResponse(response: nil, data: nil, error: URLError(.cancelled))
+            log.updateResponse(response: nil, data: nil, error: URLError(.cancelled))
+            return log
         }
         if let cancelledLog {
             logging(cancelledLog)
         }
         sessionTask?.cancel()
         sessionTask = nil
+        session?.invalidateAndCancel()
+        session = nil
+        sessionDelegate = nil
         mockTask?.cancel()
         mockTask = nil
     }
@@ -184,5 +196,31 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     
     func logging(_ item: LogItem) {
         Self.logger.logging(item)
+    }
+    
+    private func updateLog(with metrics: NetworkLogMetrics) {
+        let metricsLog = protectedLog.withLock { log in
+            log.updateMetrics(metrics)
+            return log
+        }
+        logging(metricsLog)
+    }
+}
+
+private final class SessionDelegate: NSObject, URLSessionTaskDelegate {
+    private let didCollectMetrics: @Sendable (NetworkLogMetrics) -> Void
+    
+    init(didCollectMetrics: @escaping @Sendable (NetworkLogMetrics) -> Void) {
+        self.didCollectMetrics = didCollectMetrics
+    }
+    
+    func urlSession(_ session: URLSession,
+                    task: URLSessionTask,
+                    didFinishCollecting metrics: URLSessionTaskMetrics) {
+        let transactions = metrics.transactionMetrics.map(NetworkTransaction.init)
+        let logMetrics = NetworkLogMetrics(redirectCount: metrics.redirectCount,
+                                           responseInterval: metrics.taskInterval,
+                                           transactions: transactions)
+        didCollectMetrics(logMetrics)
     }
 }

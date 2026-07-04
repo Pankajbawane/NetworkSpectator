@@ -63,8 +63,8 @@ struct LogHistoryStorageTests {
             headers: ["Content-Type": "application/json"],
             requestBodyRaw: nil,
             statusCode: statusCode,
-            responseBody: "{\"ok\":true}",
             responseHeaders: ["Content-Type": "application/json"],
+            responseRaw: "{\"ok\":true}".data(using: .utf8),
             responseTime: 0.5,
             isLoading: false
         )

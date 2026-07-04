@@ -20,8 +20,8 @@ struct TextExporterTests {
             method: "GET",
             headers: ["Content-Type": "application/json"],
             statusCode: 200,
-            responseBody: #"{"users": []}"#,
-            responseHeaders: ["Content-Length": "100"]
+            responseHeaders: ["Content-Length": "100"],
+            responseRaw: #"{"users": []}"#.data(using: .utf8)
         )
         let exporter = TextExporter(item: item)
 
