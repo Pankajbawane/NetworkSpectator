@@ -6,29 +6,30 @@
 //
 
 import SwiftUI
+import NetworkSpectatorCore
 
 /// Manages network log updates and publishes on MainActor.
 /// Communicates with UI layer for updates.
 @MainActor
-final class NetworkLogContainer: ObservableObject, Sendable {
+package final class NetworkLogContainer: ObservableObject, Sendable {
     /// Singleton.
-    static let shared = NetworkLogContainer()
+    package static let shared = NetworkLogContainer()
     
     private let logStore: any NetworkLogStoring
     
     /// Items on the MainActor to update on UI layer.
-    @Published private(set) var items: [LogItem] = []
+    @Published package private(set) var items: [LogItem] = []
     
     private var indexByID: [UUID: Int] = [:]
     
     /// Task to observe item updates from the store actor.
     private var itemUpdateTask: Task<Void, Never>?
     
-    init(logStore: any NetworkLogStoring = NetworkLogStore.shared) {
+    package init(logStore: any NetworkLogStoring = NetworkLogStore.shared) {
         self.logStore = logStore
     }
     
-    func latestItem(for id: UUID) -> LogItem? {
+    package func latestItem(for id: UUID) -> LogItem? {
         guard let index = indexByID[id], items.indices.contains(index) else {
             return nil
         }
@@ -76,17 +77,17 @@ final class NetworkLogContainer: ObservableObject, Sendable {
         indexByID = updatedIndices
     }
     
-    func startProjectingUpdates() {
+    package func startProjectingUpdates() {
         reset()
         startObservingUpdates()
     }
     
-    func stopProjectingUpdates() {
+    package func stopProjectingUpdates() {
         stopObservingUpdates()
         reset()
     }
     
-    func resetProjection() {
+    package func resetProjection() {
         reset()
     }
     

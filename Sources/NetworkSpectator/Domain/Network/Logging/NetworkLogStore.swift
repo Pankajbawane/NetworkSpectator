@@ -7,14 +7,15 @@
 
 import Foundation
 import os
+import NetworkSpectatorCore
 
 /// Identifies a specific active logging session.
-struct NetworkLogSession: Equatable, Sendable {
+package struct NetworkLogSession: Equatable, Sendable {
     fileprivate let id: UUID
 }
 
 /// Represents an incremental network log update.
-enum NetworkLogUpdate: Sendable {
+package enum NetworkLogUpdate: Sendable {
     case append(LogItem)
     case update(LogItem, index: Int)
     case reset
@@ -53,7 +54,7 @@ private final class NetworkLogSessionState: @unchecked Sendable {
 }
 
 /// Store abstraction used by UI-facing containers.
-protocol NetworkLogStoring: Sendable {
+package protocol NetworkLogStoring: Sendable {
     func start() async
     func deactivate() async
     
@@ -69,7 +70,7 @@ protocol NetworkLogStoring: Sendable {
 }
 
 /// LogStore actor for thread-safe management and streaming of network log items.
-internal actor NetworkLogStore: NetworkLogStoring {
+package actor NetworkLogStore: NetworkLogStoring {
     /// The authoritative list of all log items for the current session.
     private var items: [LogItem] = []
     
@@ -95,22 +96,22 @@ internal actor NetworkLogStore: NetworkLogStoring {
     private let flushInterval: Duration = .milliseconds(5)
     
     /// Singleton.
-    static let shared = NetworkLogStore()
+    package static let shared = NetworkLogStore()
 
     private init() { }
     
-    nonisolated func currentSession() -> NetworkLogSession? {
+    nonisolated package func currentSession() -> NetworkLogSession? {
         sessionState.current()
     }
     
     /// Starts a new active session and clears any previous session state.
-    func start() {
+    package func start() {
         _ = sessionState.start()
         clear(emitReset: true)
     }
     
     /// Stops accepting new log items without clearing the current snapshot.
-    func deactivate() {
+    package func deactivate() {
         sessionState.stop()
         flushBuffer()
     }
@@ -120,7 +121,7 @@ internal actor NetworkLogStore: NetworkLogStoring {
     /// No initial snapshot is emitted. Subscribers are expected to start observing
     /// before `start()` begins a new session, or to rebuild their initial state
     /// from `snapshot()` before consuming this stream.
-    func updates() -> AsyncStream<[NetworkLogUpdate]> {
+    package func updates() -> AsyncStream<[NetworkLogUpdate]> {
         let subscriberID = UUID()
         let (stream, continuation) = AsyncStream<[NetworkLogUpdate]>.makeStream()
         
@@ -138,25 +139,25 @@ internal actor NetworkLogStore: NetworkLogStoring {
     }
 
     /// Returns a snapshot of the current items for persistence.
-    func snapshot() -> [LogItem] {
+    package func snapshot() -> [LogItem] {
         items
     }
     
     /// Returns the count of current items.
-    var itemCount: Int {
+    package var itemCount: Int {
         items.count
     }
 
     /// Adds or updates an item using the store's current session.
     /// Prefer `add(_:session:)` for work that crosses an async boundary.
-    func add(_ item: LogItem) {
+    package func add(_ item: LogItem) {
         guard let session = sessionState.current() else { return }
         add(item, session: session)
     }
     
     /// Adds or updates an item only if it belongs to the active session.
     /// Updates are buffered and delivered as deltas to reduce MainActor work.
-    func add(_ item: LogItem, session: NetworkLogSession?) {
+    package func add(_ item: LogItem, session: NetworkLogSession?) {
         guard let session, sessionState.isCurrent(session) else { return }
         
         if let index = indexByID[item.id] {
@@ -204,7 +205,7 @@ internal actor NetworkLogStore: NetworkLogStoring {
     }
 
     /// Disables the store and finishes all active streams.
-    func stop() {
+    package func stop() {
         deactivate()
         for continuation in continuations.values {
             continuation.finish()

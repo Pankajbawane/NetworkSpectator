@@ -6,29 +6,31 @@
 //
 
 import SwiftUI
+import NetworkSpectatorCore
+import NetworkSpectatorMocking
 
 /// Coordinates monitoring controls and exposes monitoring state to the UI.
 @MainActor
-final class NetworkLogMonitor: ObservableObject, Sendable {
-    static let shared = NetworkLogMonitor()
+package final class NetworkLogMonitor: ObservableObject, Sendable {
+    package static let shared = NetworkLogMonitor()
     
     private let logContainer: NetworkLogContainer
     private let logStore: any NetworkLogStoring
     
     /// Safeguard against redundant activations. Avoids multiple calls to start/stop monitoring.
-    @Published private(set) var isLoggingEnabled: Bool = false
+    @Published package private(set) var isLoggingEnabled: Bool = false
     
     /// Tracks how monitoring was initialized, programmatically or UI.
-    private(set) var setupMode: SetupMode = .none
+    package private(set) var setupMode: SetupMode = .none
     
-    init(logContainer: NetworkLogContainer = .shared,
-         logStore: any NetworkLogStoring = NetworkLogStore.shared) {
+    package init(logContainer: NetworkLogContainer = .shared,
+                logStore: any NetworkLogStoring = NetworkLogStore.shared) {
         self.logContainer = logContainer
         self.logStore = logStore
     }
     
     /// When Monitoring state to be handled by UI on demand.
-    func enableOnDemand() async {
+    package func enableOnDemand() async {
         setupMode = .onDemand
         // if preference was stored.
         if PreferenceStorage(preference: .monitoring).retrieve() {
@@ -37,7 +39,7 @@ final class NetworkLogMonitor: ObservableObject, Sendable {
     }
     
     /// When enabled only with UI.
-    func enableInternally() async {
+    package func enableInternally() async {
         if setupMode == .none {
             setupMode = .uiInitiated
         }
@@ -45,7 +47,7 @@ final class NetworkLogMonitor: ObservableObject, Sendable {
     }
     
     /// Enables monitoring and logging. 'isLoggingEnabled' flag avoids redundant invocation.
-    func enable() async {
+    package func enable() async {
         guard !isLoggingEnabled else {
             DebugPrint.log("NETWORK SPECTATOR: Monitoring was already active.")
             return
@@ -60,7 +62,7 @@ final class NetworkLogMonitor: ObservableObject, Sendable {
     }
     
     /// Disables monitoring and logging. 'isLoggingEnabled' flag avoids redundant invocation.
-    func disable() async {
+    package func disable() async {
         guard isLoggingEnabled else {
             DebugPrint.log("NETWORK SPECTATOR: Monitoring was inactive.")
             return
@@ -72,7 +74,7 @@ final class NetworkLogMonitor: ObservableObject, Sendable {
     }
     
     /// Clears current list of items. This does not stop the monitoring.
-    func clear() async {
+    package func clear() async {
         guard isLoggingEnabled else {
             logContainer.resetProjection()
             return
@@ -83,6 +85,7 @@ final class NetworkLogMonitor: ObservableObject, Sendable {
     }
     
     private func startSession() async {
+        NetworkURLProtocol.logger = UIItemLogger()
         await logStore.start()
         await LogHistoryManager.shared.startObserving()
         NetworkInterceptor.shared.enable()
@@ -93,6 +96,7 @@ final class NetworkLogMonitor: ObservableObject, Sendable {
         await logStore.deactivate()
         await LogHistoryManager.shared.finalizeAndStopObserving()
         await logStore.stop()
+        NetworkURLProtocol.logger = DefaultItemLogger()
     }
     
     private func restartSession() async {
@@ -105,7 +109,7 @@ final class NetworkLogMonitor: ObservableObject, Sendable {
 
 extension NetworkLogMonitor {
     /// How the monitoring was initialized.
-    enum SetupMode {
+    package enum SetupMode {
         /// Not yet initialized — user opened the UI without calling start().
         case none
         /// NetworkSpectator.start() was called (always-on monitoring).
