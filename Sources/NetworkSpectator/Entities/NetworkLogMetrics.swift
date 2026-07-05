@@ -7,49 +7,55 @@
 
 import Foundation
 
-struct NetworkLogMetrics: Codable, Equatable, Hashable, Sendable {
-    let redirectCount: Int
-    let responseInterval: DateInterval
-    let transactions: [NetworkTransaction]
+package struct NetworkLogMetrics: Codable, Equatable, Hashable, Sendable {
+    package let redirectCount: Int
+    package let responseInterval: DateInterval
+    package let transactions: [NetworkTransaction]
+
+    package init(redirectCount: Int, responseInterval: DateInterval, transactions: [NetworkTransaction]) {
+        self.redirectCount = redirectCount
+        self.responseInterval = responseInterval
+        self.transactions = transactions
+    }
 }
 
-struct NetworkTransaction: Codable, Equatable, Hashable, Sendable {
+package struct NetworkTransaction: Codable, Equatable, Hashable, Sendable {
     
-    let fetchStartDate: Date?
-    let domainLookupStartDate: Date?
-    let domainLookupEndDate: Date?
-    let connectStartDate: Date?
-    let secureConnectionStartDate: Date?
-    let secureConnectionEndDate: Date?
-    let connectEndDate: Date?
-    let requestStartDate: Date?
-    let requestEndDate: Date?
-    let responseStartDate: Date?
-    let responseEndDate: Date?
-    let networkProtocolName: String?
-    let isProxyConnection: Bool?
-    let isReusedConnection: Bool?
-    let resourceFetchType: ResourceFetchType?
-    let countOfRequestHeaderBytesSent: Int64?
-    let countOfRequestBodyBytesSent: Int64?
-    let countOfRequestBodyBytesBeforeEncoding: Int64?
-    let countOfResponseHeaderBytesReceived: Int64?
-    let countOfResponseBodyBytesReceived: Int64?
-    let countOfResponseBodyBytesAfterDecoding: Int64?
-    let localAddress: String?
-    let remoteAddress: String?
-    let isCellular: Bool?
-    let isExpensive: Bool?
-    let isConstrained: Bool?
-    let isMultipath: Bool?
-    let domainResolutionProtocol: DomainResolution?
-    let localPort: Int?
-    let remotePort: Int?
-    let negotiatedTLSProtocolVersion: TLSVersion?
-    let negotiatedTLSCipherSuite: TLSCipherSuite?
+    package let fetchStartDate: Date?
+    package let domainLookupStartDate: Date?
+    package let domainLookupEndDate: Date?
+    package let connectStartDate: Date?
+    package let secureConnectionStartDate: Date?
+    package let secureConnectionEndDate: Date?
+    package let connectEndDate: Date?
+    package let requestStartDate: Date?
+    package let requestEndDate: Date?
+    package let responseStartDate: Date?
+    package let responseEndDate: Date?
+    package let networkProtocolName: String?
+    package let isProxyConnection: Bool?
+    package let isReusedConnection: Bool?
+    package let resourceFetchType: ResourceFetchType?
+    package let countOfRequestHeaderBytesSent: Int64?
+    package let countOfRequestBodyBytesSent: Int64?
+    package let countOfRequestBodyBytesBeforeEncoding: Int64?
+    package let countOfResponseHeaderBytesReceived: Int64?
+    package let countOfResponseBodyBytesReceived: Int64?
+    package let countOfResponseBodyBytesAfterDecoding: Int64?
+    package let localAddress: String?
+    package let remoteAddress: String?
+    package let isCellular: Bool?
+    package let isExpensive: Bool?
+    package let isConstrained: Bool?
+    package let isMultipath: Bool?
+    package let domainResolutionProtocol: DomainResolution?
+    package let localPort: Int?
+    package let remotePort: Int?
+    package let negotiatedTLSProtocolVersion: TLSVersion?
+    package let negotiatedTLSCipherSuite: TLSCipherSuite?
 }
 
-extension NetworkTransaction {
+package extension NetworkTransaction {
     init(_ metric: URLSessionTaskTransactionMetrics) {
         fetchStartDate = metric.fetchStartDate
         domainLookupStartDate = metric.domainLookupStartDate
@@ -86,13 +92,13 @@ extension NetworkTransaction {
     }
 }
 
-enum ResourceFetchType: Int, Codable, Sendable {
+package enum ResourceFetchType: Int, Codable, Sendable {
     case unknown = 0
     case networkLoad = 1
     case serverPush = 2
     case localCache = 3
     
-    var formatted: String {
+    package var formatted: String {
         switch self {
         case .networkLoad: return "Network"
         case .serverPush: return "Server Push"
@@ -101,7 +107,7 @@ enum ResourceFetchType: Int, Codable, Sendable {
         }
     }
     
-    var icon: String {
+    package var icon: String {
         switch self {
         case .networkLoad: return "network"
         case .serverPush: return "arrow.down.forward.and.arrow.up.backward"
@@ -111,7 +117,7 @@ enum ResourceFetchType: Int, Codable, Sendable {
     }
 }
 
-enum TLSVersion: UInt16, Codable, Sendable {
+package enum TLSVersion: UInt16, Codable, Sendable {
     case TLSv10 = 769
     case TLSv11 = 770
     case TLSv12 = 771
@@ -119,7 +125,7 @@ enum TLSVersion: UInt16, Codable, Sendable {
     case DTLSv10 = 65279
     case DTLSv12 = 65277
     
-    var formatted: String {
+    package var formatted: String {
         switch self {
         case .TLSv10: return "TLS 1.0"
         case .TLSv11: return "TLS 1.1"
@@ -131,14 +137,14 @@ enum TLSVersion: UInt16, Codable, Sendable {
     }
 }
 
-enum DomainResolution: Int, Codable, Sendable {
+package enum DomainResolution: Int, Codable, Sendable {
     case unknown = 0
     case udp = 1
     case tcp = 2
     case tls = 3
     case https = 4
     
-    var formatted: String {
+    package var formatted: String {
         switch self {
         case .udp: return "UDP"
         case .tcp: return "TCP"
@@ -149,7 +155,7 @@ enum DomainResolution: Int, Codable, Sendable {
     }
 }
 
-enum TLSCipherSuite: UInt16, Codable, Sendable {
+package enum TLSCipherSuite: UInt16, Codable, Sendable {
     case RSA_WITH_3DES_EDE_CBC_SHA = 10
     case RSA_WITH_AES_128_CBC_SHA = 47
     case RSA_WITH_AES_256_CBC_SHA = 53
@@ -177,4 +183,3 @@ enum TLSCipherSuite: UInt16, Codable, Sendable {
     case AES_256_GCM_SHA384 = 4866
     case CHACHA20_POLY1305_SHA256 = 4867
 }
-

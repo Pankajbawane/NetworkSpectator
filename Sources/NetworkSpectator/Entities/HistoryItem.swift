@@ -7,14 +7,14 @@
 
 import Foundation
 
-struct HistoryItem: Codable, Identifiable {
-    let key: String
-    let url: URL
-    let startTimestamp: String
-    let endTimestamp: String
-    let count: String
-    let size: Int
-    var isCurrentSession: Bool = false
+package struct HistoryItem: Codable, Identifiable {
+    package let key: String
+    package let url: URL
+    package let startTimestamp: String
+    package let endTimestamp: String
+    package let count: String
+    package let size: Int
+    package var isCurrentSession: Bool = false
     
     enum CodingKeys: String, CodingKey {
         case key, url, startTimestamp, endTimestamp, count, size
@@ -27,17 +27,33 @@ struct HistoryItem: Codable, Identifiable {
         return formatter
     }()
     
-    var formattedTitle: String {
+    package var formattedTitle: String {
         let startTime = formatter.date(from: startTimestamp)?.formatted(date: .abbreviated, time: .shortened) ?? ""
         let endTime = formatter.date(from: endTimestamp)?.formatted(date: .omitted, time: .shortened) ?? ""
         return "\(startTime) - \(endTime)"
     }
     
-    var shortTitle: String {
+    package var shortTitle: String {
         formatter.date(from: startTimestamp)?.formatted(date: .abbreviated, time: .shortened) ?? startTimestamp
     }
     
-    var id: String {
+    package var id: String {
         key
+    }
+
+    package init(key: String,
+                url: URL,
+                startTimestamp: String,
+                endTimestamp: String,
+                count: String,
+                size: Int,
+                isCurrentSession: Bool = false) {
+        self.key = key
+        self.url = url
+        self.startTimestamp = startTimestamp
+        self.endTimestamp = endTimestamp
+        self.count = count
+        self.size = size
+        self.isCurrentSession = isCurrentSession
     }
 }

@@ -9,85 +9,85 @@ import Foundation
 
 // MARK: - LogItem
 // Represents a single network log entry.
-struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
+package struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
     // Identity & timing
-    let id: UUID
-    let url: String
+    package let id: UUID
+    package let url: String
     private let logStartTime: Date
     private var logFinishTime: Date?
     private var logInterval: TimeInterval
 
     // Request
-    let method: String
-    let headers: [String: String]
-    let requestBodyRaw: Data?
+    package let method: String
+    package let headers: [String: String]
+    package let requestBodyRaw: Data?
 
     // Response
-    private(set) var statusCode: Int
-    private(set) var responseHeaders: [String: String]
-    private(set) var mimetype: String?
-    private(set) var textEncodingName: String?
+    package private(set) var statusCode: Int
+    package private(set) var responseHeaders: [String: String]
+    package private(set) var mimetype: String?
+    package private(set) var textEncodingName: String?
 
     // Raw response data (for binary content like images)
-    private(set) var responseRaw: Data?
+    package private(set) var responseRaw: Data?
 
     // Error & state
-    private(set) var errorDescription: String?
-    private(set) var errorLocalizedDescription: String?
-    private(set) var isLoading: Bool
+    package private(set) var errorDescription: String?
+    package private(set) var errorLocalizedDescription: String?
+    package private(set) var isLoading: Bool
     
     // If request is mocked
-    private(set) var mockId: UUID?
+    package private(set) var mockId: UUID?
     
     // Network metrics
-    private(set) var metrics: NetworkLogMetrics?
+    package private(set) var metrics: NetworkLogMetrics?
 
     // MARK: - Derived
-    var host: String {
+    package var host: String {
         URLComponents(string: url)?.host ?? url
     }
 
-    var path: String {
+    package var path: String {
         URLComponents(string: url)?.percentEncodedPath ?? ""
     }
 
-    var scheme: String? {
+    package var scheme: String? {
         URLComponents(string: url)?.scheme
     }
     
-    var requestBody: String {
+    package var requestBody: String {
        Self.prettyPrintedBody(requestBodyRaw)
    }
     
-    var requestHeadersPrettyPrinted: String {
+    package var requestHeadersPrettyPrinted: String {
         Self.prettyPrintedHeaders(headers)
     }
     
-    var responseHeadersPrettyPrinted: String {
+    package var responseHeadersPrettyPrinted: String {
         Self.prettyPrintedHeaders(responseHeaders)
     }
     
-     var responseBody: String {
+    package var responseBody: String {
         Self.prettyPrintedBody(responseRaw)
     }
     
     // Helper timeline properties.
     // When network metrics unavailable, fallbacks to logging timings.
-    var startTime: Date {
+    package var startTime: Date {
         metrics?.responseInterval.start ?? logStartTime
     }
     
-    var finishTime: Date? {
+    package var finishTime: Date? {
         metrics?.responseInterval.end ?? logFinishTime
     }
     
-    var responseTime: TimeInterval {
+    package var responseTime: TimeInterval {
         metrics?.responseInterval.duration ?? logInterval
     }
     
-    var isMocked: Bool { mockId != nil }
+    package var isMocked: Bool { mockId != nil }
 
-    var statusCategory: String {
+    package var statusCategory: String {
         switch statusCode {
         case 100..<200: return "Informational"
         case 200..<300: return "Success"
@@ -98,7 +98,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         }
     }
     
-    var statusCodeRange: String {
+    package var statusCodeRange: String {
         switch statusCode {
         case 100..<200: return "100..<200"
         case 200..<300: return "200..<300"
@@ -109,10 +109,10 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
         }
     }
 
-    var isError: Bool { (400..<600).contains(statusCode) || errorDescription != nil }
+    package var isError: Bool { (400..<600).contains(statusCode) || errorDescription != nil }
 
     // MARK: - Initializer
-    init(
+    package init(
         id: UUID = UUID(),
         startTime: Date = Date(),
         url: String,
@@ -154,7 +154,7 @@ struct LogItem: Identifiable, Codable, Equatable, Sendable, Hashable {
 }
 
 // MARK: - Convinience Object Factory Methods.
-extension LogItem {
+package extension LogItem {
     /// Create a LogItem initialized with request information.
     init(_ request: URLRequest, _ mockId: UUID? = nil) {
         let urlString = request.url?.absoluteString ?? ""

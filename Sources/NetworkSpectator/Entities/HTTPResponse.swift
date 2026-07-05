@@ -8,12 +8,12 @@
 import Foundation
 
 public struct HTTPResponse: Sendable {
-    let headers: [String: String]
-    let statusCode: Int
-    let responseData: Data?
-    let error: Error?
-    let responseTime: Double
-    let mimeType: MimeType
+    public let headers: [String: String]
+    public let statusCode: Int
+    public let responseData: Data?
+    public let error: Error?
+    public let responseTime: Double
+    public let mimeType: MimeType
     
     public init(headers: [String : String],
                 statusCode: Int, responseData: Data?,

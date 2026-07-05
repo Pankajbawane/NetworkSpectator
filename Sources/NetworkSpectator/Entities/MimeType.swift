@@ -17,7 +17,7 @@ public enum MimeType: Equatable, Codable, Hashable, Sendable {
     case empty
     case custom(String)
     
-    var raw: String {
+    public var raw: String {
         switch self {
         case .json: return "application/json"
         case .xml: return "application/xml"

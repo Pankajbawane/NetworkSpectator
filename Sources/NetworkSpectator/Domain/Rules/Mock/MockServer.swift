@@ -7,35 +7,36 @@
 
 import Foundation
 import os
+import NetworkSpectatorCore
 
 /// Manages registered mocks for network request interception.
-final class MockServer: Sendable {
+package final class MockServer: Sendable {
 
     private let state: OSAllocatedUnfairLock<Set<Mock>>
     private let storage: RuleStorage<Mock>
     
-    static let shared: MockServer = .init()
+    package static let shared: MockServer = .init()
 
-    var mocks: Set<Mock> {
+    package var mocks: Set<Mock> {
         state.withLock { $0 }
     }
 
-    init(state: OSAllocatedUnfairLock<Set<Mock>> = OSAllocatedUnfairLock(initialState: []),
-         storage: RuleStorage<Mock> = RuleStorage<Mock>(key: .mockRules)) {
+    package init(state: OSAllocatedUnfairLock<Set<Mock>> = OSAllocatedUnfairLock(initialState: []),
+                storage: RuleStorage<Mock> = RuleStorage<Mock>(key: .mockRules)) {
         self.storage = storage
         self.state = state
     }
 
     /// Registers a mock to intercept matching network requests.
     /// - Parameter mock: The mock configuration to register.
-    func register(_ mock: Mock) {
+    package func register(_ mock: Mock) {
         state.withLock { _ = $0.insert(mock) }
         if mock.saveLocally {
             persist()
         }
     }
 
-    func responseIfMocked(_ urlRequest: URLRequest) -> Mock? {
+    package func responseIfMocked(_ urlRequest: URLRequest) -> Mock? {
         let mock = state.withLock { mocks in
             mocks.first { $0.method.rawValue == urlRequest.httpMethod && $0.rule.matches(urlRequest) }
         }
@@ -46,7 +47,7 @@ final class MockServer: Sendable {
     }
 
     /// Removes registered mock.
-    func remove(id: UUID) {
+    package func remove(id: UUID) {
         let removedMock: Mock? = state.withLock { mocks in
             if let mock = mocks.first(where: { $0.id == id }) {
                 mocks.remove(mock)
@@ -60,7 +61,7 @@ final class MockServer: Sendable {
     }
 
     /// Removes all registered mocks.
-    func clear() {
+    package func clear() {
         state.withLock { $0.removeAll() }
         persist()
     }
@@ -78,3 +79,4 @@ final class MockServer: Sendable {
     }
 }
 
+extension Mock: Mockable { }

@@ -6,24 +6,25 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
-final class LoggingExclusionManager: @unchecked Sendable {
+package final class LoggingExclusionManager: @unchecked Sendable {
 
-    static let shared: LoggingExclusionManager = .init()
+    package static let shared: LoggingExclusionManager = .init()
 
-    var rules: Set<LoggingExclusionRule> = []
+    package var rules: Set<LoggingExclusionRule> = []
     private let storage: RuleStorage<LoggingExclusionRule>
 
-    var isEnabled: Bool {
+    package var isEnabled: Bool {
         !rules.isEmpty
     }
 
-    init(storage: RuleStorage<LoggingExclusionRule> = RuleStorage<LoggingExclusionRule>(key: .exclusionRules)) {
+    package init(storage: RuleStorage<LoggingExclusionRule> = RuleStorage<LoggingExclusionRule>(key: .exclusionRules)) {
         self.storage = storage
         rules = Set(storage.retrieve())
     }
 
-    func remove(id: UUID) {
+    package func remove(id: UUID) {
         if let item = rules.first(where: { $0.id == id }) {
             rules.remove(item)
             if item.saveLocally {
@@ -32,12 +33,12 @@ final class LoggingExclusionManager: @unchecked Sendable {
         }
     }
 
-    func clear() {
+    package func clear() {
         rules.removeAll()
         persist()
     }
 
-    func register(method: HTTPMethod, rule: MatchRule, saveLocally: Bool = false) {
+    package func register(method: HTTPMethod, rule: MatchRule, saveLocally: Bool = false) {
         let exclude = LoggingExclusionRule(method: method, rule: rule, saveLocally: saveLocally)
         rules.insert(exclude)
         if saveLocally {
@@ -45,14 +46,14 @@ final class LoggingExclusionManager: @unchecked Sendable {
         }
     }
 
-    func register(request: LoggingExclusionRule) {
+    package func register(request: LoggingExclusionRule) {
         rules.insert(request)
         if request.saveLocally {
             persist()
         }
     }
 
-    func shouldExcludeLogging(_ urlRequest: URLRequest) -> Bool {
+    package func shouldExcludeLogging(_ urlRequest: URLRequest) -> Bool {
         return rules.contains { $0.shouldIgnore(urlRequest) }
     }
 
