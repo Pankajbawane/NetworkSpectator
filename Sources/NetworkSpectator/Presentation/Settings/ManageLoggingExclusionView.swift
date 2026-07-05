@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NetworkSpectatorLogging
 
 struct ManageLoggingExclusionView: View {
 

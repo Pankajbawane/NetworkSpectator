@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
 struct JSONBodyLineViewModel: Sendable {
     let responseBody: String

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
 struct LogListDataSource {
     let filteredItems: [LogItem]

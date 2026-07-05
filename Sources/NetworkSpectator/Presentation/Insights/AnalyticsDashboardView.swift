@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Charts
+import NetworkSpectatorCore
 
 // MARK: - Insights View
 struct AnalyticsDashboardView: View {

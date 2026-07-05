@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Charts
+import NetworkSpectatorCore
 
 struct RequestBarChartView: View {
     let logs: [LogItem]

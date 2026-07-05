@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import NetworkSpectatorCore
+import NetworkSpectatorLogging
 
 struct LogListView: View {
     @State private var exportItem: ShareExportedItem?

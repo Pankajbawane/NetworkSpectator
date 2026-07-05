@@ -6,11 +6,15 @@
 //
 
 import SwiftUI
+import NetworkSpectatorCore
+import NetworkSpectatorLogging
 
-struct RootView: View {
+package struct RootView: View {
     @ObservedObject private var store = NetworkLogContainer.shared
+
+    public init() { }
     
-    var body: some View {
+    public var body: some View {
         NavigationStack {
             LogListView(logItems: store.items)
                 .navigationDestination(for: LogListView.NavigationRoute.self) { route in

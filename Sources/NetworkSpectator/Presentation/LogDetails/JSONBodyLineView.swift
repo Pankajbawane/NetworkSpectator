@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NetworkSpectatorCore
 
 struct JSONBodyLineView: View {
     private let viewModel: JSONBodyLineViewModel

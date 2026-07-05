@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
 struct ChartParameter<T: Hashable & Sendable>: Identifiable, Sendable {
     let value: T

@@ -10,6 +10,7 @@ import SwiftUI
 import UIKit
 #elseif canImport(AppKit)
 import AppKit
+import NetworkSpectatorCore
 #endif
 
 struct ResponseImageView: View {

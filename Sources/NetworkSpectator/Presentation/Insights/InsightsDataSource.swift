@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
 // MARK: - Compute Insights Datasource
 struct InsightsDataSource: Sendable {

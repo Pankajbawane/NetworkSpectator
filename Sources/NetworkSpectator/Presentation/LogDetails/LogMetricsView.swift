@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NetworkSpectatorCore
 
 struct LogMetricsView: View {
     private let viewModel: LogMetricsViewModel

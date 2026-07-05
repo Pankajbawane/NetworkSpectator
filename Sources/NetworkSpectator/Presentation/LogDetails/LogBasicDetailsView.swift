@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NetworkSpectatorCore
 
 struct LogBasicDetailsView: View {
     private let viewModel: LogBasicDetailsViewModel

@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import NetworkSpectatorCore
+import NetworkSpectatorLogging
 
 struct EmptyStateView: View {
 

@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+import NetworkSpectatorCore
+import NetworkSpectatorMocking
+import NetworkSpectatorLogging
 
 struct LogDetailsContainerView: View {
     let initialItem: LogItem

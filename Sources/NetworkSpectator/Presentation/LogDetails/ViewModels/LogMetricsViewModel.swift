@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import NetworkSpectatorCore
 
 struct LogMetricsViewModel {
     private static let unavailableValue = "Unavailable"
