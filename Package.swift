@@ -26,6 +26,10 @@ let package = Package(
             targets: ["NetworkSpectatorLogging"]
         ),
         .library(
+            name: "NetworkSpectatorExport",
+            targets: ["NetworkSpectatorExport"]
+        ),
+        .library(
             name: "NetworkSpectatorUI",
             targets: ["NetworkSpectatorUI"]
         ),
@@ -66,10 +70,6 @@ let package = Package(
             ],
             path: "Sources/NetworkSpectator",
             sources: [
-                "Domain/Export/CSVExporter.swift",
-                "Domain/Export/ExportManager.swift",
-                "Domain/Export/PostmanExporter.swift",
-                "Domain/Export/TextExporter.swift",
                 "Domain/Network/Logging/NetworkLogContainer.swift",
                 "Domain/Network/Logging/NetworkLogItemLogger.swift",
                 "Domain/Network/Logging/NetworkLogMonitor.swift",
@@ -81,6 +81,14 @@ let package = Package(
                 "Domain/Rules/Exclusion/LoggingExclusionManager.swift",
                 "Domain/Rules/Exclusion/LoggingExclusionRule.swift",
                 "Entities/HistoryItem.swift",
+            ]
+        ),
+        .target(
+            name: "NetworkSpectatorExport",
+            dependencies: ["NetworkSpectatorCore"],
+            path: "Sources/NetworkSpectator",
+            sources: [
+                "Export",
             ]
         ),
         .target(
