@@ -20,23 +20,33 @@ enum NetworkLogUpdate: Sendable {
     case reset
 }
 
+/// Thread-safe active-session storage used by synchronous logger.
+///
+/// `NetworkLogStore` is an actor, but `NetworkItemLogger.logging(_:)` is synchronous.
+/// This wrapper lets callers capture the active session without `await`, then lets
+/// the actor reject stale items if the session changes before the async add runs.
 private final class NetworkLogSessionState: @unchecked Sendable {
+    /// The currently active logging session, protected for nonisolated reads.
     private let session = OSAllocatedUnfairLock<NetworkLogSession?>(initialState: nil)
     
+    /// Starts a new session token and makes it the only active session.
     func start() -> NetworkLogSession {
         let newSession = NetworkLogSession(id: UUID())
         session.withLock { $0 = newSession }
         return newSession
     }
     
+    /// Clears the active session so future log items are ignored.
     func stop() {
         session.withLock { $0 = nil }
     }
     
+    /// Returns the active session for synchronous capture by logger.
     func current() -> NetworkLogSession? {
         session.withLock { $0 }
     }
     
+    /// Verifies that a captured session still matches the active session.
     func isCurrent(_ candidate: NetworkLogSession) -> Bool {
         session.withLock { $0 == candidate }
     }
