@@ -27,7 +27,7 @@ struct ChartItemFactoryTests {
 
     @Test("Empty items returns empty result")
     func testEmptyItems() {
-        let result = ChartItemFactory.get(items: [], key: \.method)
+        let result = ChartParameter.build(items: [], key: \.method)
         #expect(result.isEmpty)
     }
 
@@ -36,7 +36,7 @@ struct ChartItemFactoryTests {
     @Test("Single item returns one ChartParameter with count 1")
     func testSingleItem() {
         let items = [makeItem(method: "GET")]
-        let result = ChartItemFactory.get(items: items, key: \.method)
+        let result = ChartParameter.build(items: items, key: \.method)
 
         #expect(result.count == 1)
         #expect(result[0].value == "GET")
@@ -53,7 +53,7 @@ struct ChartItemFactoryTests {
             makeItem(method: "POST"),
             makeItem(method: "DELETE")
         ]
-        let result = ChartItemFactory.get(items: items, key: \.method)
+        let result = ChartParameter.build(items: items, key: \.method)
 
         #expect(result.count == 3)
 
@@ -75,7 +75,7 @@ struct ChartItemFactoryTests {
             makeItem(method: "GET"),
             makeItem(method: "DELETE")
         ]
-        let result = ChartItemFactory.get(items: items, key: \.method)
+        let result = ChartParameter.build(items: items, key: \.method)
 
         #expect(result[0].stringValue == "DELETE")
         #expect(result[1].stringValue == "GET")
@@ -91,7 +91,7 @@ struct ChartItemFactoryTests {
             makeItem(statusCode: 200),
             makeItem(statusCode: 404)
         ]
-        let result = ChartItemFactory.get(items: items, key: { "\($0.statusCode)" })
+        let result = ChartParameter.build(items: items, key: { "\($0.statusCode)" })
 
         #expect(result.count == 2)
         let code200 = result.first { $0.stringValue == "200" }
@@ -109,7 +109,7 @@ struct ChartItemFactoryTests {
             makeItem(url: "https://example.com/other"),
             makeItem(url: "https://test.com/data")
         ]
-        let result = ChartItemFactory.get(items: items, key: \.host)
+        let result = ChartParameter.build(items: items, key: \.host)
 
         #expect(result.count == 2)
         let example = result.first { $0.value == "example.com" }

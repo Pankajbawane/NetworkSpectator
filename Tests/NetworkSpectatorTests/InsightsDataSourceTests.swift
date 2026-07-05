@@ -147,6 +147,21 @@ struct InsightsDataSourceTests {
         #expect(result.httpErrorRate == 0)
     }
 
+    @Test("HTTP redirects are not counted as errors")
+    func testHTTPRedirectsAreNotErrors() {
+        let items = [
+            makeItem(statusCode: 200),
+            makeItem(statusCode: 302),
+            makeItem(statusCode: 404)
+        ]
+        let result = InsightsDataSource.compute(from: items)
+
+        #expect(result.httpSuccessCount == 1)
+        #expect(result.httpErrorCount == 1)
+        #expect(result.httpSuccessRate == 50.0)
+        #expect(result.httpErrorRate == 50.0)
+    }
+
     // MARK: - Error Count
 
     @Test("Error count includes 4xx, 5xx, and items with errorDescription")
