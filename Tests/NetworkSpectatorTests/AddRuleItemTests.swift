@@ -34,6 +34,7 @@ struct AddRuleItemTests {
         #expect(item.response == "{\"key\": \"value\"}")
         #expect(item.statusCode == "200")
         #expect(item.headers == "Content-Type===application/json")
+        #expect(item.delay == "")
         #expect(item.rule == .url)
         #expect(item.isMock == true)
         #expect(item.saveLocally == true)
@@ -128,6 +129,22 @@ struct AddRuleItemTests {
         let item = AddRuleItem(mock: mock)
 
         #expect(item?.saveLocally == true)
+    }
+
+    @Test("Init from Mock preserves response delay")
+    func testInitFromMockPreservesDelay() {
+        let noData: Data? = nil
+        let mock = Mock(method: .GET,
+                        rule: .url("https://example.com"),
+                        response: noData,
+                        headers: [:],
+                        statusCode: 200,
+                        error: nil,
+                        saveLocally: false,
+                        delay: 1.5)
+        let item = AddRuleItem(mock: mock)
+
+        #expect(item?.delay == "1.5")
     }
 
     // MARK: - Init from Mock with unsupported rules
@@ -225,6 +242,14 @@ struct AddRuleItemTests {
         let item = AddRuleItem(exclusion: skip)
 
         #expect(item?.saveLocally == true)
+    }
+
+    @Test("Init from SkipRequest preserves method")
+    func testInitFromSkipRequestPreservesMethod() {
+        let skip = LoggingExclusionRule(method: .POST, rule: .url("https://example.com"))
+        let item = AddRuleItem(exclusion: skip)
+
+        #expect(item?.method == .POST)
     }
 
     // MARK: - Init from SkipRequest with unsupported rules
