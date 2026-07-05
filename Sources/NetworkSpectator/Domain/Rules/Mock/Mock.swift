@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
 /// Represents a mock HTTP response for network request interception.
 public struct Mock: Identifiable, Sendable {
@@ -22,10 +23,10 @@ public struct Mock: Identifiable, Sendable {
     public let response: HTTPResponse
 
     /// Whether this mock should be persisted to local storage across sessions.
-    let saveLocally: Bool
+    public let saveLocally: Bool
     
     /// Mock deregisters when consumed.
-    let oneShot: Bool
+    public let oneShot: Bool
 
     /// Creates a mock with rule-based matching and JSON response.
     /// - Parameters:
@@ -36,15 +37,15 @@ public struct Mock: Identifiable, Sendable {
     ///   - error: Optional error to return instead of a successful response.
     ///   - saveLocally: Store mock on device.
     ///   - delay: delay in response.
-    internal init(method: HTTPMethod,
-                  rule: MatchRule,
-                  response: Data?,
-                  headers: [String: String],
-                  statusCode: Int,
-                  error: Error?,
-                  saveLocally: Bool,
-                  delay: Double = 0,
-                  oneShot: Bool = false) {
+    public init(method: HTTPMethod,
+                rule: MatchRule,
+                response: Data?,
+                headers: [String: String],
+                statusCode: Int,
+                error: Error?,
+                saveLocally: Bool,
+                delay: Double = 0,
+                oneShot: Bool = false) {
         let httpResponse = HTTPResponse(headers: headers,
                                     statusCode: statusCode,
                                     responseData: response,
@@ -54,11 +55,11 @@ public struct Mock: Identifiable, Sendable {
     }
     
     /// Designated initializer that all other initializers delegate to.
-    internal init(method: HTTPMethod,
-                  rule: MatchRule,
-                  response: HTTPResponse,
-                  saveLocally: Bool = false,
-                  oneShot: Bool = false) {
+    public init(method: HTTPMethod,
+                rule: MatchRule,
+                response: HTTPResponse,
+                saveLocally: Bool = false,
+                oneShot: Bool = false) {
         self.id = UUID()
         self.method = method
         self.rule = rule
@@ -126,7 +127,7 @@ public struct Mock: Identifiable, Sendable {
     /// Automatically injects a `Content-Type` header when the response has a known MIME type.
     /// - Parameter request: The intercepted URL request to generate a response for.
     /// - Returns: An `HTTPURLResponse`, or `nil` if the request has no URL.
-    internal func urlResponse(_ request: URLRequest) -> HTTPURLResponse? {
+    public func urlResponse(_ request: URLRequest) -> HTTPURLResponse? {
         guard let url = request.url else { return nil }
         
         var httpHeaders = response.headers
