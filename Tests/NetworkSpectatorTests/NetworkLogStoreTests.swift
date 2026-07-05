@@ -8,6 +8,10 @@
 import Testing
 import Foundation
 @testable import NetworkSpectator
+@testable import NetworkSpectatorCore
+@testable import NetworkSpectatorMocking
+@testable import NetworkSpectatorLogging
+@testable import NetworkSpectatorUI
 
 // MARK: - NetworkLogStore Tests
 // Tests use the shared singleton and clean up via stop() between tests.

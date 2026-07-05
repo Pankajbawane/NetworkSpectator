@@ -8,6 +8,10 @@
 import Testing
 import Foundation
 @testable import NetworkSpectator
+@testable import NetworkSpectatorCore
+@testable import NetworkSpectatorMocking
+@testable import NetworkSpectatorLogging
+@testable import NetworkSpectatorUI
 
 // MARK: - CSV Exporter Tests
 @Suite("CSV Exporter Tests", .serialized)
