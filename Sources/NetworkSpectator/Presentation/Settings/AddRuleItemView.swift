@@ -18,10 +18,10 @@ struct AddRuleItemView: View {
         case none
     }
 
-    let isMock: Bool
-    let title: String
-    let item: AddRuleItem?
-    let onSave: (() -> Void)?
+    private let isMock: Bool
+    private let title: String
+    private let item: AddRuleItem?
+    private let onSave: (() -> Void)?
 
     private let methods: [HTTPMethod] = [.GET, .POST, .PUT, .DELETE, .PATCH]
 
