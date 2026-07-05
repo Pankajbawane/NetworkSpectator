@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NetworkSpectatorCore
 import NetworkSpectatorLogging
 
 struct MockManagementView: View {

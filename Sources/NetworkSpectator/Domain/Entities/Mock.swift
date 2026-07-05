@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import NetworkSpectatorCore
 
 /// Represents a mock HTTP response for network request interception.
 public struct Mock: Identifiable, Sendable {
@@ -162,5 +161,4 @@ extension Mock: Hashable {
 
 // MARK: - Codable
 // Enables persistence to local storage.
-extension Mock: Codable {
-}
+extension Mock: Codable { }
