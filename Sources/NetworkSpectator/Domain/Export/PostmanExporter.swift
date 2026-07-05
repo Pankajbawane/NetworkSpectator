@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
 // Build and export Postman Collection using schema: https://schema.postman.com/json/collection/v2.1.0/collection.json
 struct PostmanExporter: FileExportable {

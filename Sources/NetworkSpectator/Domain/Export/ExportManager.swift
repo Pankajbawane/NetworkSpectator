@@ -6,14 +6,15 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
-enum ExportManager {
+package enum ExportManager {
     
     case csv([LogItem])
     case txt(LogItem)
     case postman(LogItem)
     
-    var exporter: FileExportable {
+    package var exporter: FileExportable {
         switch self {
         case .csv(let items):
             return CSVExporter(items: items)
@@ -25,13 +26,13 @@ enum ExportManager {
     }
 }
 
-protocol FileExportable {
+package protocol FileExportable: Sendable {
     var fileExtension: String { get }
     var filePrefix: String { get }
     func export() async throws -> URL
 }
 
-extension FileExportable {
+package extension FileExportable {
     // Use a safe and unique filename
     var makeFilename: String {
         let prefix: String = "export_" + filePrefix
@@ -64,7 +65,7 @@ extension FileExportable {
     }
 }
 
-enum ExportError: Error {
+package enum ExportError: Error {
     case writeFailed
     case invalidData
 }

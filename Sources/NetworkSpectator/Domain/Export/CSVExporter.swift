@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
 struct CSVExporter: FileExportable {
     let headerItems: [String] = [

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
 struct TextExporter: FileExportable {
     let fileExtension: String = "txt"
