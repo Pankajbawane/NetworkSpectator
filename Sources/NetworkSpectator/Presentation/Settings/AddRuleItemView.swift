@@ -275,7 +275,10 @@ struct AddRuleItemView: View {
             #if os(macOS)
             .formStyle(.grouped)
             .padding(20)
+            #endif
             .navigationTitle(title)
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
             #endif
             .alert("Error", isPresented: $showErrorAlert) {
                 Button("OK", role: .cancel) { }

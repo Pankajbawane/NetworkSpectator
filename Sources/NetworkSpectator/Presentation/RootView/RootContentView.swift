@@ -29,52 +29,20 @@ struct RootContentView: View {
         self.title = title
     }
 
-    var items: [LogItem] {
-        var filtered: [LogItem] = logItems
-
-        // Apply search filter
-        if !searchText.isEmpty {
-            filtered = filtered.filter { item in
-                item.url.localizedCaseInsensitiveContains(searchText) ||
-                item.host.localizedCaseInsensitiveContains(searchText) ||
-                item.method.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-
-        // Apply method filter
-        if !selectedMethods.isEmpty {
-            filtered = filtered.filter { item in
-                selectedMethods.contains(item.method.uppercased())
-            }
-        }
-
-        // Apply status code range filter
-        if !selectedStatusCodes.isEmpty {
-            filtered = filtered.filter { item in
-                selectedStatusCodes.contains(item.statusCodeRange)
-            }
-        }
-
-        return filtered
-    }
-
-    var availableMethods: [String] {
-        Array(Set(logItems.map { $0.method.uppercased() })).sorted()
-    }
-
-    var hasActiveFilters: Bool {
-        !selectedMethods.isEmpty || !selectedStatusCodes.isEmpty
-    }
-
     var body: some View {
+        let dataSource = RootContentDataSource(logItems: logItems,
+                                               searchText: searchText,
+                                               selectedMethods: selectedMethods,
+                                               selectedStatusCodes: selectedStatusCodes)
+
         ZStack {
-            if items.isEmpty {
+            if dataSource.filteredItems.isEmpty {
                 EmptyStateView(
-                    isSearchActive: !searchText.isEmpty || hasActiveFilters,
-                    searchText: searchText
+                    isSearchActive: dataSource.isSearchActive,
+                    searchText: dataSource.normalizedSearchText
                 )
             } else {
-                logListView
+                logListView(dataSource: dataSource)
             }
         }
         #if os(iOS)
@@ -89,9 +57,9 @@ struct RootContentView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
-        .toolbar { toolbarContent }
+        .toolbar { toolbarContent(dataSource: dataSource) }
         .alert("Export failed", isPresented: $showAlert, actions: {
-            Button("Ok") {
+            Button("OK") {
                 showAlert = false
             }
         })
@@ -117,17 +85,16 @@ struct RootContentView: View {
             FilterSheetView(
                 selectedMethods: $selectedMethods,
                 selectedStatusCodeCategory: $selectedStatusCodes,
-                availableMethods: availableMethods
+                availableMethods: dataSource.availableMethods
             )
         }
     }
 
     // MARK: - Subviews
 
-    private var logListView: some View {
+    private func logListView(dataSource: RootContentDataSource) -> some View {
         List {
-            // Filter chips section
-            if hasActiveFilters {
+            if dataSource.hasActiveFilters {
                 Section {
                     FilterChipsView(
                         selectedMethods: $selectedMethods,
@@ -138,22 +105,19 @@ struct RootContentView: View {
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
             }
 
-            // Requests list
             Section {
-                ForEach(items) { item in
+                ForEach(dataSource.filteredItems) { item in
                     NavigationLink(value: RootContentRoute.logDetail(item, isHistoricLogs: isHistoricLogs)) {
                         LogListItemView(item: item)
                     }
                     .listRowBackground(rowBackgroundColor(item))
                 }
             } header: {
-                if !items.isEmpty {
-                    HStack {
-                        Text("\(items.count) Request\(items.count == 1 ? "" : "s")")
-                            .font(.caption.bold())
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                    }
+                HStack {
+                    Text(dataSource.requestCountText)
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                    Spacer()
                 }
             }
         }
@@ -166,9 +130,9 @@ struct RootContentView: View {
     }
 
     @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
+    private func toolbarContent(dataSource: RootContentDataSource) -> some ToolbarContent {
         ToolbarItemGroup(placement: .automatic) {
-            filterButton
+            filterButton(dataSource: dataSource)
 
             if isHistoricLogs {
                 NavigationLink(value: RootContentRoute.insights(logItems)) {
@@ -188,7 +152,7 @@ struct RootContentView: View {
                 .disabled(logItems.isEmpty)
             }
 
-            exportButton
+            exportButton(dataSource: dataSource)
 
             if !isHistoricLogs {
                 NavigationLink(value: RootContentRoute.settings) {
@@ -199,13 +163,13 @@ struct RootContentView: View {
         }
     }
 
-    private var filterButton: some View {
+    private func filterButton(dataSource: RootContentDataSource) -> some View {
         Button {
             showFilterSheet = true
         } label: {
             ZStack(alignment: .topTrailing) {
                 Image(systemName: "line.3.horizontal.decrease.circle")
-                if hasActiveFilters {
+                if dataSource.hasActiveFilters {
                     Circle()
                         .fill(Color.blue)
                         .frame(width: 8, height: 8)
@@ -217,18 +181,9 @@ struct RootContentView: View {
         .disabled(logItems.isEmpty)
     }
 
-    private var exportButton: some View {
+    private func exportButton(dataSource: RootContentDataSource) -> some View {
         Button {
-            isExporting = true
-            Task {
-                do {
-                    let url = try await ExportManager.csv(logItems).exporter.export()
-                    exportItem = ShareExportedItem(data: url)
-                } catch {
-                    showAlert = true
-                }
-                isExporting = false
-            }
+            export(dataSource.exportItems)
         } label: {
             if isExporting {
                 ProgressView()
@@ -238,11 +193,23 @@ struct RootContentView: View {
             }
         }
         .accessibilityLabel("Export requests")
-        .disabled(isExporting || logItems.isEmpty)
+        .disabled(isExporting || dataSource.exportItems.isEmpty)
     }
 
-    func rowBackgroundColor(_ item: LogItem) -> Color {
-        // Priority: Error > Loading > Status code based
+    private func export(_ items: [LogItem]) {
+        isExporting = true
+        Task {
+            do {
+                let url = try await ExportManager.csv(items).exporter.export()
+                exportItem = ShareExportedItem(data: url)
+            } catch {
+                showAlert = true
+            }
+            isExporting = false
+        }
+    }
+
+    private func rowBackgroundColor(_ item: LogItem) -> Color {
         if item.errorDescription != nil {
             return Color.red.opacity(0.08)
         }
