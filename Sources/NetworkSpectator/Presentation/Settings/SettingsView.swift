@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import NetworkSpectatorMocking
 import NetworkSpectatorLogging
 
 struct SettingsView: View {

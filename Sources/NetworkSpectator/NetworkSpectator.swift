@@ -7,7 +7,6 @@
 
 import SwiftUI
 import NetworkSpectatorCore
-import NetworkSpectatorMocking
 import NetworkSpectatorLogging
 import NetworkSpectatorUI
 #if canImport(UIKit)

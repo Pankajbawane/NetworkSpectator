@@ -7,7 +7,6 @@
 
 import Foundation
 import NetworkSpectatorCore
-import NetworkSpectatorMocking
 
 struct UIItemLogger: NetworkItemLogger {
     

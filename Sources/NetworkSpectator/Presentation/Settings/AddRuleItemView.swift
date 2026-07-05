@@ -7,7 +7,6 @@
 
 import SwiftUI
 import NetworkSpectatorCore
-import NetworkSpectatorMocking
 import NetworkSpectatorLogging
 
 struct AddRuleItemView: View {

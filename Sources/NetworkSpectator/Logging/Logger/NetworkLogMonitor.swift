@@ -7,7 +7,6 @@
 
 import SwiftUI
 import NetworkSpectatorCore
-import NetworkSpectatorMocking
 
 /// Coordinates monitoring controls and exposes monitoring state to the UI.
 @MainActor

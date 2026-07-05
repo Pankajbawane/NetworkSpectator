@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
 package enum StorageKey: String, Sendable {
     case mockRules = "NETWORKSPECTATOR_MOCK_RULES"

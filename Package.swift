@@ -18,16 +18,8 @@ let package = Package(
             targets: ["NetworkSpectatorCore"]
         ),
         .library(
-            name: "NetworkSpectatorMocking",
-            targets: ["NetworkSpectatorMocking"]
-        ),
-        .library(
             name: "NetworkSpectatorLogging",
             targets: ["NetworkSpectatorLogging"]
-        ),
-        .library(
-            name: "NetworkSpectatorExport",
-            targets: ["NetworkSpectatorExport"]
         ),
         .library(
             name: "NetworkSpectatorUI",
@@ -39,81 +31,34 @@ let package = Package(
             name: "NetworkSpectatorCore",
             path: "Sources/NetworkSpectator",
             sources: [
-                "Domain/Network/Capture/NetworkInterceptor.swift",
-                "Domain/Network/Capture/NetworkURLProtocol.swift",
-                "Domain/Network/Capture/URLSessionConfiguration+Extension.swift",
-                "Domain/Network/Capture/NetworkItemLogger.swift",
-                "Domain/ConsoleLogging/DebugPrint.swift",
-                "Domain/Persistence/StorageManager.swift",
-                "Domain/Rules/MatchRule.swift",
-                "Entities/HTTPMethod.swift",
-                "Entities/HTTPResponse.swift",
-                "Entities/LogItem.swift",
-                "Entities/MimeType.swift",
-                "Entities/NetworkLogMetrics.swift",
-            ]
-        ),
-        .target(
-            name: "NetworkSpectatorMocking",
-            dependencies: ["NetworkSpectatorCore"],
-            path: "Sources/NetworkSpectator",
-            sources: [
-                "Domain/Rules/Mock/Mock.swift",
-                "Domain/Rules/Mock/MockServer.swift",
+                "Domain"
             ]
         ),
         .target(
             name: "NetworkSpectatorLogging",
             dependencies: [
                 "NetworkSpectatorCore",
-                "NetworkSpectatorMocking",
             ],
             path: "Sources/NetworkSpectator",
             sources: [
-                "Domain/Network/Logging/NetworkLogContainer.swift",
-                "Domain/Network/Logging/NetworkLogItemLogger.swift",
-                "Domain/Network/Logging/NetworkLogMonitor.swift",
-                "Domain/Network/Logging/NetworkLogStore.swift",
-                "Domain/Persistence/EmptyStorage.swift",
-                "Domain/Persistence/LogHistoryManager.swift",
-                "Domain/Persistence/LogHistoryStorage.swift",
-                "Domain/Persistence/PreferenceStorage.swift",
-                "Domain/Rules/Exclusion/LoggingExclusionManager.swift",
-                "Domain/Rules/Exclusion/LoggingExclusionRule.swift",
-                "Entities/HistoryItem.swift",
-            ]
-        ),
-        .target(
-            name: "NetworkSpectatorExport",
-            dependencies: ["NetworkSpectatorCore"],
-            path: "Sources/NetworkSpectator",
-            sources: [
-                "Export",
+                "Logging"
             ]
         ),
         .target(
             name: "NetworkSpectatorUI",
             dependencies: [
                 "NetworkSpectatorCore",
-                "NetworkSpectatorMocking",
                 "NetworkSpectatorLogging",
             ],
             path: "Sources/NetworkSpectator",
             sources: [
-                "Presentation/Insights",
-                "Presentation/LogDetails",
-                "Presentation/LogList",
-                "Presentation/Root",
-                "Presentation/Settings",
-                "Presentation/ShareActivity",
-                "Presentation/Shared",
+                "Presentation"
             ]
         ),
         .target(
             name: "NetworkSpectator",
             dependencies: [
                 "NetworkSpectatorCore",
-                "NetworkSpectatorMocking",
                 "NetworkSpectatorLogging",
                 "NetworkSpectatorUI",
             ],
@@ -127,7 +72,6 @@ let package = Package(
             dependencies: [
                 "NetworkSpectator",
                 "NetworkSpectatorCore",
-                "NetworkSpectatorMocking",
                 "NetworkSpectatorLogging",
                 "NetworkSpectatorUI",
             ]
