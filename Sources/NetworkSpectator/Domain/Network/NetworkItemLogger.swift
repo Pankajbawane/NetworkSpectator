@@ -42,9 +42,12 @@ package protocol MockServerProvider: Sendable {
     func responseIfMocked(_ urlRequest: URLRequest) -> T?
 }
 
-struct DefaultMockServer: MockServerProvider {
-    typealias T = DefaultMock
-    func responseIfMocked(_ urlRequest: URLRequest) -> T? {
+package struct DefaultMockServer: MockServerProvider {
+    package typealias T = DefaultMock
+
+    package init() { }
+
+    package func responseIfMocked(_ urlRequest: URLRequest) -> T? {
         nil
     }
 }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NetworkSpectatorCore
+import NetworkSpectatorMocking
 import NetworkSpectatorLogging
 
 struct LogDetailsContainerView: View {
@@ -105,7 +106,7 @@ struct LogDetailsContainerView: View {
                                        rule: .url,
                                        isMock: true)
             if let mockId = item.mockId {
-                if let mock = MockServer.shared.mocks.first(where:  { $0.id == mockId }) {
+                if let mock = PersistentMockServer.shared.mocks.first(where:  { $0.id == mockId }) {
                     if let item = AddRuleItem(mock: mock) {
                         ruleItem = item
                     }

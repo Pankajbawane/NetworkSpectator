@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NetworkSpectatorCore
+import NetworkSpectatorMocking
 
 /// Coordinates monitoring controls and exposes monitoring state to the UI.
 @MainActor
@@ -85,6 +86,7 @@ package final class NetworkLogMonitor: ObservableObject, Sendable {
     
     private func startSession() async {
         NetworkURLProtocol.logger = UIItemLogger()
+        NetworkURLProtocol.mockServer = MockServer.shared
         await logStore.start()
         await LogHistoryManager.shared.startObserving()
         NetworkInterceptor.shared.enable()

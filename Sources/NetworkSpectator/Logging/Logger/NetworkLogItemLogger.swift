@@ -10,12 +10,6 @@ import NetworkSpectatorCore
 
 struct UIItemLogger: NetworkItemLogger {
     
-    typealias T = Mock
-    
-    func responseIfMocked(_ urlRequest: URLRequest) -> Mock? {
-        MockServer.shared.responseIfMocked(urlRequest)
-    }
-    
     var isEnabled: Bool {
         NetworkLogStore.shared.currentSession() != nil
     }

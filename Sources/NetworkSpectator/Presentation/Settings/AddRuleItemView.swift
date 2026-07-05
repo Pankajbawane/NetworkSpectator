@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NetworkSpectatorCore
+import NetworkSpectatorMocking
 import NetworkSpectatorLogging
 
 struct AddRuleItemView: View {
@@ -348,7 +349,7 @@ struct AddRuleItemView: View {
             if isMock {
                 let mock = try makeMock(rule: matchRule)
                 replaceExistingItemIfNeeded()
-                MockServer.shared.register(mock)
+                PersistentMockServer.shared.register(mock)
             } else {
                 let exclusion = LoggingExclusionRule(method: method, rule: matchRule, saveLocally: saveLocally)
                 replaceExistingItemIfNeeded()
@@ -397,7 +398,7 @@ struct AddRuleItemView: View {
     private func replaceExistingItemIfNeeded() {
         guard let existingItem = item else { return }
         if existingItem.isMock {
-            MockServer.shared.remove(id: existingItem.id)
+            PersistentMockServer.shared.remove(id: existingItem.id)
         } else {
             LoggingExclusionManager.shared.remove(id: existingItem.id)
         }
@@ -405,7 +406,7 @@ struct AddRuleItemView: View {
 
     private func delete(_ item: AddRuleItem) {
         if item.isMock {
-            MockServer.shared.remove(id: item.id)
+            PersistentMockServer.shared.remove(id: item.id)
         } else {
             LoggingExclusionManager.shared.remove(id: item.id)
         }

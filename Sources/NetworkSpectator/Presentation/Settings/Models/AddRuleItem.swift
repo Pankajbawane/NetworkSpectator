@@ -7,6 +7,7 @@
 
 import Foundation
 import NetworkSpectatorCore
+import NetworkSpectatorMocking
 import NetworkSpectatorLogging
 
 struct AddRuleItem: Identifiable {

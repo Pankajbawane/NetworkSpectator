@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NetworkSpectatorMocking
 import NetworkSpectatorLogging
 
 struct SettingsView: View {
@@ -263,7 +264,7 @@ struct SettingsView: View {
     // MARK: - Data Management
 
     private func loadCounts() {
-        mockCount = MockServer.shared.mocks.count
+        mockCount = PersistentMockServer.shared.mocks.count
         exclusionCount = LoggingExclusionManager.shared.rules.count
     }
 

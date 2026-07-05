@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NetworkSpectatorCore
+import NetworkSpectatorMocking
 import NetworkSpectatorLogging
 
 struct MockManagementView: View {
@@ -94,7 +95,7 @@ struct MockManagementView: View {
         .padding(.vertical, 8)
         .contentShape(Rectangle())
         .onTapGesture {
-            if let mock = MockServer.shared.mocks.first(where: { $0.id == item.id }),
+            if let mock = PersistentMockServer.shared.mocks.first(where: { $0.id == item.id }),
                let ruleItem = AddRuleItem(mock: mock) {
                 editingMockItem = ruleItem
             }
@@ -112,7 +113,7 @@ struct MockManagementView: View {
 
     private func loadData() {
         withAnimation {
-            mocks = MockServer.shared.mocks.map { $0 }
+            mocks = PersistentMockServer.shared.mocks.map { $0 }
         }
         onDataChanged?()
     }
@@ -123,7 +124,7 @@ struct MockManagementView: View {
         withAnimation {
             mocks.remove(atOffsets: indexSet)
         }
-        MockServer.shared.remove(id: id)
+        PersistentMockServer.shared.remove(id: id)
         onDataChanged?()
     }
 }

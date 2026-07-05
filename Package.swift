@@ -18,6 +18,10 @@ let package = Package(
             targets: ["NetworkSpectatorCore"]
         ),
         .library(
+            name: "NetworkSpectatorMocking",
+            targets: ["NetworkSpectatorMocking"]
+        ),
+        .library(
             name: "NetworkSpectatorLogging",
             targets: ["NetworkSpectatorLogging"]
         ),
@@ -35,9 +39,20 @@ let package = Package(
             ]
         ),
         .target(
+            name: "NetworkSpectatorMocking",
+            dependencies: [
+                "NetworkSpectatorCore",
+            ],
+            path: "Sources/NetworkSpectator",
+            sources: [
+                "Mocking"
+            ]
+        ),
+        .target(
             name: "NetworkSpectatorLogging",
             dependencies: [
                 "NetworkSpectatorCore",
+                "NetworkSpectatorMocking",
             ],
             path: "Sources/NetworkSpectator",
             sources: [
@@ -48,6 +63,7 @@ let package = Package(
             name: "NetworkSpectatorUI",
             dependencies: [
                 "NetworkSpectatorCore",
+                "NetworkSpectatorMocking",
                 "NetworkSpectatorLogging",
             ],
             path: "Sources/NetworkSpectator",
@@ -59,6 +75,7 @@ let package = Package(
             name: "NetworkSpectator",
             dependencies: [
                 "NetworkSpectatorCore",
+                "NetworkSpectatorMocking",
                 "NetworkSpectatorLogging",
                 "NetworkSpectatorUI",
             ],
@@ -72,6 +89,7 @@ let package = Package(
             dependencies: [
                 "NetworkSpectator",
                 "NetworkSpectatorCore",
+                "NetworkSpectatorMocking",
                 "NetworkSpectatorLogging",
                 "NetworkSpectatorUI",
             ]
