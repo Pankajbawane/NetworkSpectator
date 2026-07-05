@@ -1,5 +1,5 @@
 //
-//  RootContentDataSource.swift
+//  LogListDataSource.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 04/07/26.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct RootContentDataSource {
+struct LogListDataSource {
     let filteredItems: [LogItem]
     let availableMethods: [String]
     let hasActiveFilters: Bool

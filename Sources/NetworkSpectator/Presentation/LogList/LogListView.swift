@@ -1,5 +1,5 @@
 //
-//  RootContentView.swift
+//  LogListView.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 10/03/26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct RootContentView: View {
+struct LogListView: View {
     @State private var exportItem: ShareExportedItem?
     @State private var showAlert: Bool = false
     @State private var searchText = ""
@@ -30,7 +30,7 @@ struct RootContentView: View {
     }
 
     var body: some View {
-        let dataSource = RootContentDataSource(logItems: logItems,
+        let dataSource = LogListDataSource(logItems: logItems,
                                                searchText: searchText,
                                                selectedMethods: selectedMethods,
                                                selectedStatusCodes: selectedStatusCodes)
@@ -92,7 +92,7 @@ struct RootContentView: View {
 
     // MARK: - Subviews
 
-    private func logListView(dataSource: RootContentDataSource) -> some View {
+    private func logListView(dataSource: LogListDataSource) -> some View {
         List {
             if dataSource.hasActiveFilters {
                 Section {
@@ -107,7 +107,7 @@ struct RootContentView: View {
 
             Section {
                 ForEach(dataSource.filteredItems) { item in
-                    NavigationLink(value: RootContentRoute.logDetail(item, isHistoricLogs: isHistoricLogs)) {
+                    NavigationLink(value: NavigationRoute.logDetail(item, isHistoricLogs: isHistoricLogs)) {
                         LogListItemView(item: item)
                     }
                     .listRowBackground(rowBackgroundColor(item))
@@ -130,12 +130,12 @@ struct RootContentView: View {
     }
 
     @ToolbarContentBuilder
-    private func toolbarContent(dataSource: RootContentDataSource) -> some ToolbarContent {
+    private func toolbarContent(dataSource: LogListDataSource) -> some ToolbarContent {
         ToolbarItemGroup(placement: .automatic) {
             filterButton(dataSource: dataSource)
 
             if isHistoricLogs {
-                NavigationLink(value: RootContentRoute.insights(logItems)) {
+                NavigationLink(value: NavigationRoute.insights(logItems)) {
                     Image(systemName: "chart.bar.xaxis.ascending")
                 }
                 .accessibilityLabel("Insights")
@@ -155,7 +155,7 @@ struct RootContentView: View {
             exportButton(dataSource: dataSource)
 
             if !isHistoricLogs {
-                NavigationLink(value: RootContentRoute.settings) {
+                NavigationLink(value: NavigationRoute.settings) {
                     Image(systemName: "gearshape")
                 }
                 .accessibilityLabel("Tools")
@@ -163,7 +163,7 @@ struct RootContentView: View {
         }
     }
 
-    private func filterButton(dataSource: RootContentDataSource) -> some View {
+    private func filterButton(dataSource: LogListDataSource) -> some View {
         Button {
             showFilterSheet = true
         } label: {
@@ -181,7 +181,7 @@ struct RootContentView: View {
         .disabled(logItems.isEmpty)
     }
 
-    private func exportButton(dataSource: RootContentDataSource) -> some View {
+    private func exportButton(dataSource: LogListDataSource) -> some View {
         Button {
             export(dataSource.exportItems)
         } label: {
@@ -223,8 +223,8 @@ struct RootContentView: View {
 }
 
 // MARK: - Navigation
-extension RootContentView {
-    enum RootContentRoute: Hashable {
+extension LogListView {
+    enum NavigationRoute: Hashable {
         case logDetail(LogItem, isHistoricLogs: Bool)
         case settings
         case insights([LogItem])

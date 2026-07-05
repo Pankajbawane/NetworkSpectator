@@ -13,7 +13,7 @@ struct RootContentDataSourceTests {
 
     @Test("Available methods are unique uppercase values sorted alphabetically")
     func availableMethodsAreUniqueAndSorted() {
-        let dataSource = RootContentDataSource(logItems: [
+        let dataSource = LogListDataSource(logItems: [
             makeItem(method: "post"),
             makeItem(method: "GET"),
             makeItem(method: "get")
@@ -24,7 +24,7 @@ struct RootContentDataSourceTests {
 
     @Test("Search text is trimmed before filtering and empty-state display")
     func searchTextIsTrimmedBeforeFiltering() {
-        let dataSource = RootContentDataSource(logItems: [
+        let dataSource = LogListDataSource(logItems: [
             makeItem(url: "https://api.example.com/users", method: "GET"),
             makeItem(url: "https://cdn.example.com/assets", method: "GET")
         ], searchText: "  users  ", selectedMethods: [], selectedStatusCodes: [])
@@ -40,7 +40,7 @@ struct RootContentDataSourceTests {
             makeItem(url: "https://api.example.com/users"),
             makeItem(url: "https://cdn.example.com/assets")
         ]
-        let dataSource = RootContentDataSource(logItems: items,
+        let dataSource = LogListDataSource(logItems: items,
                                                searchText: "   ",
                                                selectedMethods: [],
                                                selectedStatusCodes: [])
@@ -56,7 +56,7 @@ struct RootContentDataSourceTests {
         let getFailure = makeItem(url: "https://example.com/failure", method: "GET", statusCode: 500)
         let postSuccess = makeItem(url: "https://example.com/create", method: "POST", statusCode: 201)
 
-        let dataSource = RootContentDataSource(logItems: [getSuccess, getFailure, postSuccess],
+        let dataSource = LogListDataSource(logItems: [getSuccess, getFailure, postSuccess],
                                                searchText: "",
                                                selectedMethods: ["GET"],
                                                selectedStatusCodes: ["200..<300"])
@@ -71,7 +71,7 @@ struct RootContentDataSourceTests {
         let first = makeItem(url: "https://example.com/users", method: "GET")
         let second = makeItem(url: "https://example.com/orders", method: "POST")
 
-        let dataSource = RootContentDataSource(logItems: [first, second],
+        let dataSource = LogListDataSource(logItems: [first, second],
                                                searchText: "users",
                                                selectedMethods: [],
                                                selectedStatusCodes: [])

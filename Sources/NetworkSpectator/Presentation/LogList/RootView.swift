@@ -12,8 +12,8 @@ struct RootView: View {
     
     var body: some View {
         NavigationStack {
-            RootContentView(logItems: store.items)
-                .navigationDestination(for: RootContentView.RootContentRoute.self) { route in
+            LogListView(logItems: store.items)
+                .navigationDestination(for: LogListView.NavigationRoute.self) { route in
                     switch route {
                     case .logDetail(let item, let isHistoric):
                         LogDetailsContainerView(initialItem: item, isHistoricLogs: isHistoric)

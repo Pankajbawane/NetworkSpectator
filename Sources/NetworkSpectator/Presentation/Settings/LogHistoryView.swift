@@ -97,7 +97,7 @@ struct LogHistoryView: View {
         .navigationDestination(for: LogHistoryRoute.self) { route in
             let items = storage.retrieve(forKey: route.key)
             
-            RootContentView(
+            LogListView(
                 logItems: items,
                 isHistoricLogs: true,
                 title: route.title
