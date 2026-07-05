@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
+package final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     
     private weak var session: URLSession?
     private weak var sessionTask: URLSessionDataTask?
@@ -18,22 +18,22 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
     private static let taskCacheKey = "NETWORKSPECTATOR_TRACK_CACHED_TASK_KEY"
     
     private static let _logger = OSAllocatedUnfairLock<any NetworkItemLogger>(
-        initialState: UIItemLogger()
+        initialState: DefaultItemLogger()
     )
-    static var logger: any NetworkItemLogger {
+    package static var logger: any NetworkItemLogger {
         get { _logger.withLock { $0 } }
         set { _logger.withLock { $0 = newValue } }
     }
     
-    private static let _mockServer = OSAllocatedUnfairLock<MockServer>(
-        initialState: .shared
+    private static let _mockServer = OSAllocatedUnfairLock<any MockServerProvider>(
+        initialState: DefaultMockServer()
     )
-    static var mockServer: MockServer {
+    package static var mockServer: any MockServerProvider {
         get { _mockServer.withLock { $0 } }
         set { _mockServer.withLock { $0 = newValue } }
     }
     
-    override init(request: URLRequest, cachedResponse: CachedURLResponse?, client: (any URLProtocolClient)?) {
+    package override init(request: URLRequest, cachedResponse: CachedURLResponse?, client: (any URLProtocolClient)?) {
         // Capture the HTTP body if it's provided
         let urlRequest = Self.captureHTTPBodyIfNeeded(request)
         protectedLog = OSAllocatedUnfairLock(initialState: LogItem(urlRequest))
@@ -41,31 +41,30 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         
     }
 
-    override class func canInit(with request: URLRequest) -> Bool {
+    package override class func canInit(with request: URLRequest) -> Bool {
         // Avoid intercepting requests twice
         if URLProtocol.property(forKey: taskCacheKey, in: request) != nil {
             return false
         }
 
-        // If the request is ignored for logging using match rules, don't intercept
-        if LoggingExclusionManager.shared.isEnabled,
-           LoggingExclusionManager.shared.shouldExcludeLogging(request) {
+        // If only mocking is active, logging exclusions should not prevent interception.
+        if logger.isEnabled, logger.shouldIgnore(request) {
             return false
         }
 
         return true
     }
 
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+    package override class func canonicalRequest(for request: URLRequest) -> URLRequest {
         return request
     }
     
-    override class func canInit(with task: URLSessionTask) -> Bool {
+    package override class func canInit(with task: URLSessionTask) -> Bool {
         guard let request = task.currentRequest else { return false }
         return canInit(with: request)
     }
     
-    override func startLoading() {
+    package override func startLoading() {
         guard let thisRequest = (request as NSURLRequest).mutableCopy() as? NSMutableURLRequest else {
             super.startLoading()
             return
@@ -136,7 +135,7 @@ final class NetworkURLProtocol: URLProtocol, @unchecked Sendable {
         sessionTask?.resume()
     }
     
-    override func stopLoading() {
+    package override func stopLoading() {
         let cancelledLog: LogItem? = protectedLog.withLock { log in
             guard log.finishTime == nil else { return nil }
             log.updateResponse(response: nil, data: nil, error: URLError(.cancelled))

@@ -12,20 +12,20 @@ import os
 ///
 /// Both the UI layer (`NetworkLogContainer`) and the test layer (`Test`) share
 /// this single point of control.
-final class NetworkInterceptor: Sendable {
+package final class NetworkInterceptor: Sendable {
     
-    static let shared = NetworkInterceptor()
+    package static let shared = NetworkInterceptor()
     
     /// Thread-safe flag to guard against redundant enable/disable calls.
     private let _isEnabled = OSAllocatedUnfairLock(initialState: false)
     
     /// Whether network interception is currently active.
-    var isEnabled: Bool { _isEnabled.withLock { $0 } }
+    package var isEnabled: Bool { _isEnabled.withLock { $0 } }
     
     private init() { }
     
     /// Registers the URL protocol for intercepting.
-    func enable() {
+    package func enable() {
         _ = _isEnabled.withLock { enabled in
             guard !enabled else { return false }
             URLProtocol.registerClass(NetworkURLProtocol.self)
@@ -37,7 +37,7 @@ final class NetworkInterceptor: Sendable {
     }
     
     /// Unregisters the URL protocol and restores URLSessionConfiguration.
-    func disable() {
+    package func disable() {
         _ = _isEnabled.withLock { enabled in
             guard enabled else { return false }
             URLProtocol.unregisterClass(NetworkURLProtocol.self)
