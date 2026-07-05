@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
 /// A no-op implementation of `Storeable` used for test mocking purposes.
 /// Since tests do not require actual persistence, all operations are intentionally empty,

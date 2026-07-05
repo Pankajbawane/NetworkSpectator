@@ -7,14 +7,14 @@
 
 import Foundation
 
-enum StorageKey: String {
+package enum StorageKey: String, Sendable {
     case mockRules = "NETWORKSPECTATOR_MOCK_RULES"
     case exclusionRules = "NETWORKSPECTATOR_EXCLUSION_RULES"
     case monitorPreference = "NETWORKSPECTATOR_MONITOR_PREFERENCE"
     case historyPreference = "NETWORKSPECTATOR_HISTORY_PREFERENCE"
 }
 
-protocol Storeable: Sendable {
+package protocol Storeable: Sendable {
     func set(_ value: Any?, forKey defaultName: String)
     func data(forKey defaultName: String) -> Data?
     func removeObject(forKey defaultName: String)
@@ -25,18 +25,18 @@ protocol Storeable: Sendable {
 extension UserDefaults: Storeable { }
 
 /// Simple storage manager for persisting rules to UserDefaults
-struct RuleStorage<T: Codable>: Sendable {
+package struct RuleStorage<T: Codable>: Sendable {
 
     private let key: StorageKey
     private let store: Storeable
 
-    init(key: StorageKey, store: Storeable = UserDefaults.standard) {
+    package init(key: StorageKey, store: Storeable = UserDefaults.standard) {
         self.key = key
         self.store = store
     }
 
     /// Saves an array of rules to UserDefaults
-    func save(_ items: [T]) {
+    package func save(_ items: [T]) {
         do {
             let data = try JSONEncoder().encode(items)
             store.set(data, forKey: key.rawValue)
@@ -47,7 +47,7 @@ struct RuleStorage<T: Codable>: Sendable {
     }
 
     /// Retrieves all rules from UserDefaults
-    func retrieve() -> [T] {
+    package func retrieve() -> [T] {
         guard let data = store.data(forKey: key.rawValue) else {
             return []
         }
@@ -60,7 +60,7 @@ struct RuleStorage<T: Codable>: Sendable {
     }
 
     /// Clears all stored rules
-    func clear() {
+    package func clear() {
         store.removeObject(forKey: key.rawValue)
         store.synchronize()
     }

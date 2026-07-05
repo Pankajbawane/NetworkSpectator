@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
 /// Protocol for file system operations, enabling testability.
-protocol FileStoreable: Sendable {
+package protocol FileStoreable: Sendable {
     func fileExists(atPath path: String) -> Bool
     func createDirectory(at url: URL, withIntermediateDirectories: Bool, attributes: [FileAttributeKey: Any]?) throws
     func write(_ data: Data, to url: URL) throws
@@ -18,23 +19,23 @@ protocol FileStoreable: Sendable {
 }
 
 extension FileManager: FileStoreable {
-    func write(_ data: Data, to url: URL) throws {
+    package func write(_ data: Data, to url: URL) throws {
         try data.write(to: url)
     }
 
-    func contentsOfFile(at url: URL) throws -> Data {
+    package func contentsOfFile(at url: URL) throws -> Data {
         try Data(contentsOf: url)
     }
 }
 
 /// File-based key-value storage for log history.
 /// Each key (timestamp range string) maps to a separate JSON file containing an array of LogItems.
-struct LogHistoryStorage {
+package struct LogHistoryStorage {
 
     private let fileManager: FileStoreable
     private let baseURL: URL
 
-    init(fileManager: FileStoreable = FileManager.default) {
+    package init(fileManager: FileStoreable = FileManager.default) {
         self.fileManager = fileManager
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         self.baseURL = appSupport.appendingPathComponent("NetworkSpectator").appendingPathComponent("LogHistory")
@@ -42,7 +43,7 @@ struct LogHistoryStorage {
     }
 
     /// Initializer for testing with a custom base URL.
-    init(fileManager: FileStoreable, baseURL: URL) {
+    package init(fileManager: FileStoreable, baseURL: URL) {
         self.fileManager = fileManager
         self.baseURL = baseURL
         ensureDirectoryExists()
@@ -52,7 +53,7 @@ struct LogHistoryStorage {
 
     /// Saves pre-encoded data for the given key. Avoids double encoding when the caller
     /// has already serialized the items (e.g. to compute byte size).
-    func save(_ data: Data, forKey key: String) {
+    package func save(_ data: Data, forKey key: String) {
         do {
             let fileURL = url(forKey: key)
             try fileManager.write(data, to: fileURL)
@@ -62,7 +63,7 @@ struct LogHistoryStorage {
     }
 
     /// Saves an array of log items for the given key.
-    func save(_ items: [LogItem], forKey key: String) {
+    package func save(_ items: [LogItem], forKey key: String) {
         do {
             let logData = try JSONEncoder().encode(items)
             save(logData, forKey: key)
@@ -72,7 +73,7 @@ struct LogHistoryStorage {
     }
 
     /// Retrieves log items for the given key. Returns an empty array if the key doesn't exist.
-    func retrieve(forKey key: String) -> [LogItem] {
+    package func retrieve(forKey key: String) -> [LogItem] {
         let fileURL = url(forKey: key)
         guard fileManager.fileExists(atPath: fileURL.path) else { return [] }
         do {
@@ -85,7 +86,7 @@ struct LogHistoryStorage {
     }
 
     /// Deletes the log history entry for the given key.
-    func delete(forKey key: String) {
+    package func delete(forKey key: String) {
         let fileURL = url(forKey: key)
         guard fileManager.fileExists(atPath: fileURL.path) else { return }
         do {
@@ -96,7 +97,7 @@ struct LogHistoryStorage {
     }
 
     /// Returns all stored keys (timestamp range strings).
-    func listKeys() -> [HistoryItem] {
+    package func listKeys() -> [HistoryItem] {
         do {
             let contents = try fileManager.contentsOfDirectory(at: baseURL, includingPropertiesForKeys: [.fileSizeKey], options: .skipsHiddenFiles)
             return contents
@@ -130,7 +131,7 @@ struct LogHistoryStorage {
     }
 
     /// Deletes all stored log history entries.
-    func clearAll() {
+    package func clearAll() {
         for key in listKeys() {
             delete(forKey: key.key)
         }

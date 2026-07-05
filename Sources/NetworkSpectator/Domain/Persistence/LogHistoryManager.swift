@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)
@@ -15,7 +16,7 @@ import AppKit
 /// Manages session-based persistence of log items to disk.
 /// Periodically snapshots items from `NetworkLogStore` and persists them via debounced writes.
 /// All disk I/O runs on the actor's serial executor, off the main thread.
-actor LogHistoryManager {
+package actor LogHistoryManager {
 
     // MARK: - Dependencies
 
@@ -37,11 +38,11 @@ actor LogHistoryManager {
 
     private var isObserving: Bool = false
     
-    var historyStorePreference: Bool {
+    package var historyStorePreference: Bool {
         PreferenceStorage(preference: .history).retrieve(true)
     }
     
-    func currentSessionKey() -> String? {
+    package func currentSessionKey() -> String? {
         sessionKey
     }
 
@@ -56,7 +57,7 @@ actor LogHistoryManager {
 
     // MARK: - Singleton
 
-    static let shared = LogHistoryManager()
+    package static let shared = LogHistoryManager()
 
     private static let defaultItemProvider: @Sendable () async -> [LogItem] = {
         await NetworkLogStore.shared.snapshot()
@@ -70,9 +71,9 @@ actor LogHistoryManager {
     }
 
     /// Initializer with injectable dependencies.
-    init(storage: LogHistoryStorage,
-         debounceInterval: Duration = .seconds(2),
-         itemProvider: @escaping @Sendable () async -> [LogItem]) {
+    package init(storage: LogHistoryStorage,
+                debounceInterval: Duration = .seconds(2),
+                itemProvider: @escaping @Sendable () async -> [LogItem]) {
         self.storage = storage
         self.debounceInterval = debounceInterval
         self.itemProvider = itemProvider
@@ -81,7 +82,7 @@ actor LogHistoryManager {
     // MARK: - Observation Lifecycle
 
     /// Marks the session as active, records the start time, and begins observing batch updates.
-    func startObserving() {
+    package func startObserving() {
         guard historyStorePreference else { return }
         guard !isObserving else { return }
         isObserving = true
@@ -97,7 +98,7 @@ actor LogHistoryManager {
     }
 
     /// Cancels any pending writes and observation, resets observation state.
-    func stopObserving() {
+    package func stopObserving() {
         isObserving = false
         observeTask?.cancel()
         observeTask = nil
@@ -106,7 +107,7 @@ actor LogHistoryManager {
     }
 
     /// Immediately persists the current session, resets state, and stops observing.
-    func finalizeAndStopObserving() async {
+    package func finalizeAndStopObserving() async {
         await persistCurrentSession()
         resetSession()
         stopObserving()
@@ -114,7 +115,7 @@ actor LogHistoryManager {
 
     /// Immediately persists the current session and resets session data.
     /// Does not stop observation — use `stopObserving()` or `finalizeAndStopObserving()` for that.
-    func finalizeSession() async {
+    package func finalizeSession() async {
         writeTask?.cancel()
         writeTask = nil
         await persistCurrentSession()
@@ -124,7 +125,7 @@ actor LogHistoryManager {
     // MARK: - Debounce
 
     /// Schedules a debounced persist. Exposed as internal for testability via `@testable import`.
-    func schedulePersist() {
+    package func schedulePersist() {
         guard isObserving else { return }
         scheduleDebouncedWrite()
     }

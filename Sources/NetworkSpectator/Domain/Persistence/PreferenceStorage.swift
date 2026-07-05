@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import NetworkSpectatorCore
 
-struct PreferenceStorage {
+package struct PreferenceStorage {
     
-    enum Preference {
+    package enum Preference {
         case monitoring
         case history
         
@@ -24,24 +25,24 @@ struct PreferenceStorage {
     private let key: StorageKey
     private let store: Storeable
     
-    init(preference: Preference, store: Storeable = UserDefaults.standard) {
+    package init(preference: Preference, store: Storeable = UserDefaults.standard) {
         self.key = preference.key
         self.store = store
     }
     
     /// Saves  to UserDefaults
-    func save(_ enable: Bool) {
+    package func save(_ enable: Bool) {
         store.set(enable, forKey: key.rawValue)
         store.synchronize()
     }
     
     /// Retrieves from UserDefaults
-    func retrieve(_ defaultValue: Bool = false) -> Bool {
+    package func retrieve(_ defaultValue: Bool = false) -> Bool {
         return store.value(forKey: key.rawValue) as? Bool ?? defaultValue
     }
     
     /// Clears all stored rules
-    func clear() {
+    package func clear() {
         store.removeObject(forKey: key.rawValue)
         store.synchronize()
     }

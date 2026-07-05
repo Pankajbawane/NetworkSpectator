@@ -5,12 +5,12 @@
 //  Created by Pankaj Bawane on 08/12/25.
 //
 
-class DebugPrint: @unchecked Sendable {
+package class DebugPrint: @unchecked Sendable {
     
     private var enabled: Bool = false
-    static let shared: DebugPrint = .init()
+    package static let shared: DebugPrint = .init()
     
-    func update(_ enabled: Bool) {
+    package func update(_ enabled: Bool) {
         // DEBUG check to ensure logs are printed only while debugging.
         #if DEBUG
         self.enabled = enabled
@@ -49,7 +49,7 @@ class DebugPrint: @unchecked Sendable {
 }
 
 // MARK: - Convinience methods.
-extension DebugPrint {
+package extension DebugPrint {
     static func log(_ logItem: LogItem) {
         shared.log(logItem)
     }
