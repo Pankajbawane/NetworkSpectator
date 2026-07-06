@@ -5,16 +5,18 @@
 //  Created by Pankaj Bawane on 20/11/25.
 //
 
+#if canImport(SwiftUI)
 import SwiftUI
-@_exported import NetworkSpectatorCore
-@_exported import NetworkSpectatorMocking
-@_exported import NetworkSpectatorLogging
-@_exported import NetworkSpectatorUI
+#endif
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)
 import AppKit
 #endif
+@_exported import NetworkSpectatorCore
+@_exported import NetworkSpectatorMocking
+@_exported import NetworkSpectatorLogging
+@_exported import NetworkSpectatorUI
 
 /// The entry point for integrating network logging and mocking into your app.
 ///
@@ -37,10 +39,12 @@ public struct NetworkSpectator: Sendable {
     /// The SwiftUI inspection interface for captured network activity.
     ///
     /// Present this view from your app to browse requests, responses, mocks, exclusions, history, and insights.
+    #if canImport(SwiftUI)
     @MainActor
     public static var rootView: some View {
         RootView()
     }
+    #endif
     
     #if canImport(UIKit)
     /// A UIKit host for the NetworkSpectator inspection interface.
