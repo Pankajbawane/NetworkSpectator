@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import NetworkSpectatorCore
+@_exported import NetworkSpectatorCore
 
 /// Represents a mock HTTP response for network request interception.
 public struct Mock: Identifiable, Sendable {

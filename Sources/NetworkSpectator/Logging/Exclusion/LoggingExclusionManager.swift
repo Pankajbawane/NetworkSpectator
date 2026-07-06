@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import NetworkSpectatorCore
+@_exported import NetworkSpectatorCore
 
 package final class LoggingExclusionManager: @unchecked Sendable {
 

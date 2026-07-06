@@ -10,7 +10,7 @@ import os
 import NetworkSpectatorCore
 
 /// Manages in-memory mocks for network request interception.
-public final class MockServer: MockServerProvider, Sendable {
+package final class MockServer: MockServerProvider, Sendable {
 
     private let state: OSAllocatedUnfairLock<Set<Mock>>
 
@@ -20,13 +20,13 @@ public final class MockServer: MockServerProvider, Sendable {
         state.withLock { $0 }
     }
 
-    public init(state: OSAllocatedUnfairLock<Set<Mock>> = OSAllocatedUnfairLock(initialState: [])) {
+    package init(state: OSAllocatedUnfairLock<Set<Mock>> = OSAllocatedUnfairLock(initialState: [])) {
         self.state = state
     }
 
     /// Registers a mock to intercept matching network requests.
     /// - Parameter mock: The mock configuration to register.
-    public func register(_ mock: Mock) {
+    package func register(_ mock: Mock) {
         state.withLock { _ = $0.insert(mock) }
     }
 
@@ -41,7 +41,7 @@ public final class MockServer: MockServerProvider, Sendable {
     }
 
     /// Removes registered mock.
-    public func remove(id: UUID) {
+    package func remove(id: UUID) {
         state.withLock { mocks in
             if let mock = mocks.first(where: { $0.id == id }) {
                 mocks.remove(mock)
@@ -50,7 +50,7 @@ public final class MockServer: MockServerProvider, Sendable {
     }
 
     /// Removes all registered mocks.
-    public func clear() {
+    package func clear() {
         state.withLock { $0.removeAll() }
     }
 }

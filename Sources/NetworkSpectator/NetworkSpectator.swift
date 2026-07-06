@@ -6,10 +6,10 @@
 //
 
 import SwiftUI
-import NetworkSpectatorCore
-import NetworkSpectatorMocking
-import NetworkSpectatorLogging
-import NetworkSpectatorUI
+@_exported import NetworkSpectatorCore
+@_exported import NetworkSpectatorMocking
+@_exported import NetworkSpectatorLogging
+@_exported import NetworkSpectatorUI
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)

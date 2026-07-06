@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import NetworkSpectatorCore
+@_exported import NetworkSpectatorCore
 
 public struct LoggingExclusionRule: Identifiable, Hashable, Codable {
 
