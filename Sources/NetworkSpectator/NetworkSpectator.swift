@@ -138,11 +138,17 @@ public struct NetworkSpectator: Sendable {
     
     /// Enables or disables NetworkSpectator diagnostic output in the Xcode console.
     ///
-    /// Use this while troubleshooting SDK integration or capture behavior.
+    /// Use this while troubleshooting SDK integration or capture behavior. Console output is
+    /// compiled out of release builds and is only emitted for debug builds.
     ///
-    /// - Parameter isEnabled: Pass `true` to enable diagnostic output, or `false` to disable it.
-    public static func setDebugConsoleLogging(_ isEnabled: Bool) {
-        ConsolePrint.shared.update(isEnabled)
+    /// - Parameters:
+    ///   - isEnabled: Pass `true` to enable diagnostic output, or `false` to disable it.
+    ///   - configuration: Controls which request and response sections are printed and how large they can be.
+    public static func setDebugConsoleLogging(
+        _ isEnabled: Bool,
+        configuration: ConsoleLoggingConfiguration = .default
+    ) {
+        DebugConsoleLogger.shared.update(isEnabled, configuration: configuration)
     }
     
     /// Instantiation is not intended.

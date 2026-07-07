@@ -20,7 +20,7 @@ struct UIItemLogger: NetworkItemLogger {
 
     func logging(_ item: LogItem) {
         guard let session = NetworkLogStore.shared.currentSession() else { return }
-        ConsolePrint.log(item)
+        DebugConsoleLogger.log(item)
         Task(priority: .userInitiated) {
             await NetworkLogStore.shared.add(item, session: session)
         }

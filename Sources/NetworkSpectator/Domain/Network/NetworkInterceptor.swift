@@ -36,7 +36,7 @@ package final class NetworkInterceptor: Sendable {
             guard wasInactive else { return }
             URLProtocol.registerClass(NetworkURLProtocol.self)
             URLSessionConfiguration.enableNetworkMonitoring()
-            ConsolePrint.log("NETWORK SPECTATOR: Interception enabled.")
+            DebugConsoleLogger.log("NETWORK SPECTATOR: Interception enabled.")
         }
     }
     
@@ -46,7 +46,7 @@ package final class NetworkInterceptor: Sendable {
             guard capabilities.remove(capability) != nil, capabilities.isEmpty else { return }
             URLProtocol.unregisterClass(NetworkURLProtocol.self)
             URLSessionConfiguration.disableNetworkMonitoring()
-            ConsolePrint.log("NETWORK SPECTATOR: Interception disabled.")
+            DebugConsoleLogger.log("NETWORK SPECTATOR: Interception disabled.")
         }
     }
 }

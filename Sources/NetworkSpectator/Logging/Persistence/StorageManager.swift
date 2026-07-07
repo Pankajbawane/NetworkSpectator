@@ -43,7 +43,7 @@ package struct RuleStorage<T: Codable>: Sendable {
             store.set(data, forKey: key.rawValue)
             store.synchronize()
         } catch {
-            ConsolePrint.log("Failed to save \(key.rawValue): \(error)")
+            DebugConsoleLogger.log("Failed to save \(key.rawValue): \(error)")
         }
     }
 
@@ -55,7 +55,7 @@ package struct RuleStorage<T: Codable>: Sendable {
         do {
             return try JSONDecoder().decode([T].self, from: data)
         } catch {
-            ConsolePrint.log("Failed to retrieve \(key.rawValue): \(error)")
+            DebugConsoleLogger.log("Failed to retrieve \(key.rawValue): \(error)")
             return []
         }
     }

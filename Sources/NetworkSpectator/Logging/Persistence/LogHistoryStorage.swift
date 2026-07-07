@@ -58,7 +58,7 @@ package struct LogHistoryStorage {
             let fileURL = url(forKey: key)
             try fileManager.write(data, to: fileURL)
         } catch {
-            ConsolePrint.log("NETWORK SPECTATOR: Failed to save for key '\(key)': \(error)")
+            DebugConsoleLogger.log("NETWORK SPECTATOR: Failed to save for key '\(key)': \(error)")
         }
     }
 
@@ -68,7 +68,7 @@ package struct LogHistoryStorage {
             let logData = try JSONEncoder().encode(items)
             save(logData, forKey: key)
         } catch {
-            ConsolePrint.log("NETWORK SPECTATOR: Failed to encode for key '\(key)': \(error)")
+            DebugConsoleLogger.log("NETWORK SPECTATOR: Failed to encode for key '\(key)': \(error)")
         }
     }
 
@@ -80,7 +80,7 @@ package struct LogHistoryStorage {
             let data = try fileManager.contentsOfFile(at: fileURL)
             return try JSONDecoder().decode([LogItem].self, from: data)
         } catch {
-            ConsolePrint.log("NETWORK SPECTATOR: Failed to retrieve for key '\(key)': \(error)")
+            DebugConsoleLogger.log("NETWORK SPECTATOR: Failed to retrieve for key '\(key)': \(error)")
             return []
         }
     }
@@ -92,7 +92,7 @@ package struct LogHistoryStorage {
         do {
             try fileManager.removeItem(at: fileURL)
         } catch {
-            ConsolePrint.log("NETWORK SPECTATOR: Failed to delete for key '\(key)': \(error)")
+            DebugConsoleLogger.log("NETWORK SPECTATOR: Failed to delete for key '\(key)': \(error)")
         }
     }
 
@@ -125,7 +125,7 @@ package struct LogHistoryStorage {
                 }
                 .sorted(by: { $0.key > $1.key })
         } catch {
-            ConsolePrint.log("NETWORK SPECTATOR: Failed to list keys: \(error)")
+            DebugConsoleLogger.log("NETWORK SPECTATOR: Failed to list keys: \(error)")
             return []
         }
     }
@@ -171,7 +171,7 @@ package struct LogHistoryStorage {
             do {
                 try fileManager.createDirectory(at: baseURL, withIntermediateDirectories: true, attributes: nil)
             } catch {
-                ConsolePrint.log("NETWORK SPECTATOR: Failed to create directory: \(error)")
+                DebugConsoleLogger.log("NETWORK SPECTATOR: Failed to create directory: \(error)")
             }
         }
     }
