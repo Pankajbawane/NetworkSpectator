@@ -89,11 +89,11 @@ package final class NetworkLogMonitor: ObservableObject, Sendable {
         NetworkURLProtocol.mockServer = MockServer.shared
         await logStore.start()
         await LogHistoryManager.shared.startObserving()
-        NetworkInterceptor.shared.enable()
+        NetworkInterceptor.shared.enable(for: .logging)
     }
     
     private func stopSession() async {
-        NetworkInterceptor.shared.disable()
+        NetworkInterceptor.shared.disable(for: .logging)
         await logStore.deactivate()
         await LogHistoryManager.shared.finalizeAndStopObserving()
         await logStore.stop()
@@ -107,6 +107,8 @@ package final class NetworkLogMonitor: ObservableObject, Sendable {
         await LogHistoryManager.shared.startObserving()
     }
 }
+
+
 
 extension NetworkLogMonitor {
     /// How the monitoring was initialized.

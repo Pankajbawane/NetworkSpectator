@@ -73,13 +73,7 @@ public struct NetworkSpectator: Sendable {
     /// - Parameter onDemand: When `true`, capture is configured but logging remains disabled until
     ///   it is enabled from the UI. When `false`, logging starts immediately.
     public static func start(onDemand: Bool = false) {
-        Task {
-            if onDemand {
-                await NetworkLogMonitor.shared.enableOnDemand()
-            } else {
-                await NetworkLogMonitor.shared.enable()
-            }
-        }
+        NetworkSpectatorLogging.start(onDemand: onDemand)
     }
     
     /// Stops network capture.
@@ -87,17 +81,25 @@ public struct NetworkSpectator: Sendable {
     /// This method schedules shutdown work asynchronously and returns immediately. Calling it is
     /// not required if ``start(onDemand:)`` was never invoked.
     public static func stop() {
-        Task {
-            await NetworkLogMonitor.shared.disable()
-        }
+        NetworkSpectatorLogging.stop()
+    }
+    
+    /// Starts mock-only network interception without enabling request logging or history persistence.
+    public static func startMocking() {
+        NetworkSpectatorMocking.start()
+    }
+    
+    /// Stops mock-only network interception.
+    public static func stopMocking() {
+        NetworkSpectatorMocking.stop()
     }
     
     /// Clears all registered mock responses and logging exclusion rules.
     ///
     /// Use this when you want to keep NetworkSpectator available but discard runtime configuration.
     public static func reset() {
-        MockServer.shared.clear()
-        LoggingExclusionManager.shared.clear()
+        NetworkSpectatorMocking.clearMocks()
+        NetworkSpectatorLogging.clearExclusions()
     }
     
     /// Registers a mock response to be returned for requests matching the mock's rule.
@@ -107,14 +109,14 @@ public struct NetworkSpectator: Sendable {
     ///
     /// - Parameter mock: A ``Mock`` instance that defines the match rule and the response to return.
     public static func registerMock(for mock: Mock) {
-        MockServer.shared.register(mock)
+        NetworkSpectatorMocking.register(mock)
     }
     
     /// Removes all registered mock responses.
     ///
     /// After calling this method, matching requests are no longer served from NetworkSpectator mocks.
     public static func clearMocks() {
-        MockServer.shared.clear()
+        NetworkSpectatorMocking.clearMocks()
     }
     
     /// Registers a logging exclusion rule.
@@ -124,14 +126,14 @@ public struct NetworkSpectator: Sendable {
     ///
     /// - Parameter rule: The method and matching rule that identify requests to exclude from logging.
     public static func excludeFromLogging(for rule: LoggingExclusionRule) {
-        LoggingExclusionManager.shared.register(request: rule)
+        NetworkSpectatorLogging.exclude(rule)
     }
     
     /// Removes all logging exclusion rules.
     ///
     /// After calling this method, intercepted requests are eligible to appear in the network log again.
     public static func clearLoggingExclusions() {
-        LoggingExclusionManager.shared.clear()
+        NetworkSpectatorLogging.clearExclusions()
     }
     
     /// Enables or disables NetworkSpectator diagnostic output in the Xcode console.
