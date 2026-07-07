@@ -34,7 +34,7 @@ import AppKit
 ///     NetworkSpectator.rootView
 /// }
 /// ```
-public struct NetworkSpectator: Sendable {
+public enum NetworkSpectator {
     
     /// The SwiftUI inspection interface for captured network activity.
     ///
@@ -150,7 +150,4 @@ public struct NetworkSpectator: Sendable {
     ) {
         DebugConsoleLogger.shared.update(isEnabled, configuration: configuration)
     }
-    
-    /// Instantiation is not intended.
-    private init() { }
 }
