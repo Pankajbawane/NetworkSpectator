@@ -7,11 +7,9 @@
 
 import Testing
 import Foundation
-@testable import NetworkSpectator
 @testable import NetworkSpectatorCore
 @testable import NetworkSpectatorMocking
 @testable import NetworkSpectatorLogging
-@testable import NetworkSpectatorUI
 
 // MARK: - MockServer Tests
 @Suite("MockServer Tests")

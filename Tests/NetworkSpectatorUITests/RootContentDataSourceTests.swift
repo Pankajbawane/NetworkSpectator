@@ -6,9 +6,7 @@
 //
 
 import Testing
-@testable import NetworkSpectator
 @testable import NetworkSpectatorCore
-@testable import NetworkSpectatorLogging
 @testable import NetworkSpectatorUI
 
 @Suite("RootContentDataSource Tests")

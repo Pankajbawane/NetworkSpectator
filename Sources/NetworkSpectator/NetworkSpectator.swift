@@ -13,7 +13,7 @@ import UIKit
 #elseif canImport(AppKit)
 import AppKit
 #endif
-@_exported import NetworkSpectatorCore
+
 @_exported import NetworkSpectatorMocking
 @_exported import NetworkSpectatorLogging
 @_exported import NetworkSpectatorUI
