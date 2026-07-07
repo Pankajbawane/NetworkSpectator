@@ -49,7 +49,7 @@ package final class NetworkLogMonitor: ObservableObject, Sendable {
     /// Enables monitoring and logging. 'isLoggingEnabled' flag avoids redundant invocation.
     package func enable() async {
         guard !isLoggingEnabled else {
-            DebugPrint.log("NETWORK SPECTATOR: Monitoring was already active.")
+            ConsolePrint.log("NETWORK SPECTATOR: Monitoring was already active.")
             return
         }
         if setupMode == .none {
@@ -58,19 +58,19 @@ package final class NetworkLogMonitor: ObservableObject, Sendable {
         logContainer.startProjectingUpdates()
         await startSession()
         isLoggingEnabled = true
-        DebugPrint.log("NETWORK SPECTATOR: Logging initiated.")
+        ConsolePrint.log("NETWORK SPECTATOR: Logging initiated.")
     }
     
     /// Disables monitoring and logging. 'isLoggingEnabled' flag avoids redundant invocation.
     package func disable() async {
         guard isLoggingEnabled else {
-            DebugPrint.log("NETWORK SPECTATOR: Monitoring was inactive.")
+            ConsolePrint.log("NETWORK SPECTATOR: Monitoring was inactive.")
             return
         }
         await stopSession()
         logContainer.stopProjectingUpdates()
         isLoggingEnabled = false
-        DebugPrint.log("NETWORK SPECTATOR: Monitoring stopped.")
+        ConsolePrint.log("NETWORK SPECTATOR: Monitoring stopped.")
     }
     
     /// Clears current list of items. This does not stop the monitoring.

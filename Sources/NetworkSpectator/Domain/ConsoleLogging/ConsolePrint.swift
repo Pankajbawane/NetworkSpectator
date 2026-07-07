@@ -1,14 +1,14 @@
 //
-//  DebugPrint.swift
+//  ConsolePrint.swift
 //  NetworkSpectator
 //
 //  Created by Pankaj Bawane on 08/12/25.
 //
 
-package class DebugPrint: @unchecked Sendable {
+package class ConsolePrint: @unchecked Sendable {
     
     private var enabled: Bool = false
-    package static let shared: DebugPrint = .init()
+    package static let shared: ConsolePrint = .init()
     
     package func update(_ enabled: Bool) {
         // DEBUG check to ensure logs are printed only while debugging.
@@ -49,7 +49,7 @@ package class DebugPrint: @unchecked Sendable {
 }
 
 // MARK: - Convinience methods.
-package extension DebugPrint {
+package extension ConsolePrint {
     static func log(_ logItem: LogItem) {
         shared.log(logItem)
     }

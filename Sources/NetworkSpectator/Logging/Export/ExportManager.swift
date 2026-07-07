@@ -48,7 +48,7 @@ package extension FileExportable {
             try String(content).write(to: fileURL, atomically: true, encoding: .utf8)
             return fileURL
         } catch {
-            DebugPrint.log("FileExportable failed to write text file: \(fileURL.lastPathComponent), error: \(error)")
+            ConsolePrint.log("FileExportable failed to write text file: \(fileURL.lastPathComponent), error: \(error)")
             throw ExportError.writeFailed
         }
     }
@@ -59,7 +59,7 @@ package extension FileExportable {
             try content.write(to: fileURL)
             return fileURL
         } catch {
-            DebugPrint.log("FileExportable failed to write data file: \(fileURL.lastPathComponent), error: \(error)")
+            ConsolePrint.log("FileExportable failed to write data file: \(fileURL.lastPathComponent), error: \(error)")
             throw ExportError.writeFailed
         }
     }

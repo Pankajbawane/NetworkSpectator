@@ -142,7 +142,7 @@ public struct NetworkSpectator: Sendable {
     ///
     /// - Parameter isEnabled: Pass `true` to enable diagnostic output, or `false` to disable it.
     public static func setDebugConsoleLogging(_ isEnabled: Bool) {
-        DebugPrint.shared.update(isEnabled)
+        ConsolePrint.shared.update(isEnabled)
     }
     
     /// Instantiation is not intended.
