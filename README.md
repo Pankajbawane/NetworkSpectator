@@ -1,4 +1,4 @@
-# NetworkSpectator: Monitor and Inspect HTTP Traffic on iOS and macOS apps
+# NetworkSpectator: Monitor and Inspect HTTP Traffic on iOS and macOS Apps
 
 ![Swift 6.0+](https://img.shields.io/badge/Swift-6.0%2B-orange?logo=swift)
 ![Platforms](https://img.shields.io/badge/Platforms-iOS%2016.0%2B%20%7C%20macOS%2013.0%2B-blue)
@@ -6,9 +6,26 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/pankajbawane/NetworkSpectator/blob/main/LICENSE)
 [![Build](https://github.com/Pankajbawane/NetworkSpectator/actions/workflows/ci.yml/badge.svg)](https://github.com/Pankajbawane/NetworkSpectator/actions/workflows/ci.yml)
 
-NetworkSpectator is a Swift network debugging library that intercepts, inspects, and logs HTTP/HTTPS request and response in your iOS or macOS app in real time.
-Browse captured API traffic in a native SwiftUI interface, view network request metrics, export logs and create mock API responses programmatically or through a built-in UI.
-Designed for developers debugging network calls during development and QA teams validating app behavior without backend dependencies or developer intervention.
+NetworkSpectator is a Swift network debugging library that intercepts, inspects, and logs HTTP/HTTPS requests and responses in your iOS or macOS app in real time.
+Browse captured API traffic in a native SwiftUI interface, view network request metrics, export logs, and create mock API responses programmatically or through the built-in UI.
+It is designed for developers debugging network calls during development and QA teams validating app behavior without backend dependencies.
+
+## Why NetworkSpectator
+
+NetworkSpectator is for teams that need network debugging to go beyond a basic request list. It brings traffic capture, detailed inspection, mock responses, saved sessions, exports, and a native SwiftUI interface into one Swift Package, while still supporting lightweight mock-only integration when the full UI is not needed.
+
+- **Useful across development and QA workflows**
+  - Developers can keep building against predictable responses when backend work is incomplete, unstable, or hard to reproduce
+  - QA teams can create, reuse, and persist mock scenarios from the UI without asking for app code changes
+
+- **Turns observed traffic into reusable mocks**
+  - Create mock responses directly from captured requests instead of recreating URLs, headers, and payloads manually
+  - Register mocks programmatically when a scenario should be part of a repeatable development or test setup
+
+- **Designed for deeper inspection**
+  - View headers, request payload, response, timeline metrics, transfer sizes, connection details, TLS information, and history
+  - Export captured traffic as CSV, plain text, or Postman collections
+  - Use on-demand monitoring when traffic capture should be enabled from the UI
 
 ## Features
 
@@ -18,7 +35,7 @@ Designed for developers debugging network calls during development and QA teams 
   - Live updates with in-progress indicators for pending requests
   - Start immediately or use **on-demand mode** to enable monitoring from the UI when needed
   - Color-coded list view with method badges, status indicators, and response metrics
- 
+  
 - **Filtering and search**
   - Filter by status code ranges and HTTP methods
   - Combine multiple filters with visual filter chips
@@ -84,9 +101,25 @@ Or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/pankajbawane/NetworkSpectator.git", branch: "main")
+    .package(url: "https://github.com/pankajbawane/NetworkSpectator.git", .upToNextMajor(from: "0.2.0"))
 ]
 ```
+## Architecture
+
+NetworkSpectator is split into SwiftPM products so apps can depend on only the capabilities they need:
+
+```text
+NetworkSpectatorCore <- NetworkSpectatorMocking <- NetworkSpectatorLogging <- NetworkSpectatorUI <- NetworkSpectator
+```
+
+The full `NetworkSpectator` product is the easiest integration path.
+
+### Products
+
+| Product | Import | Purpose |
+|---------|--------|----------|
+| NetworkSpectator | `import NetworkSpectator` | You want the full capabilities: logging, mocking, persistence, exports through the UI, and the inspection interface. |
+| NetworkSpectatorMocking | `import NetworkSpectatorMocking` | You only need in-memory mock responses without logging, persistence, exports, or UI. |
 
 ## Usage
 
@@ -98,20 +131,21 @@ The NetworkSpectatorExample app demonstrates basic usage of the library: https:/
 1. **Enable NetworkSpectator** in your app's entry point (AppDelegate or App struct):
 
 Call `NetworkSpectator.start()` to begin listening to HTTP requests. This will automatically log all HTTP traffic.
+
 ```swift
 import NetworkSpectator
+import SwiftUI
 
 @main
 struct MyApp: App {
-
     var body: some Scene {
         WindowGroup {
             ContentView()
-                    .task {
-                        #if DEBUG
-                        NetworkSpectator.start()
-                        #endif
-                      }
+                .task {
+                    #if DEBUG
+                    NetworkSpectator.start()
+                    #endif
+                }
         }
     }
 }
@@ -120,18 +154,27 @@ struct MyApp: App {
 2. **Present the NetworkSpectator UI**:
 
 #### SwiftUI
+
 ```swift
 import NetworkSpectator
+import SwiftUI
 
-ContentView() {
+struct ContentView: View {
+    @State private var showLogs = false
+
+    var body: some View {
+        Button("Show Network Logs") {
+            showLogs = true
+        }
+        .sheet(isPresented: $showLogs) {
+            NetworkSpectator.rootView
+        }
+    }
 }
-  .sheet(isPresented: $showLogs) {
-      NetworkSpectator.rootView
-  }
-
 ```
 
 #### UIKit (iOS)
+
 ```swift
 import NetworkSpectator
 
@@ -140,6 +183,7 @@ present(networkVC, animated: true)
 ```
 
 #### AppKit (macOS)
+
 ```swift
 import NetworkSpectator
 
@@ -169,7 +213,7 @@ NetworkSpectator.excludeFromLogging(for: exclusion)
 NetworkSpectator.clearLoggingExclusions()
 
 // Remove all registered mocks and logging exclusions
-NetworkSpectator.resetConfiguration()
+NetworkSpectator.reset()
 ```
 
 ### On-Demand Monitoring
@@ -180,9 +224,47 @@ Start NetworkSpectator in on-demand mode to let users enable monitoring from the
 NetworkSpectator.start(onDemand: true)
 ```
 
+### Mock-Only Usage
+
+Use `NetworkSpectatorMocking` when you only need in-memory mock responses and do not want logging, history persistence, exports, or UI:
+
+```swift
+import NetworkSpectatorMocking
+
+let mock = Mock(
+    method: .GET,
+    rule: .url("https://api.example.com/users"),
+    response: Data(#"{"users":[]}"#.utf8),
+    headers: ["Content-Type": "application/json"],
+    statusCode: 200,
+    error: nil,
+    saveLocally: false
+)
+
+NetworkSpectatorMocking.register(mock)
+NetworkSpectatorMocking.start()
+```
+
+Stop mock-only interception when the mock session is no longer needed:
+
+```swift
+NetworkSpectatorMocking.stop()
+NetworkSpectatorMocking.clearMocks()
+```
+
+The full facade exposes the same lifecycle for clients that already import `NetworkSpectator`:
+
+```swift
+NetworkSpectator.registerMock(for: mock)
+NetworkSpectator.startMocking()
+NetworkSpectator.stopMocking()
+```
+
+`NetworkSpectatorMocking` is memory-only. The `Mock.saveLocally` flag is kept on `Mock` for compatibility, but mock-only usage ignores it. Persisted mocks are handled by the logging/UI/full-facade flow through local storage.
+
 ### Disabling NetworkSpectator
 
-If enabled, then, to stop network monitoring:
+Call `NetworkSpectator.stop()` when network monitoring is no longer needed:
 
 ```swift
 NetworkSpectator.stop()
@@ -222,12 +304,12 @@ The following screenshots demonstrate NetworkSpectator running on macOS.
 
 Because NetworkSpectator captures and displays network information, you should **limit it to debug/test builds only**. Wrap your integration points with `#if DEBUG` to ensure nothing leaks into release builds.
 
-### Recommendations:
+### Recommendations
 
 - Always guard with `#if DEBUG` and/or internal feature flags
 - Ensure NetworkSpectator is not initialized in release configurations
 
-### Example:
+### Example
 
 ```swift
 // Monitoring will start only for a debug build.
