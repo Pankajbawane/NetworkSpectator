@@ -85,7 +85,37 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "NetworkSpectatorTests",
+            name: "NetworkSpectatorCoreTests",
+            dependencies: [
+                "NetworkSpectatorCore",
+            ]
+        ),
+        .testTarget(
+            name: "NetworkSpectatorMockingTests",
+            dependencies: [
+                "NetworkSpectatorCore",
+                "NetworkSpectatorMocking",
+            ]
+        ),
+        .testTarget(
+            name: "NetworkSpectatorLoggingTests",
+            dependencies: [
+                "NetworkSpectatorCore",
+                "NetworkSpectatorMocking",
+                "NetworkSpectatorLogging",
+            ]
+        ),
+        .testTarget(
+            name: "NetworkSpectatorUITests",
+            dependencies: [
+                "NetworkSpectatorCore",
+                "NetworkSpectatorMocking",
+                "NetworkSpectatorLogging",
+                "NetworkSpectatorUI",
+            ]
+        ),
+        .testTarget(
+            name: "NetworkSpectatorIntegrationTests",
             dependencies: [
                 "NetworkSpectator",
                 "NetworkSpectatorCore",

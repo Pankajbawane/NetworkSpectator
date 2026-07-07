@@ -7,10 +7,8 @@
 
 import Testing
 import Foundation
-@testable import NetworkSpectator
 @testable import NetworkSpectatorCore
 @testable import NetworkSpectatorLogging
-@testable import NetworkSpectatorUI
 
 /// In-memory mock file system for testing LogHistoryStorage without touching disk.
 final class MockFileStorage: FileStoreable, @unchecked Sendable {

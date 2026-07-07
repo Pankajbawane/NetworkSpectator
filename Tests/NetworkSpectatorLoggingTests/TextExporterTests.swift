@@ -7,19 +7,17 @@
 
 import Testing
 import Foundation
-@testable import NetworkSpectator
 @testable import NetworkSpectatorCore
 @testable import NetworkSpectatorLogging
-@testable import NetworkSpectatorUI
 
 // MARK: - Text Exporter Tests
-@Suite("Text Exporter Tests")
+@Suite("Text Exporter Tests", .serialized)
 struct TextExporterTests {
 
     @Test("Text export format")
     func testTextExportFormat() async throws {
         let item = LogItem(
-            url: "https://example.com/api/users",
+            url: "https://text-format.example.com/api/users",
             method: "GET",
             headers: ["Content-Type": "application/json"],
             statusCode: 200,
@@ -32,7 +30,7 @@ struct TextExporterTests {
         let content = try String(contentsOf: url, encoding: .utf8)
 
         #expect(content.contains("URL"))
-        #expect(content.contains("https://example.com/api/users"))
+        #expect(content.contains("https://text-format.example.com/api/users"))
         #expect(content.contains("Method"))
         #expect(content.contains("GET"))
         #expect(content.contains("Status Code"))

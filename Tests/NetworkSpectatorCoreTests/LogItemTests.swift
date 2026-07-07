@@ -7,10 +7,7 @@
 
 import Testing
 import Foundation
-@testable import NetworkSpectator
 @testable import NetworkSpectatorCore
-@testable import NetworkSpectatorLogging
-@testable import NetworkSpectatorUI
 
 // MARK: - LogItem Tests
 @Suite("LogItem Tests")

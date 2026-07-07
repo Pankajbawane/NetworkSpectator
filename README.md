@@ -84,7 +84,7 @@ Or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/pankajbawane/NetworkSpectator.git", branch: "main")
+    .package(url: "https://github.com/pankajbawane/NetworkSpectator.git", .upToNextMajor(from: "0.2.0"))
 ]
 ```
 
@@ -93,6 +93,20 @@ dependencies: [
 ### Example App
 The NetworkSpectatorExample app demonstrates basic usage of the library: https://github.com/Pankajbawane/NetworkSpectatorExample
 
+### Products and Imports
+
+Choose the smallest product that matches your integration:
+
+| Product | Import | Use when |
+|---------|--------|----------|
+| NetworkSpectator | `import NetworkSpectator` | You want the full facade: logging, mocking, exports, persistence, and UI. |
+| NetworkSpectatorMocking | `import NetworkSpectatorMocking` | You only need in-memory mock responses without logging, persistence, exports, or UI. |
+| NetworkSpectatorLogging | `import NetworkSpectatorLogging` | You need request capture, exclusions, history without importing the SwiftUI module directly. |
+| NetworkSpectatorUI | `import NetworkSpectatorUI` | You want to present the SwiftUI views while composing modules yourself. |
+| NetworkSpectatorCore | `import NetworkSpectatorCore` | You need shared entities, matching rules, or low-level networking types. |
+
+`import NetworkSpectator` re-exports the modular products for compatibility with existing integrations.
+
 ### Basic Setup
 
 1. **Enable NetworkSpectator** in your app's entry point (AppDelegate or App struct):
@@ -100,6 +114,7 @@ The NetworkSpectatorExample app demonstrates basic usage of the library: https:/
 Call `NetworkSpectator.start()` to begin listening to HTTP requests. This will automatically log all HTTP traffic.
 ```swift
 import NetworkSpectator
+import SwiftUI
 
 @main
 struct MyApp: App {
@@ -169,7 +184,7 @@ NetworkSpectator.excludeFromLogging(for: exclusion)
 NetworkSpectator.clearLoggingExclusions()
 
 // Remove all registered mocks and logging exclusions
-NetworkSpectator.resetConfiguration()
+NetworkSpectator.reset()
 ```
 
 ### On-Demand Monitoring
@@ -179,6 +194,44 @@ Start NetworkSpectator in on-demand mode to let users enable monitoring from the
 ```swift
 NetworkSpectator.start(onDemand: true)
 ```
+
+### Mock-Only Usage
+
+Use `NetworkSpectatorMocking` when you only need in-memory mock responses and do not want logging, history persistence, exports, or UI:
+
+```swift
+import NetworkSpectatorMocking
+
+let mock = Mock(
+    method: .GET,
+    rule: .url("https://api.example.com/users"),
+    response: Data(#"{"users":[]}"#.utf8),
+    headers: ["Content-Type": "application/json"],
+    statusCode: 200,
+    error: nil,
+    saveLocally: false
+)
+
+NetworkSpectatorMocking.register(mock)
+NetworkSpectatorMocking.start()
+```
+
+Stop mock-only interception when the mock session is no longer needed:
+
+```swift
+NetworkSpectatorMocking.stop()
+NetworkSpectatorMocking.clearMocks()
+```
+
+The full facade exposes the same lifecycle for clients that already import `NetworkSpectator`:
+
+```swift
+NetworkSpectator.registerMock(for: mock)
+NetworkSpectator.startMocking()
+NetworkSpectator.stopMocking()
+```
+
+`NetworkSpectatorMocking` is memory-only. The `Mock.saveLocally` flag is kept on `Mock` for compatibility, but mock-only usage ignores it. Persisted mocks are handled by the logging/UI/full-facade flow through local storage.
 
 ### Disabling NetworkSpectator
 
