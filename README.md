@@ -106,23 +106,20 @@ dependencies: [
 ```
 ## Architecture
 
-NetworkSpectator is split into SwiftPM modules so apps can depend on only the capabilities they need:
+NetworkSpectator is split into SwiftPM products so apps can depend on only the capabilities they need:
 
 ```text
 NetworkSpectatorCore <- NetworkSpectatorMocking <- NetworkSpectatorLogging <- NetworkSpectatorUI <- NetworkSpectator
 ```
 
-The full `NetworkSpectator` is the easiest integration path. The smaller modules are available for apps that want mock-only and non-UI integrations.
+The full `NetworkSpectator` product is the easiest integration path.
 
-### Modules
+### Products
 
-| Module | Import | Purpose |
+| Product | Import | Purpose |
 |---------|--------|----------|
-| NetworkSpectator | `import NetworkSpectator` | You want the full facade: logging, mocking, persistence, exports through the UI, and the inspection interface. |
+| NetworkSpectator | `import NetworkSpectator` | You want the full capabilities: logging, mocking, persistence, exports through the UI, and the inspection interface. |
 | NetworkSpectatorMocking | `import NetworkSpectatorMocking` | You only need in-memory mock responses without logging, persistence, exports, or UI. |
-| NetworkSpectatorLogging | `import NetworkSpectatorLogging` | NetworkSpectatorUI module needs it to log requests, exclude, and persist. |
-| NetworkSpectatorUI | `import NetworkSpectatorUI` | UI is part of this module. |
-| NetworkSpectatorCore | `import NetworkSpectatorCore` | Shared entities, matching rules, and networking types are part of this module. |
 
 ## Usage
 
