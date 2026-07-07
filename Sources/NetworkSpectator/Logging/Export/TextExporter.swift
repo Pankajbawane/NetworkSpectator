@@ -1,0 +1,35 @@
+//
+//  TextExporter.swift
+//  NetworkSpectator
+//
+//  Created by Pankaj Bawane on 11/07/25.
+//
+
+import Foundation
+import NetworkSpectatorCore
+
+struct TextExporter: FileExportable {
+    let fileExtension: String = "txt"
+    var filePrefix: String {
+        item.host
+    }
+    let item: LogItem
+    
+    func export() async throws -> URL {
+        let details: [String] = [
+            "URL:\n" + item.url,
+            "Method:\n" + item.method.uppercased(),
+            "Headers:\n" + item.requestHeadersPrettyPrinted,
+            "Request Body:\n" + item.requestBody,
+            "Status Code:\n\(item.statusCode)",
+            "Start Time:\n\(item.startTime)",
+            "Finish Time:\n\(item.finishTime ?? Date())",
+            "Response Time:\n\(item.responseTime) s",
+            "Response Headers:\n" + item.responseHeadersPrettyPrinted,
+            "Response Body:\n" + item.responseBody
+        ]
+        
+        let text = details.joined(separator: "\n\n")
+        return try await save(content: text)
+    }
+}

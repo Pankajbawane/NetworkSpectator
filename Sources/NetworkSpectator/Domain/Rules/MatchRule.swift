@@ -17,7 +17,7 @@ public enum MatchRule: Equatable, Hashable, Sendable {
     case queryParameter(key: String, value: String)
     case urlRequest(URLRequest)
     
-    var ruleName: String {
+    public var ruleName: String {
         switch self {
         case .hostName(let string): return "Rule_Host Name" + ": " + string
         case .url(let string): return "Rule_URL" + ": " + string
@@ -30,7 +30,7 @@ public enum MatchRule: Equatable, Hashable, Sendable {
         }
     }
 
-    func matches(_ urlRequest: URLRequest) -> Bool {
+    public func matches(_ urlRequest: URLRequest) -> Bool {
         guard let url = urlRequest.url else {
             return self == .urlRequest(urlRequest)
         }
